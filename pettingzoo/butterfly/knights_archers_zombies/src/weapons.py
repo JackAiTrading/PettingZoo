@@ -19,7 +19,7 @@ class Arrow(pygame.sprite.Sprite):
         self.pos = pygame.Vector2(self.archer.rect.center)
         self.direction = self.archer.direction
 
-        # reset the archer timeout when arrow fired
+        # 当箭矢发射时重置弓箭手的超时时间
         archer.weapon_timeout = 0
 
     @property
@@ -50,7 +50,7 @@ class Arrow(pygame.sprite.Sprite):
 
 class Sword(pygame.sprite.Sprite):
     def __init__(self, knight):
-        # the sword is actually a mace, but we refer to it as sword everywhere
+        # 这个武器实际上是一个狼牙棒，但我们在所有地方都称它为剑
         super().__init__()
         self.knight = knight
         self.image = get_image(os.path.join("img", "mace.png"))
@@ -58,7 +58,7 @@ class Sword(pygame.sprite.Sprite):
         self.direction = self.knight.direction
         self.active = False
 
-        # phase of the sword, starts at the left most part
+        # 剑的相位，从最左边部分开始
         self.phase = const.MAX_PHASE
 
     @property
@@ -76,8 +76,7 @@ class Sword(pygame.sprite.Sprite):
             self.active = True
 
         if self.active and self.knight.alive:
-            # phase goes from max to min because
-            # it counts positive from CCW
+            # 相位从最大值到最小值，因为它从逆时针方向计数为正
             if self.phase > const.MIN_PHASE:
                 self.phase -= 1
                 self.knight.attacking = True

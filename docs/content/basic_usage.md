@@ -1,28 +1,28 @@
 ---
 title: API
 ---
-# Basic Usage
+# 基本用法
 
-## Installation
+## 安装
 
-To install the base PettingZoo library: `pip install pettingzoo`.
+安装 PettingZoo 基础库：`pip install pettingzoo`。
 
-This does not include dependencies for all families of environments (some environments can be problematic to install on certain systems).
+这不包括所有环境族的依赖项（某些环境在特定系统上可能难以安装）。
 
-To install the dependencies for one family, use `pip install 'pettingzoo[atari]'`, or use `pip install 'pettingzoo[all]'` to install all dependencies.
+要安装某个环境族的依赖项，使用 `pip install 'pettingzoo[atari]'`，或使用 `pip install 'pettingzoo[all]'` 安装所有依赖项。
 
-We support Python 3.8, 3.9, 3.10 and 3.11 on Linux and macOS. We will accept PRs related to Windows, but do not officially support it.
+我们支持 Linux 和 macOS 上的 Python 3.8、3.9、3.10 和 3.11。我们会接受与 Windows 相关的 PR，但不官方支持它。
 
-## Initializing Environments
+## 初始化环境
 
-Using environments in PettingZoo is very similar to using them in Gymnasium. You initialize an environment via:
+在 PettingZoo 中使用环境与在 Gymnasium 中使用非常相似。你可以通过以下方式初始化环境：
 
 ``` python
 from pettingzoo.butterfly import pistonball_v6
 env = pistonball_v6.env()
 ```
 
-Environments are generally highly configurable via arguments at creation, i.e.:
+环境通常可以在创建时通过参数进行高度配置，例如：
 
 ``` python
 from pettingzoo.butterfly import cooperative_pong_v5
@@ -31,9 +31,9 @@ cooperative_pong_v5.env(ball_speed=18, left_paddle_speed=25,
 right_paddle_speed=25, cake_paddle=True, max_cycles=900, bounce_randomness=False)
 ```
 
-## Interacting With Environments
+## 与环境交互
 
-Environments can be interacted with using a similar interface to Gymnasium:
+与环境的交互接口类似于 Gymnasium：
 
 ``` python
 from pettingzoo.butterfly import cooperative_pong_v5
@@ -47,86 +47,86 @@ for agent in env.agent_iter():
     if termination or truncation:
         action = None
     else:
-        # this is where you would insert your policy
+        # 这里是你插入策略的地方
         action = env.action_space(agent).sample()
 
     env.step(action)
 env.close()
 ```
 
-The commonly used methods are:
+常用的方法有：
 
-`agent_iter(max_iter=2**63)` returns an iterator that yields the current agent of the environment. It terminates when all agents in the environment are done or when `max_iter` (steps have been executed).
+`agent_iter(max_iter=2**63)` 返回一个迭代器，产生环境中当前的智能体。当环境中的所有智能体都完成或执行了 `max_iter` 步骤时终止。
 
-`last(observe=True)` returns observation, reward, done, and info for the agent currently able to act. The returned reward is the cumulative reward that the agent has received since it last acted. If `observe` is set to False, the observation will not be computed, and None will be returned in its place. Note that a single agent being done does not imply the environment is done.
+`last(observe=True)` 返回当前可以行动的智能体的观察、奖励、完成状态和信息。返回的奖励是该智能体自上次行动以来累积的奖励。如果 `observe` 设置为 False，则不会计算观察值，而是返回 None。注意，单个智能体完成并不意味着环境完成。
 
-`reset()` resets the environment and sets it up for use when called the first time. This method must be called before any other method.
+`reset()` 重置环境并在首次调用时设置它以供使用。在使用任何其他方法之前必须调用此方法。
 
-`step(action)` takes and executes the action of the agent in the environment, automatically switches control to the next agent.
+`step(action)` 接收并执行智能体在环境中的动作，自动将控制权切换到下一个智能体。
 
-## Additional Environment API
+## 额外的环境 API
 
-PettingZoo models games as *Agent Environment Cycle* (AEC) games, and thus can support any game multi-agent RL can consider, allowing for fantastically weird cases. Because of this, our API includes lower level functions and attributes that you probably won't need but are very important when you do. Their functionality is used to implement the high-level functions above though, so including them is just a matter of code factoring.
+PettingZoo 将游戏建模为*智能体环境循环*（AEC）游戏，因此可以支持多智能体强化学习能考虑的任何游戏，允许出现奇妙的情况。因此，我们的 API 包含了你可能不需要但在需要时非常重要的低级函数和属性。它们的功能用于实现上述高级函数，所以包含它们只是代码组织的问题。
 
-`agents`: A list of the names of all current agents, typically integers. These may be changed as an environment progresses (i.e. agents can be added or removed).
+`agents`：所有当前智能体的名称列表，通常是整数。这些可能会随着环境的进展而改变（即可以添加或删除智能体）。
 
-`num_agents`: The length of the agents list.
+`num_agents`：agents 列表的长度。
 
-`agent_selection` an attribute of the environment corresponding to the currently selected agent that an action can be taken for.
+`agent_selection` 环境的一个属性，对应于当前可以执行动作的选定智能体。
 
-`observation_space(agent)` a function that retrieves the observation space for a particular agent. This space should never change for a particular agent ID.
+`observation_space(agent)` 一个函数，用于获取特定智能体的观察空间。对于特定的智能体 ID，这个空间永远不应该改变。
 
-`action_space(agent)` a function that retrieves the action space for a particular agent. This space should never change for a particular agent ID.
+`action_space(agent)` 一个函数，用于获取特定智能体的动作空间。对于特定的智能体 ID，这个空间永远不应该改变。
 
-`terminations`: A dict of the termination state of every current agent at the time called, keyed by name. `last()` accesses this attribute. Note that agents can be added or removed from this dict. The returned dict looks like:
+`terminations`：一个字典，包含调用时每个当前智能体的终止状态，以名称为键。`last()` 访问此属性。注意，可以从此字典中添加或删除智能体。返回的字典如下所示：
 
-`terminations = {0:[first agent's termination state], 1:[second agent's termination state] ... n-1:[nth agent's termination state]}`
+`terminations = {0:[第一个智能体的终止状态], 1:[第二个智能体的终止状态] ... n-1:[第n个智能体的终止状态]}`
 
-`truncations`: A dict of the truncation state of every current agent at the time called, keyed by name. `last()` accesses this attribute. Note that agents can be added or removed from this dict. The returned dict looks like:
+`truncations`：一个字典，包含调用时每个当前智能体的截断状态，以名称为键。`last()` 访问此属性。注意，可以从此字典中添加或删除智能体。返回的字典如下所示：
 
-`truncations = {0:[first agent's truncation state], 1:[second agent's truncation state] ... n-1:[nth agent's truncation state]}`
+`truncations = {0:[第一个智能体的截断状态], 1:[第二个智能体的截断状态] ... n-1:[第n个智能体的截断状态]}`
 
-`infos`: A dict of info for each current agent, keyed by name. Each agent's info is also a dict. Note that agents can be added or removed from this attribute. `last()` accesses this attribute. The returned dict looks like:
+`infos`：一个字典，包含每个当前智能体的信息，以名称为键。每个智能体的信息也是一个字典。注意，可以从此属性中添加或删除智能体。`last()` 访问此属性。返回的字典如下所示：
 
-`infos = {0:[first agent's info], 1:[second agent's info] ... n-1:[nth agent's info]}`
+`infos = {0:[第一个智能体的信息], 1:[第二个智能体的信息] ... n-1:[第n个智能体的信息]}`
 
-`observe(agent)`: Returns the observation an agent currently can make. `last()` calls this function.
+`observe(agent)`：返回智能体当前可以做出的观察。`last()` 调用此函数。
 
-`rewards`: A dict of the rewards of every current agent at the time called, keyed by name. Rewards the instantaneous reward generated after the last step. Note that agents can be added or removed from this attribute. `last()` does not directly access this attribute, rather the returned reward is stored in an internal variable. The rewards structure looks like:
+`rewards`：一个字典，包含调用时每个当前智能体的奖励，以名称为键。奖励是上一步后生成的即时奖励。注意，可以从此属性中添加或删除智能体。`last()` 不直接访问此属性，而是将返回的奖励存储在内部变量中。奖励结构如下所示：
 
-`{0:[first agent's reward], 1:[second agent's reward] ... n-1:[nth agent's reward]}`
+`{0:[第一个智能体的奖励], 1:[第二个智能体的奖励] ... n-1:[第n个智能体的奖励]}`
 
-`seed(seed=None)`: Reseeds the environment. `reset()` must be called after `seed()`, and before `step()`.
+`seed(seed=None)`：重新设置环境的随机种子。必须在 `seed()` 之后调用 `reset()`，并在 `step()` 之前调用。
 
-`render()`: Returns a rendered frame from the environment using render mode specified at initialization. In the case render mode is`'rgb_array'`, returns a numpy array, while with `'ansi'` returns the strings printed. There is no need to call `render()` with `human` mode.
+`render()`：使用初始化时指定的渲染模式返回环境中的渲染帧。在渲染模式为 `'rgb_array'` 的情况下，返回一个 numpy 数组，而在 `'ansi'` 模式下返回打印的字符串。在 `human` 模式下不需要调用 `render()`。
 
-`close()`: Closes the rendering window.
+`close()`：关闭渲染窗口。
 
-### Optional API Components
+### 可选的 API 组件
 
-While not required by the base API, most downstream wrappers and utilities depend on the following attributes and methods, and they should be added to new environments except in special circumstances where adding one or more is not possible.
+虽然基础 API 不要求，但大多数下游包装器和工具依赖于以下属性和方法，除非在特殊情况下无法添加一个或多个，否则应该将它们添加到新环境中。
 
-`possible_agents`: A list of all possible_agents the environment could generate. Equivalent to the list of agents in the observation and action spaces. This cannot be changed through play or resetting.
+`possible_agents`：环境可能生成的所有可能智能体的列表。等同于观察和动作空间中的智能体列表。这不能通过游戏或重置来改变。
 
-`max_num_agents`: The length of the possible_agents list.
+`max_num_agents`：possible_agents 列表的长度。
 
-`observation_spaces`: A dict of the observation spaces of every agent, keyed by name. This cannot be changed through play or resetting.
+`observation_spaces`：每个智能体的观察空间字典，以名称为键。这不能通过游戏或重置来改变。
 
-`action_spaces`: A dict of the action spaces of every agent, keyed by name. This cannot be changed through play or resetting.
+`action_spaces`：每个智能体的动作空间字典，以名称为键。这不能通过游戏或重置来改变。
 
-`state()`: Returns a global observation of the current state of the environment. Not all environments will support this feature.
+`state()`：返回环境当前状态的全局观察。不是所有环境都支持此功能。
 
-`state_space`: The space of a global observation of the environment. Not all environments will support this feature.
+`state_space`：环境的全局观察空间。不是所有环境都支持此功能。
 
-## Notable Idioms
+## 重要用法
 
-### Checking if the entire environment is done
+### 检查整个环境是否完成
 
-When an agent is terminated or truncated, it's removed from `agents`, so when the environments done `agents` will be an empty list. This means `not env.agents` is a simple condition for the environment being done.
+当智能体终止或截断时，它会从 `agents` 中移除，所以当环境完成时 `agents` 将是一个空列表。这意味着 `not env.agents` 是环境完成的简单条件。
 
-### Unwrapping an environment
+### 解包环境
 
-If you have a wrapped environment, and you want to get the unwrapped environment underneath all the layers of wrappers (so that you can manually call a function or change some underlying aspect of the environment), you can use the `.unwrapped` attribute. If the environment is already a base environment, the `.unwrapped` attribute will just return itself.
+如果你有一个包装过的环境，想要获取所有包装层下面的未包装环境（以便手动调用函数或更改环境的某些基本方面），你可以使用 `.unwrapped` 属性。如果环境已经是基础环境，`.unwrapped` 属性将只返回它自己。
 
 ``` python
 from pettingzoo.butterfly import knights_archers_zombies_v10
@@ -134,20 +134,19 @@ from pettingzoo.butterfly import knights_archers_zombies_v10
 base_env = knights_archers_zombies_v10.env().unwrapped
 ```
 
-### Variable Numbers of Agents (Death)
+### 可变数量的智能体（死亡）
 
-Agents can die and generate during the course of an environment. If an agent dies, then its entry in the `terminated` dictionary is set to `True`, it become the next selected agent (or after another agent that is also terminated or truncated), and the action it takes is required to be `None`. After this vacuous step is taken, the agent will be removed from `agents` and other changeable attributes. Agent generation can just be done with appending it to `agents` and the other changeable attributes (with it already being in the possible agents and action/observation spaces), and transitioning to it at some point with agent_iter.
+智能体可以在环境过程中死亡和生成。如果智能体死亡，则其在 `terminated` 字典中的条目被设置为 `True`，它成为下一个选定的智能体（或在另一个也终止或截断的智能体之后），并且它采取的动作必须是 `None`。在采取这个空动作之后，智能体将从 `agents` 和其他可变属性中移除。智能体生成可以通过将其附加到 `agents` 和其他可变属性（它已经在可能的智能体和动作/观察空间中），并在某个时点用 agent_iter 转换到它来完成。
 
-### Environment as an Agent
+### 环境作为智能体
 
-In certain cases, separating agent from environment actions is helpful for studying. This can be done by treating the environment as an agent. We encourage calling the environment actor `env` in env.agents, and having it take `None` as an action.
+在某些情况下，将智能体动作与环境动作分开对研究有帮助。这可以通过将环境视为智能体来实现。我们建议在 env.agents 中将环境参与者称为 `env`，并让它采取 `None` 作为动作。
 
+## 原始环境
 
-## Raw Environments
-
-Environments are by default wrapped in a handful of lightweight wrappers that handle error messages and ensure reasonable behavior given incorrect usage (i.e. playing illegal moves or stepping before resetting). However, these add a very small amount of overhead. If you want to create an environment without them, you can do so by using the `raw_env()` constructor contained within each module:
+环境默认包装在一些轻量级包装器中，这些包装器处理错误消息并确保在不正确使用（即执行非法移动或在重置前进行步骤）时的合理行为。但是，这些会增加很小的开销。如果你想创建一个没有这些包装器的环境，可以使用每个模块中包含的 `raw_env()` 构造函数：
 
 ``` python
-environment_parameters = {}  # any parameters to pass to the environment
+environment_parameters = {}  # 要传递给环境的任何参数
 env = knights_archers_zombies_v10.raw_env(**environment_parameters)
 ```

@@ -1,73 +1,73 @@
 # noqa: D212, D415
 """
-# Othello
+# 奥赛罗（Othello）
 
 ```{figure} atari_othello.gif
 :width: 140px
 :name: othello
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import othello_v3` |
+| 导入               | `from pettingzoo.atari import othello_v3` |
 |----------------------|-------------------------------------------|
-| Actions              | Discrete                                  |
-| Parallel API         | Yes                                       |
-| Manual Control       | No                                        |
-| Agents               | `agents= ['first_0', 'second_0']`         |
-| Agents               | 2                                         |
-| Action Shape         | (1,)                                      |
-| Action Values        | [0,9]                                     |
-| Observation Shape    | (210, 160, 3)                             |
-| Observation Values   | (0,255)                                   |
+| 动作类型           | 离散                                      |
+| 并行 API          | 支持                                       |
+| 手动控制          | 不支持                                    |
+| 智能体            | `agents= ['first_0', 'second_0']`         |
+| 智能体数量        | 2                                         |
+| 动作形状          | (1,)                                      |
+| 动作值范围        | [0,9]                                     |
+| 观察形状          | (210, 160, 3)                             |
+| 观察值范围        | (0,255)                                   |
 
 
-The classic board game of long term strategy.
+经典的长期策略棋盘游戏。
 
-The goal is to flip over your opponents pieces. You can flip over your opponent's pieces (changing them to your color) by placing a piece in a row or diagonal which traps your opponents pieces between your own. You must capture at least one piece each turn
-([othello rules](https://www.mastersofgames.com/rules/reversi-othello-rules.htm)).
+目标是翻转对手的棋子。你可以通过在一行或对角线上放置一个棋子来翻转对手的棋子（将它们变成你的颜色），这样可以将对手的棋子夹在你自己的棋子之间。每回合你必须至少翻转一个棋子
+（[奥赛罗规则](https://www.mastersofgames.com/rules/reversi-othello-rules.htm)）。
 
-Note that it is known that the greedy heuristic of maximizing the number of pieces you have at any given time is a very poor heuristic, making learning more interesting.
+注意，众所周知，在任何时候最大化己方棋子数量的贪婪策略是一个非常糟糕的策略，这使得学习变得更有趣。
 
-To place a piece, one must move the cursor to a valid location on the map and hit fire. The controls are fairly sticky, meaning actions need to be repeated for awhile before they register.
+要放置一个棋子，必须将光标移动到棋盘上的有效位置并按下开火键。控制有一定的延迟，这意味着需要重复一段时间的动作才能生效。
 
-The score is the number of pieces you have on the board. The reward given is the difference is relative reward, so if you flip over 5 pieces of your opponent one turn, you get +6 reward and your opponent gets -6 reward, because you have 6 new pieces (the one you placed plus the 5 you flipped over).
+分数是你在棋盘上的棋子数量。给出的奖励是相对奖励，所以如果你在一回合中翻转了对手的 5 个棋子，你会得到 +6 奖励，你的对手会得到 -6 奖励，因为你有 6 个新棋子（你放置的 1 个加上你翻转的 5 个）。
 
-Note that following this reward greedily is known to be a bad long-term strategy, so in order to successfully solve this game, you must think long term.
+注意，贪婪地追求这种奖励是一个糟糕的长期策略，所以为了成功解决这个游戏，你必须进行长期思考。
 
-When one player cannot move, the tokens on both sides are tallied, and the player with the most tokens wins! (receives +1 reward, and their opponent -1).
+当一个玩家无法移动时，双方的棋子会被计数，拥有最多棋子的玩家获胜！（获得 +1 奖励，对手获得 -1 奖励）。
 
-This is a timed game: if a player does not take a turn after 10 seconds, then that player is rewarded -1 points, their opponent is rewarded nothing, and the timer resets. This prevents one player from indefinitely stalling the game, but also means it is no longer a purely zero sum game.
+这是一个计时游戏：如果一个玩家在 10 秒后还没有行动，那么该玩家将被扣除 1 分，对手不会得到任何奖励，计时器重置。这可以防止一个玩家无限期地拖延游戏，但也意味着这不再是一个纯零和游戏。
 
-[Official othello manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=335)
+[官方奥赛罗手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=335)
 
-#### Environment parameters
+#### 环境参数
 
-Environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari) .
+环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-### Action Space (Minimal)
+### 动作空间（最小）
 
-In any given turn, an agent can choose from one of 10 actions.
+在任何给定回合中，智能体可以从 10 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
-| 6         | Move upright |
-| 7         | Move upleft |
-| 8         | Move downright |
-| 9         | Move downleft |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
+| 6         | 向右上移动 |
+| 7         | 向左上移动 |
+| 8         | 向右下移动 |
+| 9         | 向左下移动 |
 
-### Version History
+### 版本历史
 
-* v3: Minimal Action Space (1.18.0)
-* v2: Breaking changes to entire API (1.4.0)
-* v1: Fixed othello auto reset issue (1.2.1)
-* v0: Initial versions release (1.0.0)
+* v3：最小动作空间 (1.18.0)
+* v2：对整个 API 进行重大更改 (1.4.0)
+* v1：修复了奥赛罗自动重置问题 (1.2.1)
+* v0：初始版本发布 (1.0.0)
 
 
 """

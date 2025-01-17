@@ -1,66 +1,66 @@
 # noqa: D212, D415
 """
-# Basketball Pong
+# 篮球乒乓球（Basketball Pong）
 
 ```{figure} atari_basketball_pong.gif
 :width: 140px
 :name: basketball_pong
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import             | `from pettingzoo.atari import basketball_pong_v3` |
+| 导入               | `from pettingzoo.atari import basketball_pong_v3` |
 |--------------------|---------------------------------------------------|
-| Actions            | Discrete                                          |
-| Parallel API       | Yes                                               |
-| Manual Control     | No                                                |
-| Agents             | `agents= ['first_0', 'second_0']`                 |
-| Agents             | 2                                                 |
-| Action Shape       | (1,)                                              |
-| Action Values      | [0,5]                                             |
-| Observation Shape  | (210, 160, 3)                                     |
-| Observation Values | (0,255)                                           |
+| 动作类型           | 离散                                              |
+| 并行 API          | 支持                                              |
+| 手动控制          | 不支持                                            |
+| 智能体            | `agents= ['first_0', 'second_0']`                 |
+| 智能体数量        | 2                                                 |
+| 动作形状          | (1,)                                              |
+| 动作值范围        | [0,5]                                             |
+| 观察形状          | (210, 160, 3)                                     |
+| 观察值范围        | (0,255)                                           |
 
 
-A competitive game of control.
+这是一个竞争性的控制游戏。
 
-Try to get the ball in your opponents hoop. But you cannot move on their side of the court. Scoring a point also gives your opponent -1 reward.
+尝试将球投入对手的篮筐。但你不能移动到对方的半场。得分会给你的对手 -1 分奖励。
 
-Serves are timed: If the player does not serve within 2 seconds of receiving the ball, they receive -1 points, and the timer resets. This prevents one player from indefinitely stalling the game, but also means it is no longer a purely zero sum game.
+发球是有时间限制的：如果玩家在收到球后 2 秒内没有发球，他们将获得 -1 分，计时器重置。这可以防止一名玩家无限期地拖延游戏，但也意味着这不再是一个纯零和游戏。
 
 
-[Official Video Olympics manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=587)
+[官方 Video Olympics 手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=587)
 
-#### Environment parameters
+#### 环境参数
 
-Some environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari).
+一些环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-Parameters specific to Basketball_Pong are
+Basketball_Pong 特有的参数如下：
 
 ``` python
 basketball_pong_v3.env(num_players=2)
 ```
 
-`num_players`:  Number of players (must be either 2 or 4)
+`num_players`：玩家数量（必须是 2 或 4）
 
-### Action Space (Minimal)
+### 动作空间（最小）
 
-In any given turn, an agent can choose from one of 6 actions.
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
+在任何给定回合中，智能体可以从 6 个动作中选择一个。
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 发射    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
 
-### Version History
+### 版本历史
 
-* v3: Minimal action space (1.18.0)
-* v2: No action timer (1.9.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v3：最小动作空间 (1.18.0)
+* v2：取消动作计时器 (1.9.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v0：初始版本发布 (1.0.0)
 
 """
 
@@ -76,7 +76,7 @@ from pettingzoo.atari.base_atari_env import (
 
 
 def raw_env(num_players=2, **kwargs):
-    assert num_players == 2 or num_players == 4, "pong only supports 2 or 4 players"
+    assert num_players == 2 or num_players == 4, "乒乓球游戏只支持 2 或 4 名玩家"
     mode_mapping = {2: 45, 4: 49}
     mode = mode_mapping[num_players]
     name = os.path.basename(__file__).split(".")[0]

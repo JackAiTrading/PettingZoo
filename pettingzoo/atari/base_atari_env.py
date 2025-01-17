@@ -48,10 +48,9 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         render_mode=None,
         auto_rom_install_path=None,
     ):
-        """Initializes the `ParallelAtariEnv` class.
+        """初始化 `ParallelAtariEnv` 类。
 
-        Frameskip should be either a tuple (indicating a random range to
-        choose from, with the top value exclude), or an int.
+        帧跳过（frameskip）应该是一个元组（表示要从中选择的随机范围，顶部值被排除）或一个整数。
         """
         EzPickle.__init__(
             self,
@@ -71,7 +70,7 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
             "ram",
             "rgb_image",
             "grayscale_image",
-        ), "obs_type must  either be 'ram' or 'rgb_image' or 'grayscale_image'"
+        ), "obs_type 必须是 'ram' 或 'rgb_image' 或 'grayscale_image'"
         self.obs_type = obs_type
         self.full_action_space = full_action_space
         self.num_players = num_players
@@ -95,20 +94,20 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         else:
             start = Path(auto_rom_install_path).resolve()
 
-        # start looking in local directory
+        # 开始在本地目录中查找
         final = start / f"{game}.bin"
         if not final.exists():
-            # if that doesn't work, look in 'roms'
+            # 如果不行，在 'roms' 中查找
             final = start / "roms" / f"{game}.bin"
 
         if not final.exists():
-            # use old AutoROM install path as backup
+            # 使用旧的 AutoROM 安装路径作为备份
             final = start / "ROM" / game / f"{game}.bin"
 
         if not final.exists():
             raise OSError(
-                f"rom {game} is not installed. Please install roms using AutoROM tool (https://github.com/Farama-Foundation/AutoROM) "
-                "or specify and double-check the path to your Atari rom using the `rom_path` argument."
+                f"rom {game} 未安装。请使用 AutoROM 工具安装 roms（https://github.com/Farama-Foundation/AutoROM）"
+                "或使用 `rom_path` 参数指定并仔细检查 Atari rom 的路径。"
             )
 
         self.rom_path = str(final)
@@ -122,7 +121,7 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
             mode = mode_num
             assert (
                 mode in all_modes
-            ), f"mode_num parameter is wrong. Mode {mode_num} selected, only {list(all_modes)} modes are supported"
+            ), f"mode_num 参数错误。选择了模式 {mode_num}，但只支持 {list(all_modes)} 这些模式"
 
         self.mode = mode
         self.ale.setMode(self.mode)
@@ -243,13 +242,13 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
     def render(self):
         if self.render_mode is None:
             gymnasium.logger.warn(
-                "You are calling render method without specifying any render mode."
+                "您正在调用渲染方法，但没有指定任何渲染模式。"
             )
             return
 
         assert (
             self.render_mode in self.metadata["render_modes"]
-        ), f"{self.render_mode} is not a valid render mode"
+        ), f"{self.render_mode} 不是有效的渲染模式"
         (screen_width, screen_height) = self.ale.getScreenDims()
         image = self.ale.getScreenRGB()
         if self.render_mode == "human":
@@ -280,11 +279,11 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
             self._screen = None
 
     def clone_state(self):
-        """Clone emulator state w/o system state.
+        """克隆模拟器状态（不包括系统状态）。
 
-        Restoring this state will *not* give an identical environment.
-        For complete cloning and restoring of the full state,
-        see `{clone,restore}_full_state()`.
+        恢复此状态将*不会*得到相同的环境。
+        要完整克隆和恢复完整状态，
+        请参见 `{clone,restore}_full_state()`。
         """
         state_ref = self.ale.cloneState()
         state = self.ale.encodeState(state_ref)
@@ -292,15 +291,15 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         return state
 
     def restore_state(self, state):
-        """Restore emulator state w/o system state."""
+        """恢复模拟器状态（不包括系统状态）。"""
         state_ref = self.ale.decodeState(state)
         self.ale.restoreState(state_ref)
         self.ale.deleteState(state_ref)
 
     def clone_full_state(self):
-        """Clone emulator state w/ system state including pseudorandomness.
+        """克隆模拟器状态（包括系统状态和伪随机性）。
 
-        Restoring this state will give an identical environment.
+        恢复此状态将得到相同的环境。
         """
         state_ref = self.ale.cloneSystemState()
         state = self.ale.encodeState(state_ref)
@@ -308,7 +307,7 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         return state
 
     def restore_full_state(self, state):
-        """Restore emulator state w/ system state including pseudorandomness."""
+        """恢复模拟器状态（包括系统状态和伪随机性）。"""
         state_ref = self.ale.decodeState(state)
         self.ale.restoreSystemState(state_ref)
         self.ale.deleteState(state_ref)

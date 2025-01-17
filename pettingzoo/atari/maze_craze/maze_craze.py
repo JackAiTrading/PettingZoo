@@ -1,85 +1,85 @@
 # noqa: D212, D415
 """
-# Maze Craze
+# 迷宫狂热（Maze Craze）
 
 ```{figure} atari_maze_craze.gif
 :width: 140px
 :name: maze_craze
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import maze_craze_v3` |
+| 导入               | `from pettingzoo.atari import maze_craze_v3` |
 |----------------------|----------------------------------------------|
-| Actions              | Discrete                                     |
-| Parallel API         | Yes                                          |
-| Manual Control       | No                                           |
-| Agents               | `agents= ['first_0', 'second_0']`            |
-| Agents               | 2                                            |
-| Action Shape         | (1,)                                         |
-| Action Values        | [0,17]                                       |
-| Observation Shape    | (250, 160, 3)                                |
-| Observation Values   | (0,255)                                      |
+| 动作类型           | 离散                                         |
+| 并行 API          | 支持                                          |
+| 手动控制          | 不支持                                       |
+| 智能体            | `agents= ['first_0', 'second_0']`            |
+| 智能体数量        | 2                                            |
+| 动作形状          | (1,)                                         |
+| 动作值范围        | [0,17]                                       |
+| 观察形状          | (250, 160, 3)                                |
+| 观察值范围        | (0,255)                                      |
 
 
-A competitive game of memory and planning!
+一个考验记忆力和规划能力的竞技游戏！
 
-Its a race to leave the maze. There are 3 main versions of the game.
+这是一场离开迷宫的竞赛。游戏有 3 个主要版本。
 
-1. **Race**: A basic version of the game. First to leave the maze wins
-2. **Robbers**: There are 2 robbers randomly traversing the maze. If you are captured by the robbers, you lose the game, and receive -1 reward, and will be done. The player that has not been captured will not receive any reward, but they can still exit the maze and win, scoring +1 reward.
-3. **Capture**: Each player have to capture all 3 robbers before you are able to exit the maze. Additionally, you can confuse your opponent (and yourself, if you are not careful!) by creating a block that looks identical to a wall in the maze, but all players can pass through it. You can only
-create one wall at a time, when you create a new one, the old one disappears.
+1. **竞赛**：游戏的基本版本。第一个离开迷宫的玩家获胜
+2. **强盗**：有 2 个强盗在迷宫中随机移动。如果你被强盗抓住，你就输了，获得 -1 奖励，并且游戏结束。没有被抓住的玩家不会获得任何奖励，但他们仍然可以离开迷宫并获胜，得到 +1 奖励。
+3. **捕获**：每个玩家必须在能够离开迷宫之前捕获所有 3 个强盗。此外，你可以通过创建一个看起来与迷宫墙壁相同的障碍物来迷惑你的对手（如果你不小心，也会迷惑你自己！），所有玩家都可以穿过这个障碍物。你一次只能
+创建一面墙，当你创建新的墙时，旧的墙会消失。
 
-The first player to leave the maze scores +1, the other player scores -1 (unless that other player has already been captured in Robbers mode).
+第一个离开迷宫的玩家得到 +1 分，另一个玩家得到 -1 分（除非该玩家在强盗模式下已经被抓住）。
 
-[Official Maze craze manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=295). Note that the table of modes has some inaccuracies. In particular, game mode 12 has Blockade enabled, not mode 11.
+[官方迷宫狂热手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=295)。注意，模式表中有一些不准确的地方。特别是，游戏模式 12 启用了障碍物功能，而不是模式 11。
 
-#### Environment parameters
+#### 环境参数
 
-Some environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari).
+一些环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-Parameters specific to Maze Craze are
+迷宫狂热特有的参数如下：
 
 ``` python
 maze_craze_v3.env(game_version="robbers", visibilty_level=0)
 ```
 
-`game_version`:  Possibilities are "robbers", "race", "capture", corresponding to the 3 game versions described above
+`game_version`：可选项为 "robbers"、"race"、"capture"，对应上述 3 个游戏版本
 
-`visibilty_level`:  A number from 0-3. Set to 0 for 100% visible map, and 3 for 0% visibility map.
+`visibilty_level`：一个从 0-3 的数字。设置为 0 表示地图 100% 可见，3 表示地图 0% 可见。
 
-### Action Space
+### 动作空间
 
-In any given turn, an agent can choose from one of 18 actions.
+在任何给定回合中，智能体可以从 18 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
-| 6         | Move upright |
-| 7         | Move upleft |
-| 8         | Move downright |
-| 9         | Move downleft |
-| 10        | Fire up |
-| 11        | Fire right |
-| 12        | Fire left |
-| 13        | Fire down |
-| 14        | Fire upright |
-| 15        | Fire upleft |
-| 16        | Fire downright |
-| 17        | Fire downleft |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
+| 6         | 向右上移动 |
+| 7         | 向左上移动 |
+| 8         | 向右下移动 |
+| 9         | 向左下移动 |
+| 10        | 向上开火 |
+| 11        | 向右开火 |
+| 12        | 向左开火 |
+| 13        | 向下开火 |
+| 14        | 向右上开火 |
+| 15        | 向左上开火 |
+| 16        | 向右下开火 |
+| 17        | 向左下开火 |
 
-### Version History
+### 版本历史
 
-* v3: Minimal Action Space (1.18.0)
-* v2: Breaking changes to entire API (1.4.0)
-* v1: Fixes to how all environments handle premature death (1.3.0)
-* v0: Initial versions release (1.0.0)
+* v3：最小动作空间 (1.18.0)
+* v2：对整个 API 进行重大更改 (1.4.0)
+* v1：修复了所有环境处理过早死亡的方式 (1.3.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """

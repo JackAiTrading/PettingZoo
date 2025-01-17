@@ -1,86 +1,86 @@
 # noqa: D212, D415
 """
-# Combat: Plane
+# 空战：飞机（Combat: Plane）
 
 ```{figure} atari_combat_plane.gif
 :width: 140px
 :name: combat_plane
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import             | `from pettingzoo.atari import combat_jet_v1` |
+| 导入               | `from pettingzoo.atari import combat_jet_v1` |
 |--------------------|----------------------------------------------|
-| Actions            | Discrete                                     |
-| Parallel API       | Yes                                          |
-| Manual Control     | No                                           |
-| Agents             | `agents= ['first_0', 'second_0']`            |
-| Agents             | 2                                            |
-| Action Shape       | (1,)                                         |
-| Action Values      | [0,17]                                       |
-| Observation Shape  | (256, 160, 3)                                |
-| Observation Values | (0,255)                                      |
+| 动作类型           | 离散                                         |
+| 并行 API          | 支持                                          |
+| 手动控制          | 不支持                                        |
+| 智能体            | `agents= ['first_0', 'second_0']`            |
+| 智能体数量        | 2                                            |
+| 动作形状          | (1,)                                         |
+| 动作值范围        | [0,17]                                       |
+| 观察形状          | (256, 160, 3)                                |
+| 观察值范围        | (0,255)                                      |
 
 
-*Combat*'s plane mode is an adversarial game where timing,
-positioning, and keeping track of your opponent's complex
-movements are key.
+*空战*的飞机模式是一个对抗性游戏，时机掌握、
+位置选择和追踪对手的复杂
+动作是关键。
 
-The players fly around the map, able to control flight direction
-but not your speed.
+玩家在地图上飞行，可以控制飞行方向
+但不能控制速度。
 
-When your opponent is hit by your bullet,
-you score a point.
+当你的子弹击中对手时，
+你得一分。
 
-Whenever you score a point, you are rewarded +1 and your opponent is penalized -1.
+每当你得分时，你获得 +1 奖励，你的对手受到 -1 惩罚。
 
-[Official Combat manual](https://atariage.com/manual_html_page.php?SoftwareID=935)
+[官方空战游戏手册](https://atariage.com/manual_html_page.php?SoftwareID=935)
 
 
-#### Environment parameters
+#### 环境参数
 
-Some environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari).
+一些环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-Parameters specific to combat-plane are
+combat-plane 特有的参数如下：
 
 ``` python
 combat_plane_v2.env(game_version="jet", guided_missile=True)
 ```
 
-`game_version`:  Accepted arguments are "jet" or "bi-plane". Whether the plane is a bi-plane or a jet. (Jets move faster)
+`game_version`：接受的参数为 "jet" 或 "bi-plane"。决定飞机是双翼机还是喷气式飞机。（喷气式飞机移动更快）
 
-`guided_missile`:  Whether the missile can be directed after being fired, or whether it is on a fixed path.
+`guided_missile`：导弹发射后是否可以被引导，或者是否沿固定路径飞行。
 
-### Action Space
+### 动作空间
 
-In any given turn, an agent can choose from one of 18 actions.
+在任何给定回合中，智能体可以从 18 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
-| 6         | Move upright |
-| 7         | Move upleft |
-| 8         | Move downright |
-| 9         | Move downleft |
-| 10        | Fire up |
-| 11        | Fire right |
-| 12        | Fire left |
-| 13        | Fire down |
-| 14        | Fire upright |
-| 15        | Fire upleft |
-| 16        | Fire downright |
-| 17        | Fire downleft |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
+| 6         | 向右上移动 |
+| 7         | 向左上移动 |
+| 8         | 向右下移动 |
+| 9         | 向左下移动 |
+| 10        | 向上开火 |
+| 11        | 向右开火 |
+| 12        | 向左开火 |
+| 13        | 向下开火 |
+| 14        | 向右上开火 |
+| 15        | 向左上开火 |
+| 16        | 向右下开火 |
+| 17        | 向左下开火 |
 
-### Version History
+### 版本历史
 
-* v2: Minimal Action Space (1.18.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v2：最小动作空间 (1.18.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """
@@ -103,7 +103,7 @@ avaliable_versions = {
 def raw_env(game_version="bi-plane", guided_missile=True, **kwargs):
     assert (
         game_version in avaliable_versions
-    ), "game_version must be either 'jet' or 'bi-plane'"
+    ), "game_version 必须是 'jet' 或 'bi-plane'"
     mode = avaliable_versions[game_version] + (0 if guided_missile else 1)
     name = os.path.basename(__file__).split(".")[0]
     parent_file = glob(

@@ -1,81 +1,81 @@
 # noqa: D212, D415
 """
-# Emtombed: Cooperative
+# 活埋：合作版（Emtombed: Cooperative）
 
 ```{figure} atari_entombed_cooperative.gif
 :width: 140px
 :name: entombed_cooperative
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import entombed_cooperative_v3` |
+| 导入               | `from pettingzoo.atari import entombed_cooperative_v3` |
 |----------------------|--------------------------------------------------------|
-| Actions              | Discrete                                               |
-| Parallel API         | Yes                                                    |
-| Manual Control       | No                                                     |
-| Agents               | `agents= ['first_0', 'second_0']`                      |
-| Agents               | 2                                                      |
-| Action Shape         | (1,)                                                   |
-| Action Values        | [0,17]                                                 |
-| Observation Shape    | (210, 160, 3)                                          |
-| Observation Values   | (0,255)                                                |
-| Average Total Reward | 6.23                                                   |
+| 动作类型           | 离散                                                   |
+| 并行 API          | 支持                                                    |
+| 手动控制          | 不支持                                                 |
+| 智能体            | `agents= ['first_0', 'second_0']`                      |
+| 智能体数量        | 2                                                      |
+| 动作形状          | (1,)                                                   |
+| 动作值范围        | [0,17]                                                 |
+| 观察形状          | (210, 160, 3)                                          |
+| 观察值范围        | (0,255)                                                |
+| 平均总奖励        | 6.23                                                   |
 
 
-Entombed's cooperative version is an exploration game
-where you need to work with your teammate to make it
-as far as possible into the maze.
+活埋的合作版本是一个探索游戏，
+你需要与队友合作，尽可能深入
+迷宫。
 
-You both need to quickly navigate down a constantly generating
-maze you can only see part of. If you get stuck, you lose.
-Note you can easily find yourself in a dead-end escapable only through the use of rare power-ups.
-If players help each other by the use of these powerups, they can last longer. Note that optimal coordination requires that the agents be on opposite sides of the map, because powerups appear on one side or the other, but can be used to break through walls on both sides
-(the break is symmetric and effects both halves of the screen).
-In addition, there dangerous zombies lurking around to avoid.
+你们两个都需要快速在一个不断生成的迷宫中导航，
+而你只能看到其中的一部分。如果你被困住了，你就输了。
+注意，你很容易发现自己陷入死胡同，只能通过使用稀有的能量提升道具来逃脱。
+如果玩家通过使用这些能量提升道具互相帮助，他们可以坚持更久。注意，最佳协调要求智能体在地图的两侧，因为能量提升道具会出现在一侧或另一侧，但可以用来打破两侧的墙
+（破坏是对称的，会影响屏幕的两半）。
+此外，还有危险的僵尸潜伏在周围需要避开。
 
-The reward was designed to be identical to the single player rewards. In particular, an entombed stage is divided into 5 invisible sections. You receive reward immediately after changing sections, or after resetting the stage. Note that this means that you receive a reward when you lose a life,
-because it resets the stage, but not when you lose your last life, because the game terminates without the stage resetting.
-
-
-[Official Entombed manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=165)
+奖励的设计与单人游戏的奖励相同。具体来说，一个活埋关卡被分为 5 个不可见的区域。你在改变区域后或重置关卡后立即获得奖励。注意，这意味着当你失去一条生命时会获得奖励，
+因为它会重置关卡，但当你失去最后一条生命时不会获得奖励，因为游戏会在关卡重置之前终止。
 
 
-#### Environment parameters
+[官方活埋游戏手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=165)
 
-Environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari) .
 
-### Action Space
+#### 环境参数
 
-In any given turn, an agent can choose from one of 18 actions.
+环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
-| 6         | Move upright |
-| 7         | Move upleft |
-| 8         | Move downright |
-| 9         | Move downleft |
-| 10        | Fire up |
-| 11        | Fire right |
-| 12        | Fire left |
-| 13        | Fire down |
-| 14        | Fire upright |
-| 15        | Fire upleft |
-| 16        | Fire downright |
-| 17        | Fire downleft |
+### 动作空间
 
-### Version History
+在任何给定回合中，智能体可以从 18 个动作中选择一个。
 
-* v3: Minimal Action Space (1.18.0)
-* v2: Breaking changes to entire API, fixed Entombed rewards (1.4.0)
-* v1: Fixes to how all environments handle premature death (1.3.0)
-* v0: Initial versions release (1.0.0)
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
+| 6         | 向右上移动 |
+| 7         | 向左上移动 |
+| 8         | 向右下移动 |
+| 9         | 向左下移动 |
+| 10        | 向上开火 |
+| 11        | 向右开火 |
+| 12        | 向左开火 |
+| 13        | 向下开火 |
+| 14        | 向右上开火 |
+| 15        | 向左上开火 |
+| 16        | 向右下开火 |
+| 17        | 向左下开火 |
+
+### 版本历史
+
+* v3：最小动作空间 (1.18.0)
+* v2：对整个 API 进行重大更改，修复了活埋游戏的奖励 (1.4.0)
+* v1：修复了所有环境处理过早死亡的方式 (1.3.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """

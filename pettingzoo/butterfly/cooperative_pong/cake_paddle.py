@@ -4,7 +4,7 @@ import pygame
 class CakePaddle(pygame.sprite.Sprite):
     def __init__(self, speed=12, render_ratio=2):
         self.render_ratio = render_ratio
-        # surf is the right-most (largest) tier of the cake
+        # surf 是蛋糕的最右侧（最大）层
         self.surf = pygame.Surface((30 // render_ratio, 120 // render_ratio))
         self.rect = self.surf.get_rect()
         self.surf2 = pygame.Surface((30 // render_ratio, 80 // render_ratio))
@@ -17,7 +17,7 @@ class CakePaddle(pygame.sprite.Sprite):
         self.speed = speed
 
     def reset(self, seed=None, options=None):
-        # self.rect is set from env class
+        # self.rect 由环境类设置
         self.rect2.midright = self.rect.midleft
         self.rect3.midright = self.rect2.midleft
         self.rect4.midright = self.rect3.midleft
@@ -29,7 +29,7 @@ class CakePaddle(pygame.sprite.Sprite):
         pygame.draw.rect(screen, (255, 255, 255), self.rect4)
 
     def update(self, area, action):
-        # action: 1 - up, 2 - down
+        # 动作：1 - 向上，2 - 向下
         movepos = [0, 0]
         if action == 1:
             movepos[1] = movepos[1] - self.speed
@@ -39,13 +39,13 @@ class CakePaddle(pygame.sprite.Sprite):
         newpos = self.rect.move(movepos)
         if area.contains(newpos):
             self.rect = newpos
-            # move other rects too
+            # 同时移动其他矩形
             self.rect2 = self.rect2.move(movepos)
             self.rect3 = self.rect3.move(movepos)
             self.rect4 = self.rect4.move(movepos)
 
     def _process_collision_with_rect(self, rect, b_rect, b_speed, paddle_type):
-        # handle collision from top
+        # 处理从顶部的碰撞
         if (
             b_rect.bottom > rect.top
             and b_rect.top - b_speed[1] < rect.top
@@ -54,7 +54,7 @@ class CakePaddle(pygame.sprite.Sprite):
             b_rect.bottom = rect.top
             if b_speed[1] > 0:
                 b_speed[1] *= -1
-        # handle collision from bottom
+        # 处理从底部的碰撞
         elif (
             b_rect.top < rect.bottom
             and b_rect.bottom - b_speed[1] > rect.bottom
@@ -63,7 +63,7 @@ class CakePaddle(pygame.sprite.Sprite):
             b_rect.top = rect.bottom
             if b_speed[1] < 0:
                 b_speed[1] *= -1
-        # handle collision from left
+        # 处理从左侧的碰撞
         if b_rect.right > rect.left:
             b_rect.right = rect.left
             if b_speed[0] > 0:
@@ -71,18 +71,17 @@ class CakePaddle(pygame.sprite.Sprite):
         return True, b_rect, b_speed
 
     def process_collision(self, b_rect, b_speed, paddle_type):
-        """Returns if ball collides with paddle.
+        """返回球是否与球拍碰撞。
 
-        Args:
-            b_rect : Ball rect
-            dx, dy : Ball speed along single axis
-            b_speed : Ball speed
-            ignore paddle type
+        参数：
+            b_rect：球的矩形区域
+            b_speed：球的速度
+            忽略球拍类型
 
-        Returns:
-            is_collision: 1 if ball collides with paddle
-            b_rect: new ball rect
-            b_speed: new ball speed
+        返回：
+            is_collision：如果球与球拍碰撞则为 1
+            b_rect：新的球矩形区域
+            b_speed：新的球速度
 
         """
         if self.rect4.colliderect(b_rect):

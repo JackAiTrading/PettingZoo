@@ -1,48 +1,47 @@
 ---
-title: Environment Creation
+title: 环境创建
 ---
-# Environment Creation
+# 环境创建
 
-This documentation overviews creating new environments and relevant useful wrappers, utilities and tests included in PettingZoo designed for the creation of new environments.
+本文档概述了创建新环境以及 PettingZoo 中包含的相关有用的包装器、工具和测试，这些都是为创建新环境而设计的。
 
+我们将通过创建一个简单的石头剪刀布环境来演示，包括 [AEC](/api/aec/) 和 [Parallel](/api/parallel/) 环境的示例代码。
 
-We will walk through the creation of a simple Rock-Paper-Scissors environment, with example code for both [AEC](/api/aec/) and [Parallel](/api/parallel/) environments.
+查看我们的[自定义环境教程](/tutorials/custom_environment/index)，了解创建自定义环境的完整流程，包括复杂的环境逻辑和非法动作掩码。
 
-See our [Custom Environment Tutorial](/tutorials/custom_environment/index) for a full walkthrough on creating custom environments, including complex environment logic and illegal action masking.
+## 示例自定义环境
 
-## Example Custom Environment
-
-This is a carefully commented version of the PettingZoo rock paper scissors environment.
+这是一个经过仔细注释的 PettingZoo 石头剪刀布环境版本。
 
 ```{eval-rst}
 .. literalinclude:: ../code_examples/aec_rps.py
    :language: python
 ```
 
-To interact with your custom AEC environment, use the following code:
+要与你的自定义 AEC 环境交互，使用以下代码：
 
 ```{eval-rst}
 .. literalinclude:: ../code_examples/aec_rps_usage.py
    :language: python
 ```
 
-## Example Custom Parallel Environment
+## 示例自定义并行环境
 
 ```{eval-rst}
 .. literalinclude:: ../code_examples/parallel_rps.py
    :language: python
 ```
 
-To interact with your custom parallel environment, use the following code:
+要与你的自定义并行环境交互，使用以下代码：
 
 ```{eval-rst}
 .. literalinclude:: ../code_examples/parallel_rps_usage.py
    :language: python
 ```
 
-## Using Wrappers
+## 使用包装器
 
-A wrapper is an environment transformation that takes in an environment as input, and outputs a new environment that is similar to the input environment, but with some transformation or validation applied. PettingZoo provides [wrappers to convert environments](/api/pz_wrappers) back and forth between the AEC API and the Parallel API and a set of simple [utility wrappers](/api/pz_wrappers) which provide input validation and other convenient reusable logic. PettingZoo also includes [wrappers](/api/supersuit_wrappers) via the SuperSuit companion package (`pip install supersuit`).
+包装器是一个环境转换，它接收一个环境作为输入，并输出一个与输入环境相似但应用了某些转换或验证的新环境。PettingZoo 提供了[包装器来转换环境](/api/pz_wrappers)，在 AEC API 和并行 API 之间来回转换，以及一组简单的[实用包装器](/api/pz_wrappers)，提供输入验证和其他方便的可重用逻辑。PettingZoo 还通过 SuperSuit 配套包（`pip install supersuit`）包含了[包装器](/api/supersuit_wrappers)。
 
 ```python
 from pettingzoo.butterfly import pistonball_v6
@@ -50,45 +49,45 @@ from pettingzoo.utils import ClipOutOfBoundsWrapper
 
 env = pistonball_v6.env()
 wrapped_env = ClipOutOfBoundsWrapper(env)
-# Wrapped environments must be reset before use
+# 包装的环境在使用前必须重置
 wrapped_env.reset()
 ```
 
-## Developer Utils
+## 开发者工具
 
-The utils directory contains a few functions which are helpful for debugging environments. These are documented in the API docs.
+utils 目录包含一些对调试环境有帮助的函数。这些在 API 文档中有记录。
 
-The utils directory also contain some classes which are only helpful for developing new environments. These are documented below.
+utils 目录还包含一些只对开发新环境有帮助的类。这些记录如下。
 
-### Agent selector
+### 智能体选择器
 
-The `AgentSelector` class steps through agents in a cycle
+`AgentSelector` 类循环遍历智能体
 
-It can be used as follows to cycle through the list of agents:
+它可以用如下方式循环遍历智能体列表：
 
 ```python
 from pettingzoo.utils import AgentSelector
 agents = ["agent_1", "agent_2", "agent_3"]
 selector = AgentSelector(agents)
 agent_selection = selector.reset()
-# agent_selection will be "agent_1"
+# agent_selection 将是 "agent_1"
 for i in range(100):
     agent_selection = selector.next()
-    # will select "agent_2", "agent_3", "agent_1", "agent_2", "agent_3", ..."
+    # 将依次选择 "agent_2", "agent_3", "agent_1", "agent_2", "agent_3", ...
 ```
 
-### Deprecated Module
+### 已弃用模块
 
-The DeprecatedModule is used in PettingZoo to help guide the user away from old obsolete environment versions and toward new ones. If you wish to create a similar versioning system, this may be helpful.
+DeprecatedModule 在 PettingZoo 中用于帮助引导用户远离旧的过时环境版本，转向新版本。如果你想创建类似的版本控制系统，这可能会有帮助。
 
-For example, when the user tries to import the `knights_archers_zombies_v0` environment, they import the following variable (defined in `pettingzoo/butterfly/__init__.py`):
+例如，当用户尝试导入 `knights_archers_zombies_v0` 环境时，他们导入以下变量（定义在 `pettingzoo/butterfly/__init__.py` 中）：
 ``` python
 from pettingzoo.utils.deprecated_module import DeprecatedModule
 knights_archers_zombies_v0 = DeprecatedModule("knights_archers_zombies", "v0", "v10")
 ```
-This declaration tells the user that `knights_archers_zombies_v0` is deprecated and `knights_archers_zombies_v10` should be used instead. In particular, it gives the following error:
+这个声明告诉用户 `knights_archers_zombies_v0` 已经弃用，应该使用 `knights_archers_zombies_v10` 代替。具体来说，它会给出以下错误：
 ``` python notest
 from pettingzoo.butterfly import knights_archers_zombies_v0
 knights_archers_zombies_v0.env()
-# pettingzoo.utils.deprecated_module.DeprecatedEnv: knights_archers_zombies_v0 is now deprecated, use knights_archers_zombies_v10 instead
+# pettingzoo.utils.deprecated_module.DeprecatedEnv: knights_archers_zombies_v0 现在已弃用，请使用 knights_archers_zombies_v10 代替
 ```

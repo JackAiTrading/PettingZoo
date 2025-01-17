@@ -1,76 +1,76 @@
 # noqa: D212, D415
 """
-# Space Invaders
+# 太空侵略者（Space Invaders）
 
 ```{figure} atari_space_invaders.gif
 :width: 140px
 :name: space_invaders
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import space_invaders_v2` |
+| 导入               | `from pettingzoo.atari import space_invaders_v2` |
 |----------------------|--------------------------------------------------|
-| Actions              | Discrete                                         |
-| Parallel API         | Yes                                              |
-| Manual Control       | No                                               |
-| Agents               | `agents= ['first_0', 'second_0']`                |
-| Agents               | 2                                                |
-| Action Shape         | (1,)                                             |
-| Action Values        | [0,5]                                            |
-| Observation Shape    | (210, 160, 3)                                    |
-| Observation Values   | (0,255)                                          |
+| 动作类型           | 离散                                             |
+| 并行 API          | 支持                                              |
+| 手动控制          | 不支持                                           |
+| 智能体            | `agents= ['first_0', 'second_0']`                |
+| 智能体数量        | 2                                                |
+| 动作形状          | (1,)                                             |
+| 动作值范围        | [0,5]                                            |
+| 观察形状          | (210, 160, 3)                                    |
+| 观察值范围        | (0,255)                                          |
 
 
-Classic Atari game, but there are two ships controlled by two players that are each trying to maximize their score.
+经典的 Atari 游戏，但有两艘由两个玩家控制的飞船，每个玩家都试图最大化他们的得分。
 
-This game has a cooperative aspect where the players can choose to maximize their score by working together to clear the levels. The normal aliens are 5-30 points, depending on how high up they start, and the ship that flies across the top of the screen is worth 100 points.
+这个游戏具有合作性，玩家可以通过合作来通关以最大化他们的得分。普通外星人根据它们的起始高度可以得到 5-30 分，而在屏幕顶部飞过的飞船值 100 分。
 
-However, there is also a competitive aspect where a player receives a 200 point bonus when the other player is hit by the aliens. So sabotaging the other player somehow is a possible strategy.
+然而，游戏也有竞争性的一面，当另一个玩家被外星人击中时，玩家会获得 200 分的奖励。所以破坏另一个玩家也是一种可能的策略。
 
-The number of lives is shared between the ships, i.e. the game ends when a ship has been hit 3 times.
+飞船之间共享生命数，即当一艘飞船被击中 3 次时游戏结束。
 
-[Official Space Invaders manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=460)
+[官方太空侵略者手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=460)
 
-#### Environment parameters
+#### 环境参数
 
-Some environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari).
+一些环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-Parameters specific to Space Invaders are
+太空侵略者特有的参数如下：
 
 ``` python
 space_invaders_v2.env(alternating_control=False, moving_shields=True,
 zigzaging_bombs=False, fast_bomb=False, invisible_invaders=False)
 ```
 
-`alternating_control`:  Only one of the two players has an option to fire at one time. If you fire, your opponent can then fire. However, you can't hoard the firing ability forever, eventually, control shifts to your opponent anyways.
+`alternating_control`：每次只有两个玩家中的一个有开火选项。如果你开火，你的对手就可以开火。但是，你不能永远保持开火能力，最终控制权会转移给你的对手。
 
-`moving_shields`:  The shields move back and forth, leaving less reliable protection.
+`moving_shields`：护盾来回移动，提供的保护不太可靠。
 
-`zigzaging_bombs`:  The invader's bombs move back and forth, making them more difficult to avoid.
+`zigzaging_bombs`：入侵者的炸弹来回移动，更难避开。
 
-`fast_bomb`:  The bombs are much faster, making them more difficult to avoid.
+`fast_bomb`：炸弹速度更快，更难避开。
 
-`invisible_invaders`:  The invaders are invisible, making them more difficult to hit.
+`invisible_invaders`：入侵者是隐形的，更难击中。
 
-### Action Space (Minimal)
+### 动作空间（最小）
 
-In any given turn, an agent can choose from one of 6 actions.
+在任何给定回合中，智能体可以从 6 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
 
-### Version History
+### 版本历史
 
-* v2: Minimal Action Space (1.18.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v2：最小动作空间 (1.18.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """

@@ -32,7 +32,7 @@ class Zombie(pygame.sprite.Sprite):
 
         self.rect.y += const.ZOMBIE_Y_SPEED
 
-        # Wobbling in X-Y Direction
+        # 在 X-Y 方向上摇摆
         if self.rect.y % const.SCREEN_UNITS == 0:
             if self.rect.x > self.x_lims[0] and self.rect.x < self.x_lims[1]:
                 if rand_x in [1, 3, 6]:
@@ -40,12 +40,12 @@ class Zombie(pygame.sprite.Sprite):
                 elif rand_x in [2, 4, 5, 8]:
                     self.rect.x -= const.ZOMBIE_X_SPEED
 
-            # Bringing the Zombies back on the Screen
+            # 将僵尸带回屏幕
             else:
                 if self.rect.x <= self.x_lims[0]:
                     self.rect.x += 2 * const.ZOMBIE_X_SPEED
                 elif self.rect.x >= self.x_lims[1]:
                     self.rect.x -= 2 * const.ZOMBIE_X_SPEED
 
-        # Clamp to stay inside the screen
+        # 限制在屏幕内
         self.rect.x = max(min(self.rect.x, const.SCREEN_WIDTH - 100), 100)

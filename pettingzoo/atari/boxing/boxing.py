@@ -1,76 +1,76 @@
 # noqa: D212, D415
 """
-# Boxing
+# 拳击（Boxing）
 
 ```{figure} atari_boxing.gif
 :width: 140px
 :name: boxing
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import             | `from pettingzoo.atari import boxing_v2` |
+| 导入               | `from pettingzoo.atari import boxing_v2` |
 |--------------------|------------------------------------------|
-| Actions            | Discrete                                 |
-| Parallel API       | Yes                                      |
-| Manual Control     | No                                       |
-| Agents             | `agents= ['first_0', 'second_0']`        |
-| Agents             | 2                                        |
-| Action Shape       | (1,)                                     |
-| Action Values      | [0,17]                                   |
-| Observation Shape  | (210, 160, 3)                            |
-| Observation Values | (0,255)                                  |
+| 动作类型           | 离散                                     |
+| 并行 API          | 支持                                      |
+| 手动控制          | 不支持                                    |
+| 智能体            | `agents= ['first_0', 'second_0']`        |
+| 智能体数量        | 2                                        |
+| 动作形状          | (1,)                                     |
+| 动作值范围        | [0,17]                                   |
+| 观察形状          | (210, 160, 3)                            |
+| 观察值范围        | (0,255)                                  |
 
 
-*Boxing* is an adversarial game where precise control and
-appropriate responses to your opponent are key.
+*拳击*是一个对抗性游戏，精确的控制和
+对对手的适当反应是关键。
 
-The players have two minutes (around 1200 steps) to duke it
-out in the ring. Each step, they can move and punch.
-Successful punches score points,
-1 point for a long jab, 2 for a close power punch,
-and 100 points for a KO (which also will end the game).
-Whenever you score a number of points, you are rewarded by
-that number and your opponent is penalized by that number.
+玩家有两分钟（约 1200 步）的时间在拳击台上
+决一胜负。每一步，他们都可以移动和出拳。
+成功的出拳可以得分，
+远距离刺拳得 1 分，近距离重拳得 2 分，
+击倒（KO）得 100 分（同时也会结束游戏）。
+每当你得分时，你会获得相应分数的奖励，
+而你的对手会受到相应分数的惩罚。
 
-[Official Boxing manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=45)
+[官方拳击游戏手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=45)
 
-#### Environment parameters
+#### 环境参数
 
-Environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari) .
+环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-### Action Space
+### 动作空间
 
-In any given turn, an agent can choose from one of 18 actions.
+在任何给定回合中，智能体可以从 18 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
-| 6         | Move upright |
-| 7         | Move upleft |
-| 8         | Move downright |
-| 9         | Move downleft |
-| 10        | Fire up |
-| 11        | Fire right |
-| 12        | Fire left |
-| 13        | Fire down |
-| 14        | Fire upright |
-| 15        | Fire upleft |
-| 16        | Fire downright |
-| 17        | Fire downleft |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 出拳    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
+| 6         | 向右上移动 |
+| 7         | 向左上移动 |
+| 8         | 向右下移动 |
+| 9         | 向左下移动 |
+| 10        | 向上出拳 |
+| 11        | 向右出拳 |
+| 12        | 向左出拳 |
+| 13        | 向下出拳 |
+| 14        | 向右上出拳 |
+| 15        | 向左上出拳 |
+| 16        | 向右下出拳 |
+| 17        | 向左下出拳 |
 
 
 
-### Version History
+### 版本历史
 
-* v2: Minimal Action Space (1.18.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v2：最小动作空间 (1.18.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """

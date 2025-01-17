@@ -1,9 +1,9 @@
-"""Uses Stable-Baselines3 to train agents in the Connect Four environment using invalid action masking.
+"""使用 Stable-Baselines3 在四子连珠环境中训练智能体，使用无效动作掩码。
 
-For information about invalid action masking in PettingZoo, see https://pettingzoo.farama.org/api/aec/#action-masking
-For more information about invalid action masking in SB3, see https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html
+有关 PettingZoo 中无效动作掩码的信息，请参见 https://pettingzoo.farama.org/api/aec/#action-masking
+有关 SB3 中无效动作掩码的更多信息，请参见 https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html
 
-Author: Elliot (https://github.com/elliottower)
+作者: Elliot (https://github.com/elliottower)
 """
 import glob
 import os
@@ -19,29 +19,28 @@ from pettingzoo.classic import connect_four_v3
 
 
 class SB3ActionMaskWrapper(pettingzoo.utils.BaseWrapper):
-    """Wrapper to allow PettingZoo environments to be used with SB3 illegal action masking."""
+    """包装器，允许 PettingZoo 环境与 SB3 非法动作掩码一起使用。"""
 
     def reset(self, seed=None, options=None):
-        """Gymnasium-like reset function which assigns obs/action spaces to be the same for each agent.
+        """类似 Gymnasium 的重置函数，为每个智能体分配相同的观察/动作空间。
 
-        This is required as SB3 is designed for single-agent RL and doesn't expect obs/action spaces to be functions
+        这是必需的，因为 SB3 是为单智能体强化学习设计的，不期望观察/动作空间是函数
         """
         super().reset(seed, options)
 
-        # Strip the action mask out from the observation space
+        # 从观察空间中去除动作掩码
         self.observation_space = super().observation_space(self.possible_agents[0])[
             "observation"
         ]
         self.action_space = super().action_space(self.possible_agents[0])
 
-        # Return initial observation, info (PettingZoo AEC envs do not by default)
+        # 返回初始观察和信息（PettingZoo AEC 环境默认不返回）
         return self.observe(self.agent_selection), {}
 
     def step(self, action):
-        """Gymnasium-like step function, returning observation, reward, termination, truncation, info.
+        """类似 Gymnasium 的步进函数，返回观察、奖励、终止、截断、信息。
 
-        The observation is for the next agent (used to determine the next action), while the remaining
-        items are for the agent that just acted (used to understand what just happened).
+        观察是针对下一个智能体的（用于确定下一个动作），而其余项目是针对刚刚行动的智能体的（用于理解刚刚发生了什么）。
         """
         current_agent = self.agent_selection
 
@@ -57,56 +56,55 @@ class SB3ActionMaskWrapper(pettingzoo.utils.BaseWrapper):
         )
 
     def observe(self, agent):
-        """Return only raw observation, removing action mask."""
+        """仅返回原始观察，移除动作掩码。"""
         return super().observe(agent)["observation"]
 
     def action_mask(self):
-        """Separate function used in order to access the action mask."""
+        """用于访问动作掩码的独立函数。"""
         return super().observe(self.agent_selection)["action_mask"]
 
 
 def mask_fn(env):
-    # Do whatever you'd like in this function to return the action mask
-    # for the current env. In this example, we assume the env has a
-    # helpful method we can rely on.
+    # 在这个函数中执行任何您想要的操作来返回当前环境的动作掩码
+    # 在这个例子中，我们假设环境有一个我们可以依赖的有用方法。
     return env.action_mask()
 
 
 def train_action_mask(env_fn, steps=10_000, seed=0, **env_kwargs):
-    """Train a single model to play as each agent in a zero-sum game environment using invalid action masking."""
+    """训练一个模型在零和游戏环境中作为每个智能体进行游戏，使用无效动作掩码。"""
     env = env_fn.env(**env_kwargs)
 
-    print(f"Starting training on {str(env.metadata['name'])}.")
+    print(f"开始在 {str(env.metadata['name'])} 上训练。")
 
-    # Custom wrapper to convert PettingZoo envs to work with SB3 action masking
+    # 自定义包装器，将 PettingZoo 环境转换为可与 SB3 动作掩码一起工作
     env = SB3ActionMaskWrapper(env)
 
-    env.reset(seed=seed)  # Must call reset() in order to re-define the spaces
+    env.reset(seed=seed)  # 必须调用 reset() 以重新定义空间
 
-    env = ActionMasker(env, mask_fn)  # Wrap to enable masking (SB3 function)
-    # MaskablePPO behaves the same as SB3's PPO unless the env is wrapped
-    # with ActionMasker. If the wrapper is detected, the masks are automatically
-    # retrieved and used when learning. Note that MaskablePPO does not accept
-    # a new action_mask_fn kwarg, as it did in an earlier draft.
+    env = ActionMasker(env, mask_fn)  # 包装以启用掩码（SB3 函数）
+    # MaskablePPO 的行为与 SB3 的 PPO 相同，除非环境被包装
+    # 使用 ActionMasker。如果检测到包装器，掩码会自动
+    # 被检索并在学习时使用。注意 MaskablePPO 不接受
+    # 新的 action_mask_fn 关键字参数，这与早期草稿不同。
     model = MaskablePPO(MaskableActorCriticPolicy, env, verbose=1)
     model.set_random_seed(seed)
     model.learn(total_timesteps=steps)
 
     model.save(f"{env.unwrapped.metadata.get('name')}_{time.strftime('%Y%m%d-%H%M%S')}")
 
-    print("Model has been saved.")
+    print("模型已保存。")
 
-    print(f"Finished training on {str(env.unwrapped.metadata['name'])}.\n")
+    print(f"完成在 {str(env.unwrapped.metadata['name'])} 上的训练。\n")
 
     env.close()
 
 
 def eval_action_mask(env_fn, num_games=100, render_mode=None, **env_kwargs):
-    # Evaluate a trained agent vs a random agent
+    # 评估训练过的智能体与随机智能体的对抗
     env = env_fn.env(render_mode=render_mode, **env_kwargs)
 
     print(
-        f"Starting evaluation vs a random agent. Trained agent will play as {env.possible_agents[1]}."
+        f"开始评估与随机智能体的对抗。训练过的智能体将作为 {env.possible_agents[1]} 进行游戏。"
     )
 
     try:
@@ -114,7 +112,7 @@ def eval_action_mask(env_fn, num_games=100, render_mode=None, **env_kwargs):
             glob.glob(f"{env.metadata['name']}*.zip"), key=os.path.getctime
         )
     except ValueError:
-        print("Policy not found.")
+        print("策略未找到。")
         exit(0)
 
     model = MaskablePPO.load(latest_policy)
@@ -130,11 +128,11 @@ def eval_action_mask(env_fn, num_games=100, render_mode=None, **env_kwargs):
         for agent in env.agent_iter():
             obs, reward, termination, truncation, info = env.last()
 
-            # Separate observation and action mask
+            # 分离观察和动作掩码
             observation, action_mask = obs.values()
 
             if termination or truncation:
-                # If there is a winner, keep track, otherwise don't change the scores (tie)
+                # 如果有赢家，记录下来，否则不改变分数（平局）
                 if (
                     env.rewards[env.possible_agents[0]]
                     != env.rewards[env.possible_agents[1]]
@@ -142,18 +140,18 @@ def eval_action_mask(env_fn, num_games=100, render_mode=None, **env_kwargs):
                     winner = max(env.rewards, key=env.rewards.get)
                     scores[winner] += env.rewards[
                         winner
-                    ]  # only tracks the largest reward (winner of game)
-                # Also track negative and positive rewards (penalizes illegal moves)
+                    ]  # 只记录最大奖励（游戏赢家）
+                # 同时跟踪负面和正面奖励（惩罚非法移动）
                 for a in env.possible_agents:
                     total_rewards[a] += env.rewards[a]
-                # List of rewards by round, for reference
+                # 按回合列出奖励，供参考
                 round_rewards.append(env.rewards)
                 break
             else:
                 if agent == env.possible_agents[0]:
                     act = env.action_space(agent).sample(action_mask)
                 else:
-                    # Note: PettingZoo expects integer actions # TODO: change chess to cast actions to type int?
+                    # 注意：PettingZoo 期望整数动作 # TODO：是否将国际象棋更改为将动作转换为整数类型？
                     act = int(
                         model.predict(
                             observation, action_masks=action_mask, deterministic=True
@@ -162,38 +160,38 @@ def eval_action_mask(env_fn, num_games=100, render_mode=None, **env_kwargs):
             env.step(act)
     env.close()
 
-    # Avoid dividing by zero
+    # 避免除以零
     if sum(scores.values()) == 0:
         winrate = 0
     else:
         winrate = scores[env.possible_agents[1]] / sum(scores.values())
-    print("Rewards by round: ", round_rewards)
-    print("Total rewards (incl. negative rewards): ", total_rewards)
-    print("Winrate: ", winrate)
-    print("Final scores: ", scores)
+    print("每轮奖励： ", round_rewards)
+    print("总奖励（包括负面奖励）： ", total_rewards)
+    print("胜率： ", winrate)
+    print("最终得分： ", scores)
     return round_rewards, total_rewards, winrate, scores
 
 
 if __name__ == "__main__":
     if gym.__version__ > "0.29.1":
         raise ImportError(
-            f"This script requires gymnasium version 0.29.1 or lower, but you have version {gym.__version__}."
+            f"此脚本需要 gymnasium 版本 0.29.1 或更低，但您有版本 {gym.__version__}。"
         )
 
     env_fn = connect_four_v3
 
     env_kwargs = {}
 
-    # Evaluation/training hyperparameter notes:
-    # 10k steps: Winrate:  0.76, loss order of 1e-03
-    # 20k steps: Winrate:  0.86, loss order of 1e-04
-    # 40k steps: Winrate:  0.86, loss order of 7e-06
+    # 评估/训练超参数说明：
+    # 10k 步骤：胜率：0.76，损失量级为 1e-03
+    # 20k 步骤：胜率：0.86，损失量级为 1e-04
+    # 40k 步骤：胜率：0.86，损失量级为 7e-06
 
-    # Train a model against itself (takes ~20 seconds on a laptop CPU)
+    # 训练模型与自身对抗（在笔记本 CPU 上大约需要 20 秒）
     train_action_mask(env_fn, steps=20_480, seed=0, **env_kwargs)
 
-    # Evaluate 100 games against a random agent (winrate should be ~80%)
+    # 对抗随机智能体评估 100 场游戏（胜率应该约为 80%）
     eval_action_mask(env_fn, num_games=100, render_mode=None, **env_kwargs)
 
-    # Watch two games vs a random agent
+    # 观看与随机智能体的两场游戏
     eval_action_mask(env_fn, num_games=2, render_mode="human", **env_kwargs)

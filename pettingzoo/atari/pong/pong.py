@@ -1,68 +1,68 @@
 # noqa: D212, D415
 """
-# Pong
+# 乒乓（Pong）
 
 ```{figure} atari_pong.gif
 :width: 140px
 :name: pong
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import pong_v3` |
+| 导入               | `from pettingzoo.atari import pong_v3` |
 |----------------------|----------------------------------------|
-| Actions              | Discrete                               |
-| Parallel API         | Yes                                    |
-| Manual Control       | No                                     |
-| Agents               | `agents= ['first_0', 'second_0']`      |
-| Agents               | 2                                      |
-| Action Shape         | (1,)                                   |
-| Action Values        | [0,5]                                  |
-| Observation Shape    | (210, 160, 3)                          |
-| Observation Values   | (0,255)                                |
+| 动作类型           | 离散                                   |
+| 并行 API          | 支持                                    |
+| 手动控制          | 不支持                                 |
+| 智能体            | `agents= ['first_0', 'second_0']`      |
+| 智能体数量        | 2                                      |
+| 动作形状          | (1,)                                   |
+| 动作值范围        | [0,5]                                  |
+| 观察形状          | (210, 160, 3)                          |
+| 观察值范围        | (0,255)                                |
 
 
-Classic two player competitive game of timing.
+经典的双人竞技计时游戏。
 
-Get the ball past the opponent.
+让球越过对手。
 
-Scoring a point gives you +1 reward and your opponent -1 reward.
+得分会给你 +1 奖励，给对手 -1 惩罚。
 
-Serves are timed: If the player does not serve within 2 seconds of receiving the ball, they receive -1 points, and the timer resets. This prevents one player from indefinitely stalling the game, but also means it is no longer a purely zero sum game.
+发球是有时间限制的：如果玩家在收到球后 2 秒内没有发球，他们会受到 -1 分的惩罚，计时器重置。这可以防止一个玩家无限期地拖延游戏，但也意味着这不再是一个纯零和游戏。
 
-[Official Video Olympics manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=587)
+[官方视频奥运会手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=587)
 
-#### Environment parameters
+#### 环境参数
 
-Some environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari).
+一些环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-Parameters specific to Pong are
+乒乓特有的参数如下：
 
 ``` python
 pong_v3.env(num_players=2)
 ```
 
-`num_players`:  Number of players (must be either 2 or 4)
+`num_players`：玩家数量（必须是 2 或 4）
 
-### Action Space (Minimal)
+### 动作空间（最小）
 
-In any given turn, an agent can choose from one of 6 actions.
+在任何给定回合中，智能体可以从 6 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move right |
-| 3         | Move left |
-| 4         | Fire right |
-| 5         | Fire left |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向右移动 |
+| 3         | 向左移动 |
+| 4         | 向右开火 |
+| 5         | 向左开火 |
 
-### Version History
+### 版本历史
 
-* v3: Minimal Action Space (1.18.0)
-* v2: No action timer (1.9.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v3：最小动作空间 (1.18.0)
+* v2：取消动作计时器 (1.9.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """

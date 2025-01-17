@@ -1,63 +1,63 @@
 # noqa: D212, D415
 """
-# Quadrapong
+# 四人乒乓（Quadrapong）
 
 ```{figure} atari_quadrapong.gif
 :width: 140px
 :name: quadrapong
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import quadrapong_v4`             |
+| 导入               | `from pettingzoo.atari import quadrapong_v4`             |
 |----------------------|----------------------------------------------------------|
-| Actions              | Discrete                                                 |
-| Parallel API         | Yes                                                      |
-| Manual Control       | No                                                       |
-| Agents               | `agents= ['first_0', 'second_0', 'third_0', 'fourth_0']` |
-| Agents               | 4                                                        |
-| Action Shape         | (1,)                                                     |
-| Action Values        | [0,5]                                                    |
-| Observation Shape    | (210, 160, 3)                                            |
-| Observation Values   | (0,255)                                                  |
+| 动作类型           | 离散                                                     |
+| 并行 API          | 支持                                                      |
+| 手动控制          | 不支持                                                   |
+| 智能体            | `agents= ['first_0', 'second_0', 'third_0', 'fourth_0']` |
+| 智能体数量        | 4                                                        |
+| 动作形状          | (1,)                                                     |
+| 动作值范围        | [0,5]                                                    |
+| 观察形状          | (210, 160, 3)                                            |
+| 观察值范围        | (0,255)                                                  |
 
 
-Four player team battle.
+四人团队对战。
 
-Each player controls a paddle and defends a scoring area. However, this is a team game, and so two of the 4 scoring areas belong to the same team. So a given team must try to coordinate to get the ball away from their scoring areas towards their opponent's.
-Specifically `first_0` and `third_0` are on one team and `second_0` and `fourth_0` are on the other.
+每个玩家控制一个球拍并防守一个得分区域。然而，这是一个团队游戏，所以 4 个得分区域中的两个属于同一个团队。因此，一个团队必须尝试协调，将球从他们的得分区域引向对手的得分区域。
+具体来说，`first_0` 和 `third_0` 在一个队，`second_0` 和 `fourth_0` 在另一个队。
 
-Scoring a point gives your team +1 reward and your opponent team -1 reward.
+得分会给你的团队 +1 奖励，给对手团队 -1 惩罚。
 
-Serves are timed: If the player does not serve within 2 seconds of receiving the ball, their team receives -1 points, and the timer resets. This prevents one player from indefinitely stalling the game, but also means it is no longer a purely zero sum game.
+发球是有时间限制的：如果玩家在收到球后 2 秒内没有发球，他们的团队会受到 -1 分的惩罚，计时器重置。这可以防止一个玩家无限期地拖延游戏，但也意味着这不再是一个纯零和游戏。
 
 
-[Official Video Olympics manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=587)
+[官方视频奥运会手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=587)
 
-#### Environment parameters
+#### 环境参数
 
-Environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari) .
+环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-### Action Space (Minimal)
+### 动作空间（最小）
 
-In any given turn, an agent can choose from one of 6 actions.
+在任何给定回合中，智能体可以从 6 个动作中选择一个。
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火    |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
 
-### Version History
+### 版本历史
 
-* v4: Minimal Action Space (1.18.0)
-* v3: No action timer (1.9.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v2: Fixed quadrapong rewards (1.2.0)
-* v0: Initial versions release (1.0.0)
+* v4：最小动作空间 (1.18.0)
+* v3：取消动作计时器 (1.9.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v2：修复了四人乒乓的奖励 (1.2.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """

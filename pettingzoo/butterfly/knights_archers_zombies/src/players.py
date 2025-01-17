@@ -52,32 +52,32 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             move_angle = math.radians(self.angle + 90)
-            # Up and Down movement
+            # 上下移动
             if action == 1 and self.rect.y > 20:
                 self.rect.x += math.cos(move_angle) * self.speed
                 self.rect.y -= math.sin(move_angle) * self.speed
             elif action == 2 and self.rect.y < const.SCREEN_HEIGHT - 40:
                 self.rect.x -= math.cos(move_angle) * self.speed
                 self.rect.y += math.sin(move_angle) * self.speed
-            # Turn CCW & CW
+            # 逆时针和顺时针旋转
             elif action == 3:
                 self.angle += self.ang_rate
             elif action == 4:
                 self.angle -= self.ang_rate
-            # weapon and do nothing
+            # 使用武器或不做任何动作
             elif action == 5 and self.alive:
                 pass
             elif action == 6:
                 pass
 
-            # Clamp to stay inside the screen
+            # 限制在屏幕内
             if self.rect.y < 0 or self.rect.y > (const.SCREEN_HEIGHT - 40):
                 went_out_of_bounds = True
 
             self.rect.x = max(min(self.rect.x, const.SCREEN_WIDTH - 132), 100)
             self.rect.y = max(min(self.rect.y, const.SCREEN_HEIGHT - 40), 0)
 
-            # add to weapon timeout when we know we're not attacking
+            # 当我们确定没有攻击时，增加武器超时时间
             self.weapon_timeout += 1
         else:
             self.weapon_timeout = 0

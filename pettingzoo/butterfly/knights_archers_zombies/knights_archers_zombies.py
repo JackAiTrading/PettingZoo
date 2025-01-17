@@ -1,121 +1,118 @@
 # noqa: D212, D415
 """
-# Knights Archers Zombies ('KAZ')
+# 骑士、弓箭手与僵尸（'KAZ'）
 
 ```{figure} butterfly_knights_archers_zombies.gif
 :width: 200px
 :name: knights_archers_zombies
 ```
 
-This environment is part of the <a href='..'>butterfly environments</a>. Please read that page first for general information.
+此环境是<a href='..'>蝴蝶环境</a>的一部分。请先阅读该页面以获取一般信息。
 
-| Import               | `from pettingzoo.butterfly import knights_archers_zombies_v10` |
-|----------------------|----------------------------------------------------------------|
-| Actions              | Discrete                                                       |
-| Parallel API         | Yes                                                            |
-| Manual Control       | Yes                                                            |
-| Agents               | `agents= ['archer_0', 'archer_1', 'knight_0', 'knight_1']`     |
-| Agents               | 4                                                              |
-| Action Shape         | (1,)                                                           |
-| Action Values        | [0, 5]                                                         |
-| Observation Shape    | (512, 512, 3)                                                  |
-| Observation Values   | (0, 255)                                                       |
-| State Shape          | (720, 1280, 3)                                                 |
-| State Values         | (0, 255)                                                       |
+| 导入                | `from pettingzoo.butterfly import knights_archers_zombies_v10` |
+|---------------------|----------------------------------------------------------------|
+| 动作                | 离散                                                           |
+| 并行 API            | 是                                                            |
+| 手动控制            | 是                                                            |
+| 智能体              | `agents= ['archer_0', 'archer_1', 'knight_0', 'knight_1']`     |
+| 智能体数量          | 4                                                              |
+| 动作形状            | (1,)                                                           |
+| 动作值范围          | [0, 5]                                                         |
+| 观察形状            | (512, 512, 3)                                                  |
+| 观察值范围          | (0, 255)                                                       |
+| 状态形状            | (720, 1280, 3)                                                 |
+| 状态值范围          | (0, 255)                                                       |
 
 
-Zombies walk from the top border of the screen down to the bottom border in unpredictable paths. The agents you control are knights and archers (default 2 knights and 2 archers) that are initially positioned at the bottom border of the screen. Each agent can rotate clockwise or counter-clockwise
-and move forward or backward. Each agent can also attack to kill zombies. When a knight attacks, it swings a mace in an arc in front of its current heading direction. When an archer attacks, it fires an arrow in a straight line in the direction of the archer's heading. The game ends when all
-agents die (collide with a zombie) or a zombie reaches the bottom screen border. A knight is rewarded 1 point when its mace hits and kills a zombie. An archer is rewarded 1 point when one of their arrows hits and kills a zombie.
-There are two possible observation types for this environment, vectorized and image-based.
+僵尸从屏幕上边缘以不可预测的路径向下边缘行走。玩家控制的智能体是骑士和弓箭手（默认 2 名骑士和 2 名弓箭手），初始位置在屏幕底部边缘。每个智能体都可以顺时针或逆时针旋转，并可以向前或向后移动。每个智能体也可以攻击来消灭僵尸。当骑士攻击时，会在其当前朝向方向前方挥舞锤子形成一个弧形。当弓箭手攻击时，会沿着弓箭手的朝向方向射出一支直线箭。当所有智能体死亡（与僵尸碰撞）或僵尸到达屏幕底部边缘时，游戏结束。当骑士的锤子击中并杀死僵尸时，获得 1 分。当弓箭手的箭击中并杀死僵尸时，获得 1 分。
 
-#### Vectorized (Default)
-Pass the argument `vector_state=True` to the environment.
+这个环境有两种可能的观察类型：向量化和基于图像的。
 
-The observation is an (N+1)x5 array for each agent, where `N = num_archers + num_knights + num_swords + max_arrows + max_zombies`.
-> Note that `num_swords = num_knights`
+#### 向量化（默认）
+向环境传递参数 `vector_state=True`。
 
-The ordering of the rows of the observation look something like this:
+对于每个智能体，观察是一个 (N+1)x5 的数组，其中 `N = num_archers + num_knights + num_swords + max_arrows + max_zombies`。
+> 注意 `num_swords = num_knights`
+
+观察的行排序如下所示：
 ```
 [
-[current agent],
-[archer 1],
+[当前智能体],
+[弓箭手 1],
 ...,
-[archer N],
-[knight 1],
+[弓箭手 N],
+[骑士 1],
 ...
-[knight M],
-[sword 1],
+[骑士 M],
+[剑 1],
 ...
-[sword M],
-[arrow 1],
+[剑 M],
+[箭 1],
 ...
-[arrow max_arrows],
-[zombie 1],
+[箭 max_arrows],
+[僵尸 1],
 ...
-[zombie max_zombies]
+[僵尸 max_zombies]
 ]
 ```
 
-In total, there will be N+1 rows. Rows with no entities will be all 0, but the ordering of the entities will not change.
+总共有 N+1 行。没有实体的行将全为 0，但实体的排序不会改变。
 
-**Vector Breakdown**
+**向量分解**
 
-This breaks down what a row in the observation means. All distances are normalized to [0, 1].
-Note that for positions, [0, 0] is the top left corner of the image. Down is positive y, Left is positive x.
+这里解释了观察中每一行的含义。所有距离都归一化到 [0, 1]。
+注意对于位置，[0, 0] 是图像的左上角。向下是正 y，向左是正 x。
 
-For the vector for `current agent`:
-- The first value means nothing and will always be 0.
-- The next four values are the position and angle of the current agent.
-  - The first two values are position values, normalized to the width and height of the image respectively.
-  - The final two values are heading of the agent represented as a unit vector.
+对于 `当前智能体` 的向量：
+- 第一个值没有意义，始终为 0。
+- 接下来的四个值是当前智能体的位置和角度。
+  - 前两个值是位置值，分别归一化到图像的宽度和高度。
+  - 最后两个值是智能体的朝向，表示为单位向量。
 
-For everything else:
-- Each row of the matrix (this is an 5 wide vector) has a breakdown that looks something like this:
-  - The first value is the absolute distance between an entity and the current agent.
-  - The next four values are relative position and absolute angles of each entity relative to the current agent.
-    - The first two values are position values relative to the current agent.
-    - The final two values are the angle of the entity represented as a directional unit vector relative to the world.
+对于其他所有实体：
+- 矩阵的每一行（这是一个宽度为 5 的向量）的分解如下：
+  - 第一个值是实体与当前智能体之间的绝对距离。
+  - 接下来的四个值是每个实体相对于当前智能体的相对位置和绝对角度。
+    - 前两个值是相对于当前智能体的位置值。
+    - 最后两个值是实体的角度，表示为相对于世界的方向单位向量。
 
-**Typemasks**
+**类型掩码**
 
-There is an option to prepend a typemask to each row vector. This can be enabled by passing `use_typemasks=True` as a kwarg.
+有一个选项可以在每个行向量前添加类型掩码。这可以通过传递 `use_typemasks=True` 作为 kwarg 来启用。
 
-The typemask is a 6 wide vector, that looks something like this:
+类型掩码是一个宽度为 6 的向量，看起来像这样：
 ```
 [0., 0., 0., 1., 0., 0.]
 ```
 
-Each value corresponds to either
+每个值分别对应：
 ```
-[zombie, archer, knight, sword, arrow, current agent]
+[僵尸, 弓箭手, 骑士, 剑, 箭, 当前智能体]
 ```
 
-If there is no entity there, the whole typemask (as well as the whole state vector) will be 0.
+如果那里没有实体，整个类型掩码（以及整个状态向量）将为 0。
 
-As a result, setting `use_typemask=True` results in the observation being a (N+1)x11 vector.
+因此，设置 `use_typemask=True` 会导致观察成为 (N+1)x11 的向量。
 
-**Sequence Space** (Experimental)
+**序列空间**（实验性）
 
-There is an option to also pass `sequence_space=True` as a kwarg to the environment. This just removes all non-existent entities from the observation and state vectors. Note that this is **still experimental** as the state and observation size are no longer constant. In particular, `N` is now a
-variable number.
+还有一个选项可以向环境传递 `sequence_space=True` 作为 kwarg。这只是从观察和状态向量中移除所有不存在的实体。注意这仍然是**实验性的**，因为状态和观察大小不再是常量。特别是，`N` 现在是一个可变数字。
 
-#### Image-based
-Pass the argument `vector_state=False` to the environment.
+#### 基于图像
+向环境传递参数 `vector_state=False`。
 
-Each agent observes the environment as a square region around itself, with its own body in the center of the square. The observation is represented as a 512x512 pixel image around the agent, or in other words, a 16x16 agent sized space around the agent.
+每个智能体将环境观察为其周围的一个正方形区域，自己的身体在正方形的中心。观察表示为智能体周围的 512x512 像素图像，换句话说，是智能体周围 16x16 大小的空间。
 
-### Manual Control
+### 手动控制
 
-Move the archer using the 'W', 'A', 'S' and 'D' keys. Shoot the Arrow using 'F' key. Rotate the archer using 'Q' and 'E' keys.
-Press 'X' key to spawn a new archer.
+使用 'W'、'A'、'S' 和 'D' 键移动弓箭手。使用 'F' 键射箭。使用 'Q' 和 'E' 键旋转弓箭手。
+按 'X' 键生成一个新的弓箭手。
 
-Move the knight using the 'I', 'J', 'K' and 'L' keys. Stab the Sword using ';' key. Rotate the knight using 'U' and 'O' keys.
-Press 'M' key to spawn a new knight.
-
+使用 'I'、'J'、'K' 和 'L' 键移动骑士。使用 ';' 键挥剑。使用 'U' 和 'O' 键旋转骑士。
+按 'M' 键生成一个新的骑士。
 
 
-### Arguments
+### 参数
 
 ``` python
 knights_archers_zombies_v10.env(
@@ -135,44 +132,44 @@ knights_archers_zombies_v10.env(
 )
 ```
 
-`spawn_rate`:  how many cycles before a new zombie is spawned. A lower number means zombies are spawned at a higher rate.
+`spawn_rate`：在生成新僵尸之前的周期数。数字越小意味着僵尸生成的速率越高。
 
-`num_archers`:  how many archer agents initially spawn.
+`num_archers`：初始生成的弓箭手智能体数量。
 
-`num_knights`:  how many knight agents initially spawn.
+`num_knights`：初始生成的骑士智能体数量。
 
-`max_zombies`: maximum number of zombies that can exist at a time
+`max_zombies`：同时存在的最大僵尸数量。
 
-`max_arrows`: maximum number of arrows that can exist at a time
+`max_arrows`：同时存在的最大箭数量。
 
-`killable_knights`:  if set to False, knight agents cannot be killed by zombies.
+`killable_knights`：如果设置为 False，骑士智能体不会被僵尸杀死。
 
-`killable_archers`:  if set to False, archer agents cannot be killed by zombies.
+`killable_archers`：如果设置为 False，弓箭手智能体不会被僵尸杀死。
 
-`pad_observation`:  if agents are near edge of environment, their observation cannot form a 40x40 grid. If this is set to True, the observation is padded with black.
+`pad_observation`：如果智能体靠近环境边缘，它们的观察无法形成 40x40 的网格。如果设置为 True，观察将用黑色填充。
 
-`line_death`:  if set to False, agents do not die when they touch the top or bottom border. If True, agents die as soon as they touch the top or bottom border.
+`line_death`：如果设置为 False，智能体触碰上边界或下边界时不会死亡。如果为 True，智能体一触碰上边界或下边界就会死亡。
 
-`vector_state`: whether to use vectorized state, if set to `False`, an image-based observation will be provided instead.
+`vector_state`：是否使用向量化状态，如果设置为 `False`，将提供基于图像的观察。
 
-`use_typemasks`: only relevant when `vector_state=True` is set, adds typemasks to the vectors.
+`use_typemasks`：仅在设置 `vector_state=True` 时相关，向向量添加类型掩码。
 
-`sequence_space`: **experimental**, only relevant when `vector_state=True` is set, removes non-existent entities in the vector state.
+`sequence_space`：**实验性**，仅在设置 `vector_state=True` 时相关，移除向量状态中不存在的实体。
 
 
-### Version History
+### 版本历史
 
-* v10: Add vectorizable state space (1.17.0)
-* v9: Code rewrite and numerous fixes (1.16.0)
-* v8: Code cleanup and several bug fixes (1.14.0)
-* v7: Minor bug fix relating to end of episode crash (1.6.0)
-* v6: Fixed reward structure (1.5.2)
-* v5: Removed black death argument (1.5.0)
-* v4: Fixed observation and rendering issues (1.4.2)
-* v3: Misc bug fixes, bumped PyGame and PyMunk version (1.4.0)
-* v2: Fixed bug in how `dones` were computed (1.3.1)
-* v1: Fixes to how all environments handle premature death (1.3.0)
-* v0: Initial versions release (1.0.0)
+* v10：添加可向量化的状态空间 (1.17.0)
+* v9：代码重写和多项修复 (1.16.0)
+* v8：代码清理和多个错误修复 (1.14.0)
+* v7：修复了与回合结束崩溃相关的小错误 (1.6.0)
+* v6：修复了奖励结构 (1.5.2)
+* v5：移除了黑色死亡参数 (1.5.0)
+* v4：修复了观察和渲染问题 (1.4.2)
+* v3：其他错误修复，升级了 PyGame 和 PyMunk 版本 (1.4.0)
+* v2：修复了 `dones` 计算中的错误 (1.3.1)
+* v1：修复了所有环境处理过早死亡的方式 (1.3.0)
+* v0：初始版本发布 (1.0.0)
 
 """
 

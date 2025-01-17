@@ -1,58 +1,58 @@
 # noqa: D212, D415
 """
-# Surround
+# 包围（Surround）
 
 ```{figure} atari_surround.gif
 :width: 140px
 :name: surround
 ```
 
-This environment is part of the <a href='..'>Atari environments</a>. Please read that page first for general information.
+此环境是<a href='..'>Atari 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.atari import surround_v2` |
+| 导入               | `from pettingzoo.atari import surround_v2` |
 |----------------------|--------------------------------------------|
-| Actions              | Discrete                                   |
-| Parallel API         | Yes                                        |
-| Manual Control       | No                                         |
-| Agents               | `agents= ['first_0', 'second_0']`          |
-| Agents               | 2                                          |
-| Action Shape         | (1,)                                       |
-| Action Values        | [0,4]                                      |
-| Observation Shape    | (210, 160, 3)                              |
-| Observation Values   | (0,255)                                    |
+| 动作类型           | 离散                                       |
+| 并行 API          | 支持                                        |
+| 手动控制          | 不支持                                     |
+| 智能体            | `agents= ['first_0', 'second_0']`          |
+| 智能体数量        | 2                                          |
+| 动作形状          | (1,)                                       |
+| 动作值范围        | [0,4]                                      |
+| 观察形状          | (210, 160, 3)                              |
+| 观察值范围        | (0,255)                                    |
 
 
-A competitive game of planning and strategy.
+这是一个需要规划和策略的竞争性游戏。
 
-In surround, your goal is to avoid the walls. If you run into a wall, you are rewarded -1 points, and your opponent, +1 points.
+在包围游戏中，你的目标是避开墙壁。如果你撞到墙壁，你会受到 -1 分的惩罚，而你的对手会得到 +1 分。
 
-But both players leave a trail of walls behind you, slowly filling the screen with obstacles. To avoid the obstacles as long as possible, you must plan your path to conserve space. Once that is mastered, a higher level aspect of the game comes into play, where both players literally try to
-surround the other with walls, so their opponent will run out of room and be forced to run into a wall.
+但两个玩家都会在身后留下一道墙壁，慢慢地让屏幕充满障碍物。为了尽可能长时间地避开障碍物，你必须规划路径以节省空间。一旦掌握了这一点，游戏的更高层面就会出现，两个玩家会字面意义上地尝试
+用墙壁包围对方，这样对手就会用尽空间，被迫撞到墙上。
 
-[Official surround manual](https://atariage.com/manual_html_page.php?SoftwareLabelID=943)
+[官方包围游戏手册](https://atariage.com/manual_html_page.php?SoftwareLabelID=943)
 
-#### Environment parameters
+#### 环境参数
 
-Environment parameters are common to all Atari environments and are described in the [base Atari documentation](../atari) .
+环境参数是所有 Atari 环境通用的，在[基础 Atari 文档](../atari)中有描述。
 
-### Action Space (Minimal)
+### 动作空间（最小）
 
-In any given turn, an agent can choose from one of 6 actions. (Fire is dummy action, but for the continuous numbering)
+在任何给定回合中，智能体可以从 6 个动作中选择一个。（开火是虚拟动作，但为了保持连续编号）
 
-| Action    | Behavior  |
-|:---------:|-----------|
-| 0         | No operation |
-| 1         | Fire (dummy) |
-| 2         | Move up |
-| 3         | Move right |
-| 4         | Move left |
-| 5         | Move down |
+| 动作     | 行为    |
+|:---------:|---------|
+| 0         | 无操作  |
+| 1         | 开火（虚拟） |
+| 2         | 向上移动 |
+| 3         | 向右移动 |
+| 4         | 向左移动 |
+| 5         | 向下移动 |
 
-### Version History
+### 版本历史
 
-* v2: Minimal Action Space (1.18.0)
-* v1: Breaking changes to entire API (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v2：最小动作空间 (1.18.0)
+* v1：对整个 API 进行重大更改 (1.4.0)
+* v0：初始版本发布 (1.0.0)
 
 
 """
