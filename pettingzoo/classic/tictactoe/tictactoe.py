@@ -102,6 +102,14 @@ def get_font(path, size):
 
 
 def env(**kwargs):
+    """创建井字棋环境实例。
+
+    参数:
+        render_mode (str, 可选): 渲染模式，可以是 "human" 或 None
+
+    返回:
+        TicTacToeEnv: 井字棋环境实例
+    """
     env = raw_env(**kwargs)
     env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
     env = wrappers.AssertOutOfBoundsWrapper(env)
@@ -110,16 +118,20 @@ def env(**kwargs):
 
 
 class raw_env(AECEnv, EzPickle):
-    """井字棋游戏的主要环境类。
+    """井字棋环境的原始实现。
 
-    这个环境实现了标准的井字棋游戏，支持两个玩家轮流对弈。
+    这个类实现了完整的井字棋游戏逻辑，包括：
+    1. 移动验证
+    2. 状态更新
+    3. 奖励计算
+    4. 游戏结束判定
 
-    属性：
-        metadata (dict): 环境的元数据，包括版本信息和渲染模式
-        possible_agents (list): 可能的智能体列表，包括玩家1和玩家2
-        board (ndarray): 棋盘状态，3x3的二维数组
-        action_spaces (dict): 每个玩家的动作空间
-        observation_spaces (dict): 每个玩家的观察空间
+    属性:
+        metadata (dict): 环境元数据
+        possible_agents (list): 可能的智能体列表
+        board (numpy.ndarray): 棋盘状态
+        observation_spaces (dict): 每个智能体的观察空间
+        action_spaces (dict): 每个智能体的动作空间
     """
 
     metadata = {
@@ -134,8 +146,8 @@ class raw_env(AECEnv, EzPickle):
     ):
         """初始化井字棋环境。
 
-        参数：
-            render_mode (str, 可选): 渲染模式，可以是 "human" 或 "rgb_array"
+        参数:
+            render_mode (str, 可选): 渲染模式，可以是 "human" 或 None
             screen_height (int, 可选): 渲染模式为 "human" 时的屏幕高度
         """
         super().__init__()
@@ -174,15 +186,13 @@ class raw_env(AECEnv, EzPickle):
             self.clock = pygame.time.Clock()
 
     def observe(self, agent):
-        """获取指定玩家的观察。
+        """获取指定智能体的观察。
 
-        参数：
-            agent (str): 玩家标识符
+        参数:
+            agent (str): 智能体名称
 
-        返回：
-            dict: 玩家的观察，包括：
-                - observation: 棋盘状态
-                - action_mask: 合法动作掩码
+        返回:
+            dict: 包含观察和动作掩码的字典
         """
         board_vals = np.array(self.board.squares).reshape(3, 3)
         cur_player = self.possible_agents.index(agent)
@@ -198,12 +208,12 @@ class raw_env(AECEnv, EzPickle):
         return {"observation": observation, "action_mask": action_mask}
 
     def _get_mask(self, agent):
-        """获取指定玩家的合法动作掩码。
+        """获取指定智能体的合法动作掩码。
 
-        参数：
-            agent (str): 玩家标识符
+        参数:
+            agent (str): 智能体名称
 
-        返回：
+        返回:
             ndarray: 合法动作掩码
         """
         action_mask = np.zeros(9, dtype=np.int8)
@@ -216,23 +226,23 @@ class raw_env(AECEnv, EzPickle):
         return action_mask
 
     def observation_space(self, agent):
-        """获取指定玩家的观察空间。
+        """获取指定智能体的观察空间。
 
-        参数：
-            agent (str): 玩家标识符
+        参数:
+            agent (str): 智能体名称
 
-        返回：
+        返回:
             spaces.Dict: 观察空间
         """
         return self.observation_spaces[agent]
 
     def action_space(self, agent):
-        """获取指定玩家的动作空间。
+        """获取指定智能体的动作空间。
 
-        参数：
-            agent (str): 玩家标识符
+        参数:
+            agent (str): 智能体名称
 
-        返回：
+        返回:
             spaces.Discrete: 动作空间
         """
         return self.action_spaces[agent]
@@ -241,10 +251,10 @@ class raw_env(AECEnv, EzPickle):
     def step(self, action):
         """执行一步游戏。
 
-        参数：
+        参数:
             action (int): 玩家的动作，表示在棋盘上的位置（0-8）
 
-        返回：
+        返回:
             observations (dict): 每个玩家的观察
             rewards (dict): 每个玩家的奖励
             terminations (dict): 每个玩家的终止状态
@@ -281,13 +291,14 @@ class raw_env(AECEnv, EzPickle):
     def reset(self, seed=None, options=None):
         """重置游戏到初始状态。
 
-        参数：
-            seed (int, 可选): 随机种子
+        参数:
+            seed (int, 可选): 随机数种子
             options (dict, 可选): 重置选项
 
-        返回：
-            observations (dict): 每个玩家的初始观察
-            infos (dict): 每个玩家的初始信息
+        返回:
+            tuple: (observations, infos)
+                - observations (dict): 每个智能体的初始观察
+                - infos (dict): 每个智能体的初始信息
         """
         self.board.reset()
 
@@ -323,7 +334,7 @@ class raw_env(AECEnv, EzPickle):
         - "human": 在窗口中显示棋盘
         - "rgb_array": 返回 RGB 数组形式的棋盘图像
 
-        返回：
+        返回:
             ndarray or None: 如果 render_mode 为 "rgb_array"，返回 RGB 数组；否则返回 None
         """
         if self.render_mode is None:

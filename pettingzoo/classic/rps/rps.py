@@ -65,7 +65,7 @@ rps_v2.env(num_actions=3, max_cycles=15)
 | 4      | 史波克      |
 | 5      | 动作6       |
 | 6      | 动作7       |
-| 7      | None         |
+| 7      | None       |
 
 ### 动作空间
 
@@ -144,6 +144,15 @@ def get_font(path, size):
 
 
 def env(**kwargs):
+    """
+    创建石头剪刀布环境实例。
+
+    参数:
+        render_mode (str, 可选): 渲染模式，可以是 "human" 或 None
+
+    返回:
+        RPSEnv: 石头剪刀布环境实例
+    """
     env = raw_env(**kwargs)
     env = wrappers.AssertOutOfBoundsWrapper(env)
     env = wrappers.OrderEnforcingWrapper(env)
@@ -154,7 +163,8 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class raw_env(AECEnv, EzPickle):
-    """石头剪刀布游戏环境。
+    """
+    石头剪刀布游戏环境。
 
     这个环境实现了标准的石头剪刀布游戏，支持两个玩家同时出拳。
 
@@ -180,6 +190,15 @@ class raw_env(AECEnv, EzPickle):
         render_mode: str | None = None,
         screen_height: int | None = 800,
     ):
+        """
+        初始化石头剪刀布环境。
+
+        参数:
+            num_actions (int, 可选): 游戏中的动作数量。默认值为3，表示标准的石头剪刀布游戏。
+            max_cycles (int, 可选): 游戏的最大回合数。超过这个回合数后，所有玩家将被视为完成游戏。
+            render_mode (str, 可选): 渲染模式，可以是 "human" 或 None
+            screen_height (int, 可选): 渲染窗口的高度
+        """
         EzPickle.__init__(self, num_actions, max_cycles, render_mode, screen_height)
         super().__init__()
         self.max_cycles = max_cycles
@@ -213,12 +232,35 @@ class raw_env(AECEnv, EzPickle):
             self.clock = pygame.time.Clock()
 
     def observation_space(self, agent):
+        """
+        获取指定玩家的观察空间。
+
+        参数:
+            agent (str): 玩家名称
+
+        返回:
+            Discrete: 观察空间
+        """
         return self.observation_spaces[agent]
 
     def action_space(self, agent):
+        """
+        获取指定玩家的动作空间。
+
+        参数:
+            agent (str): 玩家名称
+
+        返回:
+            Discrete: 动作空间
+        """
         return self.action_spaces[agent]
 
     def render(self):
+        """
+        渲染当前游戏状态。
+
+        如果渲染模式为 "human"，将显示当前的游戏状态。
+        """
         if self.render_mode is None:
             gymnasium.logger.warn(
                 "您正在调用render方法，但没有指定任何渲染模式。"
@@ -413,15 +455,39 @@ class raw_env(AECEnv, EzPickle):
         )
 
     def observe(self, agent):
+        """
+        获取指定玩家的观察。
+
+        参数:
+            agent (str): 玩家名称
+
+        返回:
+            int: 观察值
+        """
         # 每个玩家的观察是另一个玩家的上一轮动作
         return np.array(self.observations[agent])
 
     def close(self):
+        """
+        关闭环境，释放资源。
+        """
         if self.screen is not None:
             pygame.quit()
             self.screen = None
 
     def reset(self, seed=None, options=None):
+        """
+        重置环境到初始状态。
+
+        参数:
+            seed (int, 可选): 随机数种子
+            options (dict, 可选): 重置选项
+
+        返回:
+            tuple: (observations, infos)
+                - observations (dict): 每个玩家的初始观察
+                - infos (dict): 每个玩家的初始信息
+        """
         self.agents = self.possible_agents[:]
         self._agent_selector = AgentSelector(self.agents)
         self.agent_selection = self._agent_selector.next()
@@ -451,6 +517,15 @@ class raw_env(AECEnv, EzPickle):
             self.screen = pygame.Surface((screen_width, screen_height))
 
     def step(self, action):
+        """
+        执行一步环境交互。
+
+        参数:
+            action (int): 选择的动作（0=石头，1=剪刀，2=布）
+
+        返回:
+            None: 环境状态会被更新，但不直接返回
+        """
         if (
             self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]

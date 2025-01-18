@@ -1,3 +1,18 @@
+"""
+环境基类模块。
+
+这个模块定义了PettingZoo中所有环境的基类。包括：
+1. AEC（Agent Environment Cycle）环境基类
+2. 并行环境基类
+3. 环境验证工具
+
+主要功能：
+1. 定义环境接口规范
+2. 提供基础的环境操作方法
+3. 实现通用的环境状态管理
+"""
+
+
 from __future__ import annotations
 
 import warnings
@@ -25,10 +40,21 @@ See docs/dev_docs.md for additional documentation and an example environment.
 
 
 class AECEnv(Generic[AgentID, ObsType, ActionType]):
-    """The AECEnv steps agents one at a time.
+    """AEC（Agent Environment Cycle）环境基类。
 
-    If you are unsure if you have implemented a AECEnv correctly, try running
-    the `api_test` documented in the Developer documentation on the website.
+    这个类定义了AEC环境的标准接口，所有AEC环境都应该继承这个类。
+    AEC环境的特点是智能体轮流与环境交互，每次只有一个智能体可以行动。
+
+    属性：
+        agents (list): 当前活跃的智能体列表
+        possible_agents (list): 所有可能的智能体列表
+        agent_selection (str): 当前选中的智能体
+        observation_spaces (dict): 每个智能体的观察空间
+        action_spaces (dict): 每个智能体的动作空间
+        rewards (dict): 每个智能体的即时奖励
+        terminations (dict): 每个智能体的终止状态
+        truncations (dict): 每个智能体的截断状态
+        infos (dict): 每个智能体的额外信息
     """
 
     metadata: dict[str, Any]  # Metadata for the environment
@@ -56,12 +82,17 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
     agent_selection: AgentID  # The agent currently being stepped
 
     def __init__(self):
+        """初始化AEC环境。"""
         pass
 
     def step(self, action: ActionType) -> None:
-        """Accepts and executes the action of the current agent_selection in the environment.
+        """执行一步环境交互。
 
-        Automatically switches control to the next agent.
+        参数：
+            action: 当前智能体的动作
+
+        注意：
+            这个方法需要在子类中实现
         """
         raise NotImplementedError
 
@@ -70,31 +101,48 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         seed: int | None = None,
         options: dict | None = None,
     ) -> None:
-        """Resets the environment to a starting state."""
+        """重置环境到初始状态。
+
+        参数：
+            seed (int, 可选): 随机数种子
+            options (dict, 可选): 重置选项
+
+        注意：
+            这个方法需要在子类中实现
+        """
         raise NotImplementedError
 
     # TODO: Remove `Optional` type below
     def observe(self, agent: AgentID) -> ObsType | None:
-        """Returns the observation an agent currently can make.
+        """获取指定智能体的观察。
 
-        `last()` calls this function.
+        参数：
+            agent (str): 智能体名称
+
+        返回：
+            object: 智能体的观察
+
+        注意：
+            这个方法需要在子类中实现
         """
         raise NotImplementedError
 
     def render(self) -> None | np.ndarray | str | list:
-        """Renders the environment as specified by self.render_mode.
+        """渲染环境的当前状态。
 
-        Render mode can be `human` to display a window.
-        Other render modes in the default environments are `'rgb_array'`
-        which returns a numpy array and is supported by all environments outside of classic,
-        and `'ansi'` which returns the strings printed (specific to classic environments).
+        注意：
+            这个方法需要在子类中实现
         """
         raise NotImplementedError
 
     def state(self) -> np.ndarray:
-        """State returns a global view of the environment.
+        """获取环境的全局状态。
 
-        It is appropriate for centralized training decentralized execution methods like QMIX
+        返回：
+            object: 环境的全局状态
+
+        注意：
+            这个方法在子类中是可选的
         """
         raise NotImplementedError(
             "state() method has not been implemented in the environment {}.".format(
@@ -103,19 +151,21 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         )
 
     def close(self):
-        """Closes any resources that should be released.
+        """关闭环境，释放资源。
 
-        Closes the rendering window, subprocesses, network connections,
-        or any other resources that should be released.
+        注意：
+            这个方法需要在子类中实现
         """
         pass
 
     def observation_space(self, agent: AgentID) -> gymnasium.spaces.Space:
-        """Takes in agent and returns the observation space for that agent.
+        """获取指定智能体的观察空间。
 
-        MUST return the same value for the same agent name
+        参数：
+            agent (str): 智能体名称
 
-        Default implementation is to return the observation_spaces dict
+        返回：
+            spaces.Space: 观察空间
         """
         warnings.warn(
             "Your environment should override the observation_space function. Attempting to use the observation_spaces dict attribute."
@@ -123,11 +173,13 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         return self.observation_spaces[agent]
 
     def action_space(self, agent: AgentID) -> gymnasium.spaces.Space:
-        """Takes in agent and returns the action space for that agent.
+        """获取指定智能体的动作空间。
 
-        MUST return the same value for the same agent name
+        参数：
+            agent (str): 智能体名称
 
-        Default implementation is to return the action_spaces dict
+        返回：
+            spaces.Space: 动作空间
         """
         warnings.warn(
             "Your environment should override the action_space function. Attempting to use the action_spaces dict attribute."
@@ -143,9 +195,12 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         return len(self.possible_agents)
 
     def _deads_step_first(self) -> AgentID:
-        """Makes .agent_selection point to first terminated agent.
+        """处理已终止智能体的动作。
 
-        Stores old value of agent_selection so that _was_dead_step can restore the variable after the dead agent steps.
+        这个方法在智能体已经终止但仍然尝试执行动作时被调用。
+
+        返回：
+            AgentID: 当前智能体
         """
         _deads_order = [
             agent
@@ -158,29 +213,45 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         return self.agent_selection
 
     def _clear_rewards(self) -> None:
-        """Clears all items in .rewards."""
+        """清除所有智能体的奖励。"""
         for agent in self.rewards:
             self.rewards[agent] = 0
 
     def _accumulate_rewards(self) -> None:
-        """Adds .rewards dictionary to ._cumulative_rewards dictionary.
+        """累积奖励。
 
-        Typically called near the end of a step() method
+        这个方法用于累积每个智能体的奖励。
         """
         for agent, reward in self.rewards.items():
             self._cumulative_rewards[agent] += reward
 
     def agent_iter(self, max_iter: int = 2**63) -> AECIterable:
-        """Yields the current agent (self.agent_selection).
+        """获取智能体迭代器。
 
-        Needs to be used in a loop where you step() each iteration.
+        参数：
+            max_iter (int, 可选): 最大迭代次数
+
+        返回：
+            AECIterable: 智能体迭代器
         """
         return AECIterable(self, max_iter)
 
     def last(
         self, observe: bool = True
     ) -> tuple[ObsType | None, float, bool, bool, dict[str, Any]]:
-        """Returns observation, cumulative reward, terminated, truncated, info for the current agent (specified by self.agent_selection)."""
+        """获取当前智能体的状态。
+
+        参数：
+            observe (bool, 可选): 是否观察当前智能体
+
+        返回：
+            tuple: (observation, cumulative_reward, terminated, truncated, info)
+                - observation (object): 当前智能体的观察
+                - cumulative_reward (float): 当前智能体的累积奖励
+                - terminated (bool): 当前智能体是否终止
+                - truncated (bool): 当前智能体是否截断
+                - info (dict): 当前智能体的额外信息
+        """
         agent = self.agent_selection
         assert agent is not None
         observation = self.observe(agent) if observe else None
@@ -193,22 +264,12 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         )
 
     def _was_dead_step(self, action: ActionType) -> None:
-        """Helper function that performs step() for dead agents.
+        """处理已终止智能体的动作。
 
-        Does the following:
+        这个方法在智能体已经终止但仍然尝试执行动作时被调用。
 
-        1. Removes dead agent from .agents, .terminations, .truncations, .rewards, ._cumulative_rewards, and .infos
-        2. Loads next agent into .agent_selection: if another agent is dead, loads that one, otherwise load next live agent
-        3. Clear the rewards dict
-
-        Examples:
-            Highly recommended to use at the beginning of step as follows:
-
-        def step(self, action):
-            if (self.terminations[self.agent_selection] or self.truncations[self.agent_selection]):
-                self._was_dead_step()
-                return
-            # main contents of step
+        参数：
+            action: 尝试执行的动作
         """
         if action is not None:
             raise ValueError("when an agent is dead, the only valid action is None")
@@ -243,7 +304,11 @@ class AECEnv(Generic[AgentID, ObsType, ActionType]):
         self._clear_rewards()
 
     def __str__(self) -> str:
-        """Returns a name which looks like: `space_invaders_v1`."""
+        """获取环境名称。
+
+        返回：
+            str: 环境名称
+        """
         if hasattr(self, "metadata"):
             return self.metadata.get("name", self.__class__.__name__)
         else:
@@ -279,11 +344,16 @@ class AECIterator(Iterator[AgentID], Generic[AgentID, ObsType, ActionType]):
 
 
 class ParallelEnv(Generic[AgentID, ObsType, ActionType]):
-    """Parallel environment class.
+    """并行环境基类。
 
-    It steps every live agent at once. If you are unsure if you
-    have implemented a ParallelEnv correctly, try running the `parallel_api_test` in
-    the Developer documentation on the website.
+    这个类定义了并行环境的标准接口，所有并行环境都应该继承这个类。
+    并行环境的特点是所有智能体可以同时行动。
+
+    属性：
+        agents (list): 当前活跃的智能体列表
+        possible_agents (list): 所有可能的智能体列表
+        observation_spaces (dict): 每个智能体的观察空间
+        action_spaces (dict): 每个智能体的动作空间
     """
 
     metadata: dict[str, Any]
@@ -300,9 +370,19 @@ class ParallelEnv(Generic[AgentID, ObsType, ActionType]):
         seed: int | None = None,
         options: dict | None = None,
     ) -> tuple[dict[AgentID, ObsType], dict[AgentID, dict]]:
-        """Resets the environment.
+        """重置环境到初始状态。
 
-        And returns a dictionary of observations (keyed by the agent name)
+        参数：
+            seed (int, 可选): 随机数种子
+            options (dict, 可选): 重置选项
+
+        返回：
+            tuple: (observations, infos)
+                - observations (dict): 每个智能体的初始观察
+                - infos (dict): 每个智能体的初始信息
+
+        注意：
+            这个方法需要在子类中实现
         """
         raise NotImplementedError
 
@@ -315,32 +395,48 @@ class ParallelEnv(Generic[AgentID, ObsType, ActionType]):
         dict[AgentID, bool],
         dict[AgentID, dict],
     ]:
-        """Receives a dictionary of actions keyed by the agent name.
+        """执行一步环境交互。
 
-        Returns the observation dictionary, reward dictionary, terminated dictionary, truncated dictionary
-        and info dictionary, where each dictionary is keyed by the agent.
+        参数：
+            actions (dict): 每个智能体的动作
+
+        返回：
+            tuple: (observations, rewards, terminations, truncations, infos)
+                - observations (dict): 每个智能体的新观察
+                - rewards (dict): 每个智能体的奖励
+                - terminations (dict): 每个智能体的终止状态
+                - truncations (dict): 每个智能体的截断状态
+                - infos (dict): 每个智能体的额外信息
+
+        注意：
+            这个方法需要在子类中实现
         """
         raise NotImplementedError
 
     def render(self) -> None | np.ndarray | str | list:
-        """Displays a rendered frame from the environment, if supported.
+        """渲染环境的当前状态。
 
-        Alternate render modes in the default environments are `'rgb_array'`
-        which returns a numpy array and is supported by all environments outside
-        of classic, and `'ansi'` which returns the strings printed
-        (specific to classic environments).
+        注意：
+            这个方法需要在子类中实现
         """
         raise NotImplementedError
 
     def close(self):
-        """Closes the rendering window."""
+        """关闭环境，释放资源。
+
+        注意：
+            这个方法需要在子类中实现
+        """
         pass
 
     def state(self) -> np.ndarray:
-        """Returns the state.
+        """获取环境的全局状态。
 
-        State returns a global view of the environment appropriate for
-        centralized training decentralized execution methods like QMIX
+        返回：
+            object: 环境的全局状态
+
+        注意：
+            这个方法在子类中是可选的
         """
         raise NotImplementedError(
             "state() method has not been implemented in the environment {}.".format(
@@ -349,11 +445,13 @@ class ParallelEnv(Generic[AgentID, ObsType, ActionType]):
         )
 
     def observation_space(self, agent: AgentID) -> gymnasium.spaces.Space:
-        """Takes in agent and returns the observation space for that agent.
+        """获取指定智能体的观察空间。
 
-        MUST return the same value for the same agent name
+        参数：
+            agent (str): 智能体名称
 
-        Default implementation is to return the observation_spaces dict
+        返回：
+            spaces.Space: 观察空间
         """
         warnings.warn(
             "Your environment should override the observation_space function. Attempting to use the observation_spaces dict attribute."
@@ -361,11 +459,13 @@ class ParallelEnv(Generic[AgentID, ObsType, ActionType]):
         return self.observation_spaces[agent]
 
     def action_space(self, agent: AgentID) -> gymnasium.spaces.Space:
-        """Takes in agent and returns the action space for that agent.
+        """获取指定智能体的动作空间。
 
-        MUST return the same value for the same agent name
+        参数：
+            agent (str): 智能体名称
 
-        Default implementation is to return the action_spaces dict
+        返回：
+            spaces.Space: 动作空间
         """
         warnings.warn(
             "Your environment should override the action_space function. Attempting to use the action_spaces dict attribute."
@@ -381,9 +481,10 @@ class ParallelEnv(Generic[AgentID, ObsType, ActionType]):
         return len(self.possible_agents)
 
     def __str__(self) -> str:
-        """Returns the name.
+        """获取环境名称。
 
-        Which looks like: "space_invaders_v1" by default
+        返回：
+            str: 环境名称
         """
         if hasattr(self, "metadata"):
             return self.metadata.get("name", self.__class__.__name__)
