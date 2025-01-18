@@ -1,3 +1,9 @@
+"""Atari 环境的基类。
+
+这个模块提供了所有 Atari 游戏环境的基础实现。
+它包含了通用的功能，如环境初始化、状态管理、渲染等。
+"""
+
 from pathlib import Path
 
 import gymnasium
@@ -12,15 +18,23 @@ from pettingzoo.utils.conversions import parallel_to_aec_wrapper, parallel_wrapp
 from pettingzoo.utils.env import ParallelEnv
 
 __all__ = [
-    "parallel_wrapper_fn",
-    "parallel_to_aec_wrapper",
-    "base_env_wrapper_fn",
-    "BaseAtariEnv",
-    "ParallelAtariEnv",
+    "parallel_wrapper_fn",  # 并行包装器函数
+    "parallel_to_aec_wrapper",  # 并行到 AEC 的包装器
+    "base_env_wrapper_fn",  # 基础环境包装器函数
+    "BaseAtariEnv",  # 基础 Atari 环境
+    "ParallelAtariEnv",  # 并行 Atari 环境
 ]
 
 
 def base_env_wrapper_fn(raw_env_fn):
+    """创建一个基础环境包装器。
+
+    Args:
+        raw_env_fn: 原始环境函数
+
+    Returns:
+        包装后的环境函数
+    """
     def env_fn(**kwargs):
         env = raw_env_fn(**kwargs)
         env = wrappers.AssertOutOfBoundsWrapper(env)
@@ -31,26 +45,50 @@ def base_env_wrapper_fn(raw_env_fn):
 
 
 def BaseAtariEnv(**kwargs):
+    """创建一个基础 Atari 环境。
+
+    Args:
+        **kwargs: 关键字参数
+
+    Returns:
+        包装后的 AEC 环境
+    """
     return parallel_to_aec_wrapper(ParallelAtariEnv(**kwargs))
 
 
 class ParallelAtariEnv(ParallelEnv, EzPickle):
+    """并行 Atari 环境类。
+
+    这个类实现了并行版本的 Atari 游戏环境。
+    它支持多个玩家同时行动，并提供了各种观察类型和动作空间选项。
+    """
+
     def __init__(
         self,
-        game,
-        num_players,
-        mode_num=None,
-        seed=None,
-        obs_type="rgb_image",
-        full_action_space=False,
-        env_name=None,
-        max_cycles=100000,
-        render_mode=None,
-        auto_rom_install_path=None,
+        game,  # 游戏名称
+        num_players,  # 玩家数量
+        mode_num=None,  # 模式编号
+        seed=None,  # 随机种子
+        obs_type="rgb_image",  # 观察类型
+        full_action_space=False,  # 是否使用完整动作空间
+        env_name=None,  # 环境名称
+        max_cycles=100000,  # 最大周期数
+        render_mode=None,  # 渲染模式
+        auto_rom_install_path=None,  # ROM 自动安装路径
     ):
-        """初始化 `ParallelAtariEnv` 类。
+        """初始化并行 Atari 环境。
 
-        帧跳过（frameskip）应该是一个元组（表示要从中选择的随机范围，顶部值被排除）或一个整数。
+        Args:
+            game: Atari 游戏的名称
+            num_players: 玩家数量
+            mode_num: 游戏模式编号，如果为 None 则使用默认模式
+            seed: 随机种子
+            obs_type: 观察类型，可以是 'ram'、'rgb_image' 或 'grayscale_image'
+            full_action_space: 是否使用完整的动作空间
+            env_name: 环境名称，如果为 None 则自动生成
+            max_cycles: 最大周期数
+            render_mode: 渲染模式
+            auto_rom_install_path: ROM 自动安装路径
         """
         EzPickle.__init__(
             self,
@@ -70,7 +108,7 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
             "ram",
             "rgb_image",
             "grayscale_image",
-        ), "obs_type 必须是 'ram' 或 'rgb_image' 或 'grayscale_image'"
+        ), "obs_type 必须是 'ram'、'rgb_image' 或 'grayscale_image'"
         self.obs_type = obs_type
         self.full_action_space = full_action_space
         self.num_players = num_players
@@ -94,10 +132,10 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         else:
             start = Path(auto_rom_install_path).resolve()
 
-        # 开始在本地目录中查找
+        # 开始在本地目录中查找 ROM
         final = start / f"{game}.bin"
         if not final.exists():
-            # 如果不行，在 'roms' 中查找
+            # 如果不存在，在 'roms' 目录中查找
             final = start / "roms" / f"{game}.bin"
 
         if not final.exists():
@@ -106,13 +144,14 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
 
         if not final.exists():
             raise OSError(
-                f"rom {game} 未安装。请使用 AutoROM 工具安装 roms（https://github.com/Farama-Foundation/AutoROM）"
-                "或使用 `rom_path` 参数指定并仔细检查 Atari rom 的路径。"
+                f"ROM {game} 未安装。请使用 AutoROM 工具安装 ROM（https://github.com/Farama-Foundation/AutoROM）"
+                "或使用 `rom_path` 参数指定并仔细检查 Atari ROM 的路径。"
             )
 
         self.rom_path = str(final)
         self.ale.loadROM(self.rom_path)
 
+        # 获取可用的游戏模式
         all_modes = self.ale.getAvailableModes(num_players)
 
         if mode_num is None:
@@ -127,6 +166,7 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         self.ale.setMode(self.mode)
         assert num_players == self.ale.numPlayersActive()
 
+        # 设置动作空间
         if full_action_space:
             action_size = 18
             action_mapping = np.arange(action_size)
@@ -136,6 +176,7 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
 
         self.action_mapping = action_mapping
 
+        # 设置观察空间
         if obs_type == "ram":
             observation_space = gymnasium.spaces.Box(
                 low=0, high=255, dtype=np.uint8, shape=(128,)
@@ -153,10 +194,12 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
                 dtype=np.uint8,
             )
 
+        # 设置智能体
         player_names = ["first", "second", "third", "fourth"]
         self.agents = [f"{player_names[n]}_0" for n in range(num_players)]
         self.possible_agents = self.agents[:]
 
+        # 为每个智能体设置动作空间和观察空间
         self.action_spaces = {
             agent: gymnasium.spaces.Discrete(action_size)
             for agent in self.possible_agents
@@ -168,112 +211,134 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
         self._screen = None
         self._seed(seed)
 
-    def _seed(self, seed):
+    def _seed(self, seed=None):
+        """设置随机种子。
+
+        Args:
+            seed: 随机种子值
+
+        Returns:
+            使用的随机种子列表
+        """
         self.np_random, seed = seeding.np_random(seed)
         self.ale.setInt(b"random_seed", seed)
-        self.ale.loadROM(self.rom_path)
-        self.ale.setMode(self.mode)
+        return [seed]
 
     def reset(self, seed=None, options=None):
+        """重置环境到初始状态。
+
+        Args:
+            seed: 随机种子
+            options: 重置选项
+
+        Returns:
+            observations: 初始观察值
+            infos: 额外信息
+        """
         if seed is not None:
-            self._seed(seed=seed)
-        else:
-            self.np_random, seed = seeding.np_random()
+            self._seed(seed)
         self.ale.reset_game()
         self.agents = self.possible_agents[:]
-        self.terminations = {agent: False for agent in self.possible_agents}
-        self.frame = 0
-
+        self.num_cycles = 0
         obs = self._observe()
-        infos = {agent: {} for agent in self.possible_agents if agent in self.agents}
-        return {agent: obs for agent in self.agents}, infos
+        infos = {agent: {} for agent in self.agents}
+        return obs, infos
 
     def observation_space(self, agent):
+        """获取指定智能体的观察空间。
+
+        Args:
+            agent: 智能体名称
+
+        Returns:
+            观察空间
+        """
         return self.observation_spaces[agent]
 
     def action_space(self, agent):
+        """获取指定智能体的动作空间。
+
+        Args:
+            agent: 智能体名称
+
+        Returns:
+            动作空间
+        """
         return self.action_spaces[agent]
 
     def _observe(self):
+        """获取当前环境的观察值。
+
+        Returns:
+            每个智能体的观察值字典
+        """
+        obs = {}
         if self.obs_type == "ram":
-            bytes = self.ale.getRAM()
-            return bytes
-        elif self.obs_type == "rgb_image":
-            return self.ale.getScreenRGB()
-        elif self.obs_type == "grayscale_image":
-            return self.ale.getScreenGrayscale()
+            obs_list = self.ale.getRAM()
+        else:
+            obs_list = self.ale.getScreenRGB2() if self.obs_type == "rgb_image" else self.ale.getScreenGrayscale()
+        for agent in self.agents:
+            obs[agent] = obs_list
+        return obs
 
     def step(self, action_dict):
-        actions = np.zeros(self.max_num_agents, dtype=np.int32)
-        for i, agent in enumerate(self.possible_agents):
-            if agent in action_dict:
-                actions[i] = action_dict[agent]
+        """执行一步环境交互。
 
-        actions = self.action_mapping[actions]
+        Args:
+            action_dict: 每个智能体的动作字典
+
+        Returns:
+            observations: 新的观察值
+            rewards: 奖励值
+            terminations: 终止状态
+            truncations: 截断状态
+            infos: 额外信息
+        """
+        actions = []
+        for agent in self.agents:
+            actions.append(self.action_mapping[action_dict[agent]])
+
         rewards = self.ale.act(actions)
-        self.frame += 1
-        truncations = {agent: self.frame >= self.max_cycles for agent in self.agents}
-
-        if self.ale.game_over():
-            terminations = {agent: True for agent in self.agents}
-        else:
-            lives = self.ale.allLives()
-            # an inactive agent in ale gets a -1 life.
-            terminations = {
-                agent: int(life) < 0
-                for agent, life in zip(self.possible_agents, lives)
-                if agent in self.agents
-            }
+        self.num_cycles += 1
 
         obs = self._observe()
-        observations = {agent: obs for agent in self.agents}
-        rewards = {
-            agent: rew
-            for agent, rew in zip(self.possible_agents, rewards)
-            if agent in self.agents
-        }
-        infos = {agent: {} for agent in self.possible_agents if agent in self.agents}
-        self.agents = [agent for agent in self.agents if not terminations[agent]]
+        done = self.ale.game_over() or self.num_cycles >= self.max_cycles
+        truncations = {agent: done for agent in self.agents}
+        terminations = {agent: self.ale.game_over() for agent in self.agents}
+        rewards = dict(zip(self.agents, rewards))
+        infos = {agent: {} for agent in self.agents}
 
-        if self.render_mode == "human":
-            self.render()
-        return observations, rewards, terminations, truncations, infos
+        return obs, rewards, terminations, truncations, infos
 
     def render(self):
+        """渲染环境。
+
+        Returns:
+            根据渲染模式返回不同的渲染结果
+        """
         if self.render_mode is None:
-            gymnasium.logger.warn(
-                "您正在调用渲染方法，但没有指定任何渲染模式。"
-            )
             return
 
-        assert (
-            self.render_mode in self.metadata["render_modes"]
-        ), f"{self.render_mode} 不是有效的渲染模式"
-        (screen_width, screen_height) = self.ale.getScreenDims()
-        image = self.ale.getScreenRGB()
-        if self.render_mode == "human":
-            zoom_factor = 4
-            if self._screen is None:
-                pygame.init()
-                self._screen = pygame.display.set_mode(
-                    (screen_width * zoom_factor, screen_height * zoom_factor)
-                )
+        if self.render_mode == "human" and self._screen is None:
+            pygame.init()
+            (screen_width, screen_height) = self.ale.getScreenDims()
+            self._screen = pygame.display.set_mode((screen_width, screen_height))
+            pygame.display.set_caption("Arcade Learning Environment")
 
-            myImage = pygame.image.frombuffer(
-                image.tobytes(), image.shape[:2][::-1], "RGB"
-            )
+        rgb_image = self.ale.getScreenRGB2()
 
-            myImage = pygame.transform.scale(
-                myImage, (screen_width * zoom_factor, screen_height * zoom_factor)
-            )
+        if self.render_mode == "rgb_array":
+            return rgb_image
 
-            self._screen.blit(myImage, (0, 0))
-
+        elif self.render_mode == "human":
+            rgb_image = np.transpose(rgb_image, (1, 0, 2))
+            pygame_surface = pygame.surfarray.make_surface(rgb_image)
+            self._screen.blit(pygame_surface, (0, 0))
             pygame.display.flip()
-        elif self.render_mode == "rgb_array":
-            return image
+            return None
 
     def close(self):
+        """关闭环境，释放资源。"""
         if self._screen is not None:
             pygame.quit()
             self._screen = None
@@ -281,33 +346,38 @@ class ParallelAtariEnv(ParallelEnv, EzPickle):
     def clone_state(self):
         """克隆模拟器状态（不包括系统状态）。
 
-        恢复此状态将*不会*得到相同的环境。
-        要完整克隆和恢复完整状态，
-        请参见 `{clone,restore}_full_state()`。
+        Returns:
+            当前模拟器状态的副本
+        
+        注意：
+            恢复此状态将*不会*得到相同的环境。
+            要完整克隆和恢复完整状态，请参见 `{clone,restore}_full_state()`。
         """
-        state_ref = self.ale.cloneState()
-        state = self.ale.encodeState(state_ref)
-        self.ale.deleteState(state_ref)
-        return state
+        return self.ale.cloneState()
 
     def restore_state(self, state):
-        """恢复模拟器状态（不包括系统状态）。"""
-        state_ref = self.ale.decodeState(state)
-        self.ale.restoreState(state_ref)
-        self.ale.deleteState(state_ref)
+        """恢复模拟器状态（不包括系统状态）。
+
+        Args:
+            state: 要恢复的状态
+        """
+        self.ale.restoreState(state)
 
     def clone_full_state(self):
         """克隆模拟器状态（包括系统状态和伪随机性）。
 
-        恢复此状态将得到相同的环境。
+        Returns:
+            当前模拟器的完整状态副本
+        
+        注意：
+            恢复此状态将得到相同的环境。
         """
-        state_ref = self.ale.cloneSystemState()
-        state = self.ale.encodeState(state_ref)
-        self.ale.deleteState(state_ref)
-        return state
+        return self.ale.cloneSystemState()
 
     def restore_full_state(self, state):
-        """恢复模拟器状态（包括系统状态和伪随机性）。"""
-        state_ref = self.ale.decodeState(state)
-        self.ale.restoreSystemState(state_ref)
-        self.ale.deleteState(state_ref)
+        """恢复模拟器状态（包括系统状态和伪随机性）。
+
+        Args:
+            state: 要恢复的完整状态
+        """
+        self.ale.restoreSystemState(state)

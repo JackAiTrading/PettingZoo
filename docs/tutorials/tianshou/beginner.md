@@ -1,22 +1,22 @@
 ---
-title: "Tianshou: Basic API Usage"
+title: "天授（Tianshou）：基础 API 使用"
 ---
 
-# Tianshou: Basic API Usage
+# 天授（Tianshou）：基础 API 使用
 
-This tutorial is a simple example of how to use [Tianshou](https://github.com/thu-ml/tianshou) with a PettingZoo environment.
+本教程是一个简单的示例，展示如何在 PettingZoo 环境中使用[天授（Tianshou）](https://github.com/thu-ml/tianshou)。
 
-It demonstrates a game betwenen two [random policy](https://tianshou.readthedocs.io/en/master/_modules/tianshou/policy/random.html) agents in the [rock-paper-scissors](/environments/classic/rps/) environment.
+它演示了在[石头剪刀布](/environments/classic/rps/)环境中，两个使用[随机策略](https://tianshou.readthedocs.io/en/master/_modules/tianshou/policy/random.html)的智能体之间的对局。
 
-## Environment Setup
-To follow this tutorial, you will need to install the dependencies shown below. It is recommended to use a newly-created virtual environment to avoid dependency conflicts.
+## 环境设置
+要学习本教程，你需要安装下面显示的依赖项。建议使用新创建的虚拟环境以避免依赖冲突。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/Tianshou/requirements.txt
    :language: text
 ```
 
-## Code
-The following code should run without any issues. The comments are designed to help you understand how to use PettingZoo with Tianshou. If you have any questions, please feel free to ask in the [Discord server](https://discord.gg/nhvKkYa6qX).
+## 代码
+以下代码应该可以直接运行。注释旨在帮助你理解如何在天授（Tianshou）中使用 PettingZoo。如果你有任何问题，请随时在 [Discord 服务器](https://discord.gg/nhvKkYa6qX)中询问。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/Tianshou/1_basic_api_usage.py
    :language: python

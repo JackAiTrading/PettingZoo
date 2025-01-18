@@ -1,43 +1,45 @@
-# PettingZoo docs
+# PettingZoo 文档
 
-This folder contains the documentation for [PettingZoo](https://github.com/Farama-Foundation/PettingZoo).
+本文件夹包含 [PettingZoo](https://github.com/Farama-Foundation/PettingZoo) 的文档。
 
-For more information about how to contribute to the documentation go to our [CONTRIBUTING.md](https://github.com/Farama-Foundation/PettingZoo/blob/master/CONTRIBUTING.md)
+关于如何为文档做贡献的更多信息，请参阅我们的 [CONTRIBUTING.md](https://github.com/Farama-Foundation/PettingZoo/blob/master/CONTRIBUTING.md)。
 
-## Editing an environment page
+## 编辑环境页面
 
-Environments' documentation can be found at the top of the file python file where the environment is declared, for example, the documentation for the chess environment can be at [/pettingzoo/classic/chess/chess.py](https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/classic/chess/chess.py)
+环境的文档位于定义环境的 Python 文件顶部。例如，国际象棋环境的文档位于 [/pettingzoo/classic/chess/chess.py](https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/classic/chess/chess.py)。
 
-To generate the environments pages you need to execute the `docs/_scripts/gen_envs_mds.py` script:
+要生成环境页面，需要执行 `docs/_scripts/gen_envs_mds.py` 脚本：
 
 ```
 cd docs
 python _scripts/gen_envs_mds.py
 ```
 
-## Build the Documentation
+## 构建文档
 
-Install the required packages and PettingZoo:
+安装所需的包和 PettingZoo：
 
 ```
 pip install -e .
 pip install -r docs/requirements.txt
 ```
 
-To build the documentation once:
+一次性构建文档：
 
 ```
 cd docs
 make dirhtml
 ```
 
-To rebuild the documentation automatically every time a change is made:
+自动监视文件变化并重新构建文档：
 
 ```
 cd docs
 sphinx-autobuild -b dirhtml . _build
 ```
 
-## Test the documentation
-The plugin [pytest-markdown-docs](https://github.com/modal-labs/pytest-markdown-docs) allows us to test our documentation to ensure that example code runs successfully. To test, run the following command:
+## 测试文档
+
+我们使用 [pytest-markdown-docs](https://github.com/modal-labs/pytest-markdown-docs) 插件来测试文档，确保示例代码能够成功运行。要运行测试，请执行以下命令：
+
 pytest docs --markdown-docs -m markdown-docs
