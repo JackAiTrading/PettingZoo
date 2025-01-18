@@ -1,113 +1,111 @@
 # noqa: D212, D415
 """
-# Rock Paper Scissors
+# 石头剪刀布游戏环境
+
+这个模块实现了标准的石头剪刀布游戏，支持两个玩家同时出拳。
+游戏规则：石头胜剪刀，剪刀胜布，布胜石头。
 
 ```{figure} classic_rps.gif
 :width: 140px
 :name: rps
 ```
 
-This environment is part of the <a href='..'>classic environments</a>. Please read that page first for general information.
+这个环境是经典环境的一部分。请先阅读<a href='..'>经典环境</a>页面获取更多信息。
 
-| Import             | `from pettingzoo.classic import rps_v2` |
+| 导入             | `from pettingzoo.classic import rps_v2` |
 |--------------------|-----------------------------------------|
-| Actions            | Discrete                                |
-| Parallel API       | Yes                                     |
-| Manual Control     | No                                      |
-| Agents             | `agents= ['player_0', 'player_1']`      |
-| Agents             | 2                                       |
-| Action Shape       | Discrete(3)                             |
-| Action Values      | Discrete(3)                             |
-| Observation Shape  | Discrete(4)                             |
-| Observation Values | Discrete(4)                             |
+| 动作类型            | 离散                                |
+| 并行API           | 是                                     |
+| 手动控制          | 否                                      |
+| 智能体             | `agents= ['player_0', 'player_1']`      |
+| 智能体数量          | 2                                       |
+| 动作形状          | 离散(3)                             |
+| 动作值            | 离散(3)                             |
+| 观察形状          | 离散(4)                             |
+| 观察值            | 离散(4)                             |
 
 
-Rock, Paper, Scissors is a 2-player hand game where each player chooses either rock, paper or scissors and reveals their choices simultaneously. If both players make the same choice, then it is a draw. However, if their choices are different, the winner is determined as follows: rock beats
-scissors, scissors beat paper, and paper beats rock.
+石头剪刀布是两个玩家同时出拳的游戏。如果两个玩家出相同的拳，则为平局。如果两个玩家出不同的拳，则胜负由以下规则决定：石头胜剪刀，剪刀胜布，布胜石头。
 
-The game can be expanded to have extra actions by adding new action pairs. Adding the new actions in pairs allows for a more balanced game. This means that the final game will have an odd number of actions and each action wins over exactly half of the other actions while being defeated by the
-other half. The most common expansion of this game is [Rock, Paper, Scissors, Lizard, Spock](http://www.samkass.com/theories/RPSSL.html), in which only one extra action pair is added.
+这个游戏可以通过添加新的动作对来扩展。添加新的动作对可以使游戏更加平衡。这样一来，游戏的动作数量将为奇数，每个动作将胜过其他动作的一半，同时被其他动作的一半击败。这个游戏最常见的扩展是[石头剪刀布蜥蜴史波克](http://www.samkass.com/theories/RPSSL.html)，在这个版本中，只添加了一个新的动作对。
 
-### Arguments
+### 参数
 
-``` python
+```python
 rps_v2.env(num_actions=3, max_cycles=15)
 ```
 
-`num_actions`:  number of actions applicable in the game. The default value is 3 for the game of Rock, Paper, Scissors. This argument must be an integer greater than 3 and with odd parity. If the value given is 5, the game is expanded to Rock, Paper, Scissors, Lizard, Spock.
+`num_actions`: 游戏中的动作数量。默认值为3，表示标准的石头剪刀布游戏。这个参数必须是大于3的奇数。如果这个值为5，则游戏将扩展为石头剪刀布蜥蜴史波克。
 
-`max_cycles`:  after max_cycles steps all agents will return done.
+`max_cycles`: 游戏的最大回合数。超过这个回合数后，所有玩家将被视为完成游戏。
 
-### Observation Space
+### 观察空间
 
-#### Rock, Paper, Scissors
+#### 石头剪刀布
 
-If 3 actions are required, the game played is the standard Rock, Paper, Scissors. The observation is the last opponent action and its space is a scalar value with 4 possible values. Since both players reveal their choices at the same time, the observation is None until both players have acted.
-Therefore, 3 represents no action taken yet. Rock is represented with 0, paper with 1 and scissors with 2.
+如果动作数量为3，则游戏为标准的石头剪刀布游戏。观察空间为一个标量值，可能的值为4个。由于两个玩家同时出拳，因此观察空间在两个玩家都出拳之前为None。因此，3表示没有出拳。石头、剪刀和布分别用0、1和2表示。
 
-| Value  |  Observation |
+| 值  | 观察 |
 | :----: | :---------:  |
-| 0      | Rock         |
-| 1      | Paper        |
-| 2      | Scissors     |
+| 0      | 石头         |
+| 1      | 剪刀        |
+| 2      | 布          |
 | 3      | None         |
 
-#### Expanded Game
+#### 扩展游戏
 
-If the number of actions required in the game is greater than 3, the observation is still the last opponent action and its space is a scalar with 1 + n possible values, where n is the number of actions. The observation will as well be None until both players have acted and the largest possible
-scalar value for the space, 1 + n, represents no action taken yet. The additional actions are encoded in increasing order starting from the 0 Rock action. If 5 actions are required the game is expanded to Rock, Paper, Scissors, Lizard, Spock. The following table shows an example of an observation
-space with 7 possible actions.
+如果动作数量大于3，则观察空间为一个标量值，可能的值为1+n个，其中n是动作数量。观察空间在两个玩家都出拳之前为None，最大可能值为1+n，表示没有出拳。额外的动作按照从0开始的顺序编码。如果动作数量为5，则游戏扩展为石头剪刀布蜥蜴史波克。下表显示了一个可能的观察空间。
 
-| Value  |  Observation |
+| 值  | 观察 |
 | :----: | :---------:  |
-| 0      | Rock         |
-| 1      | Paper        |
-| 2      | Scissors     |
-| 3      | Lizard       |
-| 4      | Spock        |
-| 5      | Action_6     |
-| 6      | Action_7     |
+| 0      | 石头         |
+| 1      | 剪刀        |
+| 2      | 布          |
+| 3      | 蜥蜴        |
+| 4      | 史波克      |
+| 5      | 动作6       |
+| 6      | 动作7       |
 | 7      | None         |
 
-### Action Space
+### 动作空间
 
-#### Rock, Paper, Scissors
+#### 石头剪刀布
 
-The action space is a scalar value with 3 possible values. The values are encoded as follows: Rock is 0, paper is 1 and scissors is 2.
+动作空间为一个标量值，可能的值为3个。石头、剪刀和布分别用0、1和2表示。
 
-| Value  |  Action |
+| 值  | 动作 |
 | :----: | :---------:  |
-| 0      | Rock         |
-| 1      | Paper        |
-| 2      | Scissors     |
+| 0      | 石头         |
+| 1      | 剪刀        |
+| 2      | 布          |
 
-#### Expanded Game
+#### 扩展游戏
 
-The action space is a scalar value with n possible values, where n is the number of additional action pairs. The values for 7 possible actions are encoded as in the following table.
+动作空间为一个标量值，可能的值为n个，其中n是动作数量。动作按照从0开始的顺序编码。下表显示了一个可能的动作空间。
 
-| Value  |  Action |
+| 值  | 动作 |
 | :----: | :---------:  |
-| 0      | Rock         |
-| 1      | Paper        |
-| 2      | Scissors     |
-| 3      | Lizard       |
-| 4      | Spock        |
-| 5      | Action_6     |
-| 6      | Action_7     |
+| 0      | 石头         |
+| 1      | 剪刀        |
+| 2      | 布          |
+| 3      | 蜥蜴        |
+| 4      | 史波克      |
+| 5      | 动作6       |
+| 6      | 动作7       |
 
-### Rewards
+### 奖励
 
-| Winner | Loser |
+| 胜者 | 负者 |
 | :----: | :---: |
 | +1     | -1    |
 
-If the game ends in a draw, both players will receive a reward of 0.
+如果游戏结束时为平局，则两个玩家都将获得0奖励。
 
-### Version History
+### 版本历史
 
-* v2: Merge RPS and rock paper lizard scissors spock environments, add num_actions and max_cycles arguments (1.9.0)
-* v1: Bumped version of all environments due to adoption of new agent iteration scheme where all agents are iterated over after they are done (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v2: 合并RPS和石头剪刀布蜥蜴史波克环境，添加num_actions和max_cycles参数 (1.9.0)
+* v1: 更新所有环境的版本号，因为采用了新的智能体迭代方案 (1.4.0)
+* v0: 初始版本发布 (1.0.0)
 
 """
 from __future__ import annotations
@@ -156,10 +154,16 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class raw_env(AECEnv, EzPickle):
-    """Two-player environment for rock paper scissors.
+    """石头剪刀布游戏环境。
 
-    Expandable environment to rock paper scissors lizard spock action_6 action_7 ...
-    The observation is simply the last opponent action.
+    这个环境实现了标准的石头剪刀布游戏，支持两个玩家同时出拳。
+
+    属性:
+        metadata (dict): 环境的元数据，包括版本信息
+        possible_agents (list): 可能的智能体列表，包括玩家1和玩家2
+        action_spaces (dict): 每个玩家的动作空间
+        observation_spaces (dict): 每个玩家的观察空间
+        num_moves (int): 游戏总回合数
     """
 
     metadata = {
@@ -180,16 +184,16 @@ class raw_env(AECEnv, EzPickle):
         super().__init__()
         self.max_cycles = max_cycles
 
-        # number of actions must be odd and greater than 3
-        assert num_actions > 2, "The number of actions must be equal or greater than 3."
-        assert num_actions % 2 != 0, "The number of actions must be an odd number."
+        # 动作数量必须是奇数且大于3
+        assert num_actions > 2, "动作数量必须大于或等于3。"
+        assert num_actions % 2 != 0, "动作数量必须是奇数。"
         self._moves = ["ROCK", "PAPER", "SCISSORS"]
         if num_actions > 3:
-            # expand to lizard, spock for first extra action pair
+            # 扩展到蜥蜴和史波克
             self._moves.extend(("SPOCK", "LIZARD"))
             for action in range(num_actions - 5):
                 self._moves.append("ACTION_" f"{action + 6}")
-        # none is last possible action, to satisfy discrete action space
+        # None是最后一个可能的动作，以满足离散动作空间
         self._moves.append("None")
         self._none = num_actions
 
@@ -217,7 +221,7 @@ class raw_env(AECEnv, EzPickle):
     def render(self):
         if self.render_mode is None:
             gymnasium.logger.warn(
-                "You are calling render method without specifying any render mode."
+                "您正在调用render方法，但没有指定任何渲染模式。"
             )
             return
 
@@ -230,14 +234,14 @@ class raw_env(AECEnv, EzPickle):
         screen_height = self.screen_height
         screen_width = int(screen_height * 5 / 14)
 
-        # Load and all of the necessary images
+        # 加载所有必要的图像
         paper = get_image(os.path.join("img", "Paper.png"))
         rock = get_image(os.path.join("img", "Rock.png"))
         scissors = get_image(os.path.join("img", "Scissors.png"))
         spock = get_image(os.path.join("img", "Spock.png"))
         lizard = get_image(os.path.join("img", "Lizard.png"))
 
-        # Scale images in history
+        # 缩放历史图像
         paper = pygame.transform.scale(
             paper, (int(screen_height / 9), int(screen_height / 9 * (14 / 12)))
         )
@@ -254,18 +258,18 @@ class raw_env(AECEnv, EzPickle):
             lizard, (int(screen_height / 9 * (9 / 18)), int(screen_height / 9))
         )
 
-        # Set background color
+        # 设置背景颜色
         bg = (255, 255, 255)
         self.screen.fill(bg)
 
-        # Set font properties
+        # 设置字体属性
         black = (0, 0, 0)
         font = get_font(
             (os.path.join("font", "Minecraft.ttf")), int(screen_height / 25)
         )
 
         for i, move in enumerate(self.history[0:10]):
-            # Blit move history
+            # 绘制历史记录
             if self._moves[move] == "ROCK":
                 self.screen.blit(
                     rock,
@@ -321,7 +325,7 @@ class raw_env(AECEnv, EzPickle):
                     ),
                 )
 
-        # Scale images in current game
+        # 缩放当前游戏图像
         paper = pygame.transform.scale(
             paper, (int(screen_height / 7), int(screen_height / 7 * (14 / 12)))
         )
@@ -340,8 +344,8 @@ class raw_env(AECEnv, EzPickle):
 
         if len(self.agents) > 1:
             for i in range(0, 2):
-                # Text for each agent
-                text = font.render("Agent " + str(i + 1), True, black)
+                # 绘制每个玩家的文本
+                text = font.render("玩家 " + str(i + 1), True, black)
                 textRect = text.get_rect()
                 textRect.center = (
                     (screen_width / 2) + offset(i, 0, screen_width * 11 / 40),
@@ -349,7 +353,7 @@ class raw_env(AECEnv, EzPickle):
                 )
                 self.screen.blit(text, textRect)
 
-                # Blit agent action
+                # 绘制每个玩家的动作
                 if self._moves[self.state[self.agents[i]]] == "ROCK":
                     self.screen.blit(
                         rock,
@@ -409,7 +413,7 @@ class raw_env(AECEnv, EzPickle):
         )
 
     def observe(self, agent):
-        # observation of one agent is the previous state of the other
+        # 每个玩家的观察是另一个玩家的上一轮动作
         return np.array(self.observations[agent])
 
     def close(self):
@@ -442,7 +446,7 @@ class raw_env(AECEnv, EzPickle):
 
         if self.render_mode == "human":
             self.screen = pygame.display.set_mode((screen_width, screen_height))
-            pygame.display.set_caption("Rock Paper Scissors")
+            pygame.display.set_caption("石头剪刀布")
         else:
             self.screen = pygame.Surface((screen_width, screen_height))
 
@@ -458,19 +462,19 @@ class raw_env(AECEnv, EzPickle):
 
         self.state[self.agent_selection] = action
 
-        # collect reward if it is the last agent to act
+        # 收集奖励，如果这是最后一个玩家动作
         if self._agent_selector.is_last():
-            # same action => 0 reward each agent
+            # 相同动作 => 每个玩家奖励为0
             if self.state[self.agents[0]] == self.state[self.agents[1]]:
                 rewards = (0, 0)
             else:
-                # same action parity => lower action number wins
+                # 相同动作奇偶性 => 动作值较低的玩家获胜
                 if (self.state[self.agents[0]] + self.state[self.agents[1]]) % 2 == 0:
                     if self.state[self.agents[0]] > self.state[self.agents[1]]:
                         rewards = (-1, 1)
                     else:
                         rewards = (1, -1)
-                # different action parity => higher action number wins
+                # 不同动作奇偶性 => 动作值较高的玩家获胜
                 else:
                     if self.state[self.agents[0]] > self.state[self.agents[1]]:
                         rewards = (1, -1)
@@ -491,7 +495,7 @@ class raw_env(AECEnv, EzPickle):
             if self.render_mode == "human":
                 self.render()
 
-            # record history by pushing back
+            # 记录历史
             self.history[2:] = self.history[:-2]
             self.history[0] = self.state[self.agents[0]]
             self.history[1] = self.state[self.agents[1]]

@@ -1,84 +1,82 @@
 # noqa: D212, D415
 """
-# Waterworld
+# 水世界
 
 ```{figure} sisl_waterworld.gif
 :width: 140px
 :name: waterworld
 ```
 
-This environment is part of the <a href='..'>SISL environments</a>. Please read that page first for general information.
+此环境是 <a href='..'>SISL 环境</a>的一部分。请先阅读该页面以了解基本信息。
 
-| Import               | `from pettingzoo.sisl import waterworld_v4`            |
+| 导入                  | `from pettingzoo.sisl import waterworld_v4`            |
 |----------------------|--------------------------------------------------------|
-| Actions              | Continuous                                             |
-| Parallel API         | Yes                                                    |
-| Manual Control       | No                                                     |
-| Agents               | `agents= ['pursuer_0', 'pursuer_1', ..., 'pursuer_4']` |
-| Agents               | 5                                                      |
-| Action Shape         | (2,)                                                   |
-| Action Values        | [-0.01, 0.01]                                          |
-| Observation Shape    | (242,)                                                 |
-| Observation Values   | [-√2, 2*√2]                                            |
+| 动作空间             | 连续                                                    |
+| 并行 API            | 支持                                                    |
+| 手动控制             | 不支持                                                  |
+| 智能体               | `agents= ['pursuer_0', 'pursuer_1', ..., 'pursuer_4']` |
+| 智能体数量           | 5                                                      |
+| 动作形状             | (2,)                                                   |
+| 动作值域             | [-0.01, 0.01]                                          |
+| 观察空间形状         | (242,)                                                 |
+| 观察值域             | [-√2, 2*√2]                                            |
 
 
-Waterworld is a simulation of archea navigating and trying to survive in their environment. These archea, called pursuers attempt to consume food while avoiding poison. The agents in waterworld are the pursuers, while food and poison belong to the environment. Poison has a radius which is 0.75
-times the size of the pursuer radius, while food has a radius 2 times the size of the pursuer radius. Depending on the input parameters, multiple pursuers may need to work together to consume food, creating a dynamic that is both cooperative and competitive. Similarly, rewards can be distributed
-globally to all pursuers, or applied locally to specific pursuers. The environment is a continuous 2D space, and each pursuer has a position with x and y values each in the range [0,1]. Agents can not move beyond barriers at the minimum and maximum x and y values. Agents act by choosing a thrust
-vector to add to their current velocity. Each pursuer has a number of evenly spaced sensors which can read the speed and direction of objects near the pursuer. This information is reported in the observation space, and can be used to navigate the environment.
+水世界是一个古细菌在环境中导航和生存的模拟。这些被称为追捕者的古细菌试图消耗食物同时避开毒物。水世界中的智能体是追捕者，而食物和毒物属于环境。毒物的半径是追捕者半径的0.75倍，而食物的半径是追捕者半径的2倍。根据输入参数，
+可能需要多个追捕者合作才能消耗食物，这创造了一个既合作又竞争的动态环境。同样，奖励可以全局分配给所有追捕者，也可以局部应用于特定追捕者。环境是一个连续的2D空间，每个追捕者都有一个位置，其x和y值均在[0,1]范围内。智能体不能
+超越最小和最大x和y值的边界。智能体通过选择一个推力向量来添加到它们当前的速度上来行动。每个追捕者都有一些均匀分布的传感器，可以读取追捕者附近物体的速度和方向。这些信息在观察空间中报告，可用于在环境中导航。
 
-### Observation Space
+### 观察空间
 
-The observation shape of each agent is a vector of length > 4 that is dependent on the environment's input arguments. The full size of the vector is the number of features per sensor multiplied by the number of sensors, plus two elements indicating whether the pursuer collided with food or with
-poison respectively. The number of features per sensor is 8 by default with `speed_features` enabled, or 5 if `speed_features` is turned off. Therefore with `speed_features` enabled, the observation shape takes the full form of `(8 × n_sensors) + 2`. Elements of the observation vector take on
-values in the range [-1, 1].
+每个智能体的观察形状是一个长度大于4的向量，其具体长度取决于环境的输入参数。向量的完整大小是每个传感器的特征数乘以传感器数量，再加上两个元素，分别表示追捕者是否与食物或毒物发生碰撞。默认情况下，启用`speed_features`时每个传感器的特征数为8，
+关闭`speed_features`时为5。因此，启用`speed_features`时，观察形状的完整形式为`(8 × n_sensors) + 2`。观察向量的元素值在[-1, 1]范围内。
 
-For example, by default there are 5 agents (purple), 5 food targets (green) and 10 poison targets (red). Each agent has 30 range-limited sensors, depicted by the black lines, to detect neighboring entities (food and poison targets) resulting in 242 element vector of computed values about the
-environment for the observation space. These values represent the distances and speeds sensed by each sensor on the archea. Sensors that do not sense any objects within their range report 0 for speed and 1 for distance.
+例如，默认情况下有5个智能体（紫色）、5个食物目标（绿色）和10个毒物目标（红色）。每个智能体有30个范围有限的传感器，用黑线表示，用于检测邻近实体（食物和毒物目标），从而得到一个包含242个关于环境计算值的向量作为观察空间。
+这些值表示每个传感器在古细菌上感知到的距离和速度。在其范围内没有感知到任何物体的传感器报告速度为0，距离为1。
 
-This has been fixed from the reference environments to keep items floating off screen and being lost forever.
+这已从参考环境中修复，以防止物品漂浮到屏幕外并永远丢失。
 
-This table enumerates the observation space with `speed_features = True`:
+这个表格列举了启用`speed_features = True`时的观察空间：
 
-|        Index: [start, end)         | Description                                  |   Values    |
-| :--------------------------------: | -------------------------------------------- | :---------: |
-|           0 to n_sensors           | Obstacle distance for each sensor            |   [0, 1]   |
-|    n_sensors to (2 * n_sensors)    | Barrier distance for each sensor             |   [0, 1]   |
-| (2 * n_sensors) to (3 * n_sensors) | Food distance for each sensor                |   [0, 1]   |
-| (3 * n_sensors) to (4 * n_sensors) | Food speed for each sensor                   | [-2*√2, 2*√2] |
-| (4 * n_sensors) to (5 * n_sensors) | Poison distance for each sensor              |   [0, 1]   |
-| (5 * n_sensors) to (6 * n_sensors) | Poison speed for each sensor                 | [-2*√2, 2*√2] |
-| (6 * n_sensors) to (7 * n_sensors) | Pursuer distance for each sensor             |   [0, 1]   |
-| (7 * n_sensors) to (8 * n_sensors) | Pursuer speed for each sensor                | [-2*√2, 2*√2] |
-|           8 * n_sensors            | Indicates whether agent collided with food   |   {0, 1}    |
-|        (8 * n_sensors) + 1         | Indicates whether agent collided with poison |   {0, 1}    |
+|        索引：[开始, 结束)         | 描述                                       |   值域     |
+| :--------------------------------: | ------------------------------------------ | :---------: |
+|           0 到 n_sensors           | 每个传感器的障碍物距离                     |   [0, 1]   |
+|    n_sensors 到 (2 * n_sensors)    | 每个传感器的边界距离                       |   [0, 1]   |
+| (2 * n_sensors) 到 (3 * n_sensors) | 每个传感器的食物距离                       |   [0, 1]   |
+| (3 * n_sensors) 到 (4 * n_sensors) | 每个传感器的食物速度                       | [-2*√2, 2*√2] |
+| (4 * n_sensors) 到 (5 * n_sensors) | 每个传感器的毒物距离                       |   [0, 1]   |
+| (5 * n_sensors) 到 (6 * n_sensors) | 每个传感器的毒物速度                       | [-2*√2, 2*√2] |
+| (6 * n_sensors) 到 (7 * n_sensors) | 每个传感器的追捕者距离                     |   [0, 1]   |
+| (7 * n_sensors) 到 (8 * n_sensors) | 每个传感器的追捕者速度                     | [-2*√2, 2*√2] |
+|           8 * n_sensors            | 表示智能体是否与食物碰撞                   |   {0, 1}    |
+|        (8 * n_sensors) + 1         | 表示智能体是否与毒物碰撞                   |   {0, 1}    |
 
-This table enumerates the observation space with `speed_features = False`:
+这个表格列举了`speed_features = False`时的观察空间：
 
-|        Index: [start, end)        | Description                                  | Values  |
-| :-------------------------------: | -------------------------------------------- | :-----: |
-|           0 - n_sensors           | Obstacle distance for each sensor            | [0, 1] |
-|    n_sensors - (2 * n_sensors)    | Barrier distance for each sensor             | [0, 1] |
-| (2 * n_sensors) - (3 * n_sensors) | Food distance for each sensor                | [0, 1] |
-| (3 * n_sensors) - (4 * n_sensors) | Poison distance for each sensor              | [0, 1] |
-| (4 * n_sensors) - (5 * n_sensors) | Pursuer distance for each sensor             | [0, 1] |
-|          (5 * n_sensors)          | Indicates whether agent collided with food   | {0, 1}  |
-|        (5 * n_sensors) + 1        | Indicates whether agent collided with poison | {0, 1}  |
+|        索引：[开始, 结束)        | 描述                                       | 值域    |
+| :-------------------------------: | ------------------------------------------ | :-----: |
+|           0 - n_sensors           | 每个传感器的障碍物距离                     | [0, 1] |
+|    n_sensors - (2 * n_sensors)    | 每个传感器的边界距离                       | [0, 1] |
+| (2 * n_sensors) - (3 * n_sensors) | 每个传感器的食物距离                       | [0, 1] |
+| (3 * n_sensors) - (4 * n_sensors) | 每个传感器的毒物距离                       | [0, 1] |
+| (4 * n_sensors) - (5 * n_sensors) | 每个传感器的追捕者距离                     | [0, 1] |
+|          (5 * n_sensors)          | 表示智能体是否与食物碰撞                   | {0, 1}  |
+|        (5 * n_sensors) + 1        | 表示智能体是否与毒物碰撞                   | {0, 1}  |
 
-### Action Space
+### 动作空间
 
-The agents have a continuous action space represented as a 2 element vector, which corresponds to horizontal and vertical thrust. The range of values depends on `pursuer_max_accel`.  Action values must be in the range `[-pursuer_max_accel, pursuer_max_accel]`. If the magnitude of this action
-vector exceeds `pursuer_max_accel`, it will be scaled down to `pursuer_max_accel`. This velocity vector is added to the archea's current velocity.
+智能体具有一个连续的动作空间，表示为一个2元素向量，对应于水平和垂直推力。值的范围取决于`pursuer_max_accel`。动作值必须在`[-pursuer_max_accel, pursuer_max_accel]`范围内。如果这个动作向量的幅度超过`pursuer_max_accel`，
+它将被缩放到`pursuer_max_accel`。这个速度向量会被添加到古细菌的当前速度上。
 
-**Agent action space:** `[horizontal_thrust, vertical_thrust]`
+**智能体动作空间：** `[水平推力, 垂直推力]`
 
-### Rewards
+### 奖励
 
-When multiple agents (depending on `n_coop`) capture food together each agent receives a reward of `food_reward` (the food is not destroyed). They receive a shaping reward of `encounter_reward` for touching food, a reward of `poison_reward` for touching poison, and a `thrust_penalty x ||action||`
-reward for every action, where `||action||` is the euclidean norm of the action velocity. All of these rewards are also distributed based on `local_ratio`, where the rewards scaled by `local_ratio` (local rewards) are applied to the agents whose actions produced the rewards, and the rewards
-averaged over the number of agents (global rewards) are scaled by `(1 - local_ratio)` and applied to every agent. The environment runs for 500 frames by default.
+当多个智能体（取决于`n_coop`）一起捕获食物时，每个智能体都会收到`food_reward`奖励（食物不会被销毁）。他们会因接触食物而获得`encounter_reward`的塑形奖励，因接触毒物而获得`poison_reward`奖励，并且每个动作都会获得
+`thrust_penalty x ||action||`奖励，其中`||action||`是动作速度的欧几里得范数。所有这些奖励都基于`local_ratio`进行分配，其中按`local_ratio`缩放的奖励（局部奖励）应用于产生奖励的智能体，而按智能体数量平均的奖励（全局奖励）
+按`(1 - local_ratio)`缩放并应用于每个智能体。默认情况下，环境运行500帧。
 
-### Arguments
+### 参数
 
 ``` python
 waterworld_v4.env(n_pursuers=5, n_evaders=5, n_poisons=10, n_coop=2, n_sensors=20,
@@ -88,51 +86,51 @@ poison_speed=0.01, poison_reward=-1.0, food_reward=10.0, encounter_reward=0.01,
 thrust_penalty=-0.5, local_ratio=1.0, speed_features=True, max_cycles=500)
 ```
 
-`n_pursuers`: number of pursuing archea (agents)
+`n_pursuers`: 追捕古细菌（智能体）的数量
 
-`n_evaders`: number of food objects
+`n_evaders`: 食物对象的数量
 
-`n_poisons`: number of poison objects
+`n_poisons`: 毒物对象的数量
 
-`n_coop`: number of pursuing archea (agents) that must be touching food at the same time to consume it
+`n_coop`: 需要同时接触食物才能消耗它的追捕古细菌（智能体）数量
 
-`n_sensors`: number of sensors on all pursuing archea (agents)
+`n_sensors`: 所有追捕古细菌（智能体）上的传感器数量
 
-`sensor_range`: length of sensor dendrite on all pursuing archea (agents)
+`sensor_range`: 所有追捕古细菌（智能体）上传感器树突的长度
 
-`radius`: archea base radius. Pursuer: radius, food: 2 x radius, poison: 3/4 x radius
+`radius`: 古细菌基础半径。追捕者：radius，食物：2 x radius，毒物：3/4 x radius
 
-`obstacle_radius`: radius of obstacle object
+`obstacle_radius`: 障碍物对象的半径
 
-`obstacle_coord`: coordinate of obstacle object. Can be set to `None` to use a random location
+`obstacle_coord`: 障碍物对象的坐标。可以设置为`None`以使用随机位置
 
-`pursuer_max_accel`: pursuer archea maximum acceleration (maximum action size)
+`pursuer_max_accel`: 追捕古细菌的最大加速度（最大动作大小）
 
-`pursuer_speed`: pursuer (agent) maximum speed
+`pursuer_speed`: 追捕者（智能体）的最大速度
 
-`evader_speed`: food speed
+`evader_speed`: 食物速度
 
-`poison_speed`: poison speed
+`poison_speed`: 毒物速度
 
-`poison_reward`: reward for pursuer consuming a poison object (typically negative)
+`poison_reward`: 追捕者消耗毒物对象的奖励（通常为负）
 
-`food_reward`: reward for pursuers consuming a food object
+`food_reward`: 追捕者消耗食物对象的奖励
 
-`encounter_reward`: reward for a pursuer colliding with a food object
+`encounter_reward`: 追捕者与食物对象碰撞的奖励
 
-`thrust_penalty`: scaling factor for the negative reward used to penalize large actions
+`thrust_penalty`: 用于惩罚大动作的负奖励的缩放因子
 
-`local_ratio`: Proportion of reward allocated locally vs distributed globally among all agents
+`local_ratio`: 在所有智能体之间局部分配与全局分配的奖励比例
 
-`speed_features`: toggles whether pursuing archea (agent) sensors detect speed of other objects and archea
+`speed_features`: 切换追捕古细菌（智能体）传感器是否检测其他对象和古细菌的速度
 
-`max_cycles`: After max_cycles steps all agents will return done
+`max_cycles`: 在max_cycles步后所有智能体将返回完成状态
 
-* v4: Major refactor (1.22.0)
-* v3: Refactor and major bug fixes (1.5.0)
-* v2: Misc bug fixes (1.4.0)
-* v1: Various fixes and environment argument changes (1.3.1)
-* v0: Initial versions release (1.0.0)
+* v4: 主要重构 (1.22.0)
+* v3: 重构和主要bug修复 (1.5.0)
+* v2: 修复各种bug (1.4.0)
+* v1: 各种修复和环境参数变更 (1.3.1)
+* v0: 初始版本发布 (1.0.0)
 
 """
 

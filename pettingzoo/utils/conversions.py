@@ -1,3 +1,16 @@
+"""
+环境转换工具模块。
+
+这个模块提供了在不同类型的环境API之间进行转换的工具函数。
+主要支持在AEC（Agent Environment Cycle，智能体环境循环）和
+并行环境之间进行转换。
+
+主要功能：
+1. 将AEC环境转换为并行环境
+2. 处理并行环境中的同步和异步执行
+3. 管理环境状态和转换过程
+"""
+
 # pyright: reportGeneralTypeIssues=false
 import copy
 import warnings
@@ -10,6 +23,17 @@ from pettingzoo.utils.wrappers import OrderEnforcingWrapper
 
 
 def parallel_wrapper_fn(env_fn: Callable) -> Callable:
+    """创建并行环境包装器函数。
+
+    这个函数接收一个AEC环境创建函数，返回一个创建对应并行环境的函数。
+
+    参数:
+        env_fn (callable): 创建AEC环境的函数
+
+    返回:
+        callable: 创建并行环境的函数
+    """
+
     def par_fn(**kwargs):
         env = env_fn(**kwargs)
         env = aec_to_parallel_wrapper(env)
@@ -19,18 +43,15 @@ def parallel_wrapper_fn(env_fn: Callable) -> Callable:
 
 
 def aec_wrapper_fn(par_env_fn: Callable) -> Callable:
-    """Converts class(pettingzoo.utils.env.ParallelEnv) -> class(pettingzoo.utils.env.AECEnv).
+    """将并行环境包装为AEC环境。
 
-    Args:
-        par_env_fn: The class to be wrapped.
+    这个函数将并行环境转换为AEC环境，使其可以按照智能体顺序执行动作。
 
-    Example:
-        class my_par_class(pettingzoo.utils.env.ParallelEnv):
-            ...
+    参数:
+        par_env_fn (callable): 创建并行环境的函数
 
-        my_aec_class = aec_wrapper_fn(my_par_class)
-
-    Note: applies the `OrderEnforcingWrapper` wrapper
+    返回:
+        callable: 创建AEC环境的函数
     """
 
     def aec_fn(**kwargs):
@@ -44,10 +65,15 @@ def aec_wrapper_fn(par_env_fn: Callable) -> Callable:
 def aec_to_parallel(
     aec_env: AECEnv[AgentID, ObsType, ActionType]
 ) -> ParallelEnv[AgentID, ObsType, ActionType]:
-    """Converts an AEC environment to a Parallel environment.
+    """将AEC环境转换为并行环境。
 
-    In the case of an existing Parallel environment wrapped using a `parallel_to_aec_wrapper`, this function will return the original Parallel environment.
-    Otherwise, it will apply the `aec_to_parallel_wrapper` to convert the environment.
+    这个函数将AEC环境转换为并行环境，使其可以同时执行多个智能体的动作。
+
+    参数:
+        aec_env (AECEnv): 要转换的AEC环境
+
+    返回:
+        ParallelEnv: 转换后的并行环境
     """
     if isinstance(aec_env, OrderEnforcingWrapper) and isinstance(
         aec_env.env, parallel_to_aec_wrapper
@@ -61,10 +87,15 @@ def aec_to_parallel(
 def parallel_to_aec(
     par_env: ParallelEnv[AgentID, ObsType, Optional[ActionType]]
 ) -> AECEnv[AgentID, ObsType, Optional[ActionType]]:
-    """Converts a Parallel environment to an AEC environment.
+    """将并行环境转换为AEC环境。
 
-    In the case of an existing AEC environment wrapped using a `aec_to_parallel_wrapper`, this function will return the original AEC environment.
-    Otherwise, it will apply the `parallel_to_aec_wrapper` to convert the environment.
+    这个函数将并行环境转换为AEC环境，使其可以按照智能体顺序执行动作。
+
+    参数:
+        par_env (ParallelEnv): 要转换的并行环境
+
+    返回:
+        AECEnv: 转换后的AEC环境
     """
     if isinstance(par_env, aec_to_parallel_wrapper):
         return par_env.aec_env
@@ -103,9 +134,25 @@ def from_parallel(
 
 
 class aec_to_parallel_wrapper(ParallelEnv[AgentID, ObsType, ActionType]):
-    """Converts an AEC environment into a Parallel environment."""
+    """将AEC环境包装为并行环境。
+
+    这个类将AEC环境转换为并行环境，使其可以同时执行多个智能体的动作。
+
+    属性:
+        aec_env (AECEnv): 被包装的AEC环境
+        observation_spaces (dict): 每个智能体的观察空间
+        action_spaces (dict): 每个智能体的动作空间
+    """
 
     def __init__(self, aec_env):
+        """初始化并行环境包装器。
+
+        参数:
+            aec_env (AECEnv): 要包装的AEC环境
+
+        异常:
+            AssertionError: 如果输入环境不是AEC环境则抛出异常
+        """
         assert aec_env.metadata.get("is_parallelizable", False), (
             "Converting from an AEC environment to a Parallel environment "
             "with the to_parallel wrapper is not generally safe "
@@ -234,7 +281,15 @@ class aec_to_parallel_wrapper(ParallelEnv[AgentID, ObsType, ActionType]):
 
 
 class parallel_to_aec_wrapper(AECEnv[AgentID, ObsType, Optional[ActionType]]):
-    """Converts a Parallel environment into an AEC environment."""
+    """将并行环境包装为AEC环境。
+
+    这个类将并行环境转换为AEC环境，使其可以按照智能体顺序执行动作。
+
+    属性:
+        env (ParallelEnv): 被包装的并行环境
+        observation_spaces (dict): 每个智能体的观察空间
+        action_spaces (dict): 每个智能体的动作空间
+    """
 
     def __init__(
         self, parallel_env: ParallelEnv[AgentID, ObsType, Optional[ActionType]]

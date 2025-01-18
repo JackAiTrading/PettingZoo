@@ -1,9 +1,9 @@
 ---
-title: Butterfly Environments
+title: 蝴蝶环境
 firstpage:
 ---
 
-# Butterfly
+# 蝴蝶环境
 
 ```{toctree}
 :hidden:
@@ -16,25 +16,25 @@ butterfly/pistonball
     :file: butterfly/list.html
 ```
 
-Butterfly environments are challenging scenarios created by Farama, using Pygame with visual Atari spaces.
+蝴蝶环境是由 Farama 创建的具有挑战性的场景，使用 Pygame 实现，具有类似 Atari 的视觉空间。
 
-All environments require a high degree of coordination and require learning of emergent behaviors to achieve an optimal policy. As such, these environments are currently very challenging to learn.
+所有环境都需要高度的协调，并且需要学习涌现行为才能达到最优策略。因此，这些环境目前在学习上具有很大的挑战性。
 
-Environments are highly configurable via arguments specified in their respective documentation:
-[Cooperative Pong](/environments/butterfly/cooperative_pong/),
-[Knights Archers Zombies](/environments/butterfly/knights_archers_zombies/),
-[Pistonball](/environments/butterfly/pistonball/).
+环境可以通过其各自文档中指定的参数进行高度配置：
+[协作乒乓球](/environments/butterfly/cooperative_pong/)、
+[骑士射手大战僵尸](/environments/butterfly/knights_archers_zombies/)、
+[活塞球](/environments/butterfly/pistonball/)。
 
-### Installation
-The unique dependencies for this set of environments can be installed via:
+### 安装
+这组环境的特定依赖项可以通过以下命令安装：
 
 ````bash
 pip install 'pettingzoo[butterfly]'
 ````
 
-### Usage
+### 使用方法
 
-To launch a [Pistonball](/environments/butterfly/pistonball/) environment with random agents:
+要启动一个带有随机智能体的[活塞球](/environments/butterfly/pistonball/)环境：
 ```python
 from pettingzoo.butterfly import pistonball_v6
 
@@ -42,14 +42,14 @@ env = pistonball_v6.parallel_env(render_mode="human")
 observations, infos = env.reset()
 
 while env.agents:
-    # this is where you would insert your policy
+    # 这里是您插入策略的地方
     actions = {agent: env.action_space(agent).sample() for agent in env.agents}
 
     observations, rewards, terminations, truncations, infos = env.step(actions)
 env.close()
 ```
 
-To launch a [Knights Archers Zombies](/environments/butterfly/knights_archers_zombies/) environment with interactive user input (see [manual_policy.py](https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/butterfly/knights_archers_zombies/manual_policy.py)):
+要启动一个带有交互式用户输入的[骑士射手大战僵尸](/environments/butterfly/knights_archers_zombies/)环境（参见 [manual_policy.py](https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/butterfly/knights_archers_zombies/manual_policy.py)）：
 ```python
 import pygame
 from pettingzoo.butterfly import knights_archers_zombies_v10
@@ -65,10 +65,10 @@ for agent in env.agent_iter():
     if termination or truncation:
         action = None
     elif agent == manual_policy.agent:
-        # get user input (controls are WASD and space)
+        # 获取用户输入（控制键为 WASD 和空格）
         action = manual_policy(observation, agent)
     else:
-        # this is where you would insert your policy (for non-player agents)
+        # 这里是您插入策略的地方（用于非玩家智能体）
         action = env.action_space(agent).sample()
 
     env.step(action)

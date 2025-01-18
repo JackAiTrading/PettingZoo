@@ -1,9 +1,9 @@
 ---
-title: Atari Environments
+title: Atari 环境
 firstpage:
 ---
 
-# Atari
+# Atari 环境
 
 ```{toctree}
 :hidden:
@@ -33,26 +33,25 @@ atari/warlords
 atari/wizard_of_wor
 ```
 
-
-The Atari environments are based off the [Arcade Learning Environment](https://github.com/mgbellemare/Arcade-Learning-Environment). This environment was instrumental in the development of modern reinforcement learning, and so we hope that our [multi-agent version](https://github.com/Farama-Foundation/Multi-Agent-ALE) of it will be useful in the development of multi-agent reinforcement learning.
+Atari 环境基于[街机学习环境（ALE）](https://github.com/mgbellemare/Arcade-Learning-Environment)。这个环境在现代强化学习的发展中起到了重要作用，因此我们希望我们的[多智能体版本](https://github.com/Farama-Foundation/Multi-Agent-ALE)能在多智能体强化学习的发展中发挥作用。
 
 ```{raw} html
     :file: atari/list.html
 ```
 
-### Installation
+### 安装
 
-The unique dependencies for this set of environments can be installed via:
+这组环境的特定依赖项可以通过以下命令安装：
 
 ````bash
 pip install 'pettingzoo[atari]'
 ````
 
-Install ROMs using [AutoROM](https://github.com/Farama-Foundation/AutoROM), or specify the path to your Atari rom using the `rom_path` argument (see [Common Parameters](#common-parameters)).
+使用 [AutoROM](https://github.com/Farama-Foundation/AutoROM) 安装 ROM，或使用 `rom_path` 参数指定 Atari ROM 的路径（参见[通用参数](#common-parameters)）。
 
-### Usage
+### 使用方法
 
-To launch a [Space Invaders](/environments/atari/space_invaders/) environment with random agents:
+要启动一个带有随机智能体的[太空入侵者](/environments/atari/space_invaders/)环境：
 ```python
 from pettingzoo.atari import space_invaders_v2
 
@@ -65,91 +64,86 @@ for agent in env.agent_iter():
     if termination or truncation:
         action = None
     else:
-        action = env.action_space(agent).sample() # this is where you would insert your policy
+        action = env.action_space(agent).sample() # 这里是您插入策略的地方
 
     env.step(action)
 env.close()
 ```
 
-### Games Overview
+### 游戏概述
 
-Most games have two players, with the exception of Warlords and a couple of Pong variations which have four players.
+大多数游戏有两个玩家，除了 Warlords 和一些 Pong 变体有四个玩家。
 
-### Environment Details
+### 环境细节
 
-The ALE has been studied extensively and a few notable problems have been identified:
+ALE 已经被广泛研究，发现了一些值得注意的问题：
 
-* **Determinism**: The Atari console is deterministic, and so agents can theoretically memorize precise sequences of actions that will maximize the end score. This is not ideal, so we encourage the use of [SuperSuit's](https://github.com/Farama-Foundation/SuperSuit) `sticky_actions` wrapper (example below). This is the recommended approach of  *"Machado et al. (2018), "Revisiting the Arcade Learning Environment: Evaluation Protocols and Open Problems for General Agents"*
-* **Frame flickering**: Atari games often do not render every sprite every frame due to hardware restrictions. Instead, sprites (such as the knights in Joust) are sometimes rendered every other frame or even (in Wizard of Wor) every 3 frames. The standard way of handling this computing the pixel-wise maximum of the previous 2 observations (see example below for implementation).
+* **确定性**：Atari 主机是确定性的，因此理论上智能体可以记住精确的动作序列来最大化最终得分。这并不理想，所以我们建议使用 [SuperSuit](https://github.com/Farama-Foundation/SuperSuit) 的 `sticky_actions` 包装器（示例见下文）。这是 *"Machado et al. (2018)，"回顾街机学习环境：通用智能体的评估协议和开放问题"* 推荐的方法。
+* **帧闪烁**：由于硬件限制，Atari 游戏通常不会每帧都渲染所有精灵。相反，精灵（如 Joust 中的骑士）有时每隔一帧渲染一次，甚至（在 Wizard of Wor 中）每三帧渲染一次。处理这个问题的标准方法是计算前两个观察值的逐像素最大值（实现方法见下文）。
 
-### Preprocessing
+### 预处理
 
-We encourage the use of the [supersuit](https://github.com/Farama-Foundation/SuperSuit) library for preprocessing. The unique dependencies for this set of environments can be installed via:
+我们建议使用 [supersuit](https://github.com/Farama-Foundation/SuperSuit) 库进行预处理。这组环境的特定依赖项可以通过以下命令安装：
 
- ````bash
+````bash
 pip install supersuit
- ````
+````
 
-Here is some example usage for the Atari preprocessing:
+以下是 Atari 预处理的示例用法：
 
-``` python
+```python
 import supersuit
 from pettingzoo.atari import space_invaders_v2
 
 env = space_invaders_v2.env()
 
-# as per openai baseline's MaxAndSKip wrapper, maxes over the last 2 frames
-# to deal with frame flickering
+# 按照 openai baseline 的 MaxAndSKip 包装器，
+# 对最后 2 帧取最大值来处理帧闪烁问题
 env = supersuit.max_observation_v0(env, 2)
 
-# repeat_action_probability is set to 0.25 to introduce non-determinism to the system
+# repeat_action_probability 设置为 0.25 以引入非确定性
 env = supersuit.sticky_actions_v0(env, repeat_action_probability=0.25)
 
-# skip frames for faster processing and less control
-# to be compatible with gym, use frame_skip(env, (2,5))
+# 跳过帧以加快处理速度并减少控制
+# 要与 gym 兼容，使用 frame_skip(env, (2,5))
 env = supersuit.frame_skip_v0(env, 4)
 
-# downscale observation for faster processing
+# 缩小观察值以加快处理速度
 env = supersuit.resize_v1(env, 84, 84)
 
-# allow agent to see everything on the screen despite Atari's flickering screen problem
+# 允许智能体看到屏幕上的所有内容，尽管 Atari 存在屏幕闪烁问题
 env = supersuit.frame_stack_v1(env, 4)
 ```
 
-### Common Parameters
+### 通用参数
 
-All the Atari environments have the following environment parameters:
+所有 Atari 环境都有以下环境参数：
 
-``` python
-# using space invaders as an example, but replace with any atari game
+```python
+# 以太空入侵者为例，但可以替换为任何 Atari 游戏
 from pettingzoo.atari import space_invaders_v2
 
 space_invaders_v2.env(obs_type='rgb_image', full_action_space=True, max_cycles=100000, auto_rom_install_path=None)
 ```
 
-`obs_type`:  There are three possible values for this parameter:
+`obs_type`：此参数有三个可能的值：
 
-* 'rgb_image' (default) - produces an RGB image like you would see as a human player.
-* 'grayscale_image' - produces a grayscale image.
-* 'ram' - produces an observation of the 1024 bits that comprise the RAM of the Atari console.
+* 'rgb_image'（默认）- 产生一个类似人类玩家看到的 RGB 图像。
+* 'grayscale_image' - 产生一个灰度图像。
+* 'ram' - 产生 Atari 主机 RAM 的 1024 位观察值。
 
-`full_action_space`: Setting this option to True sets the action space to the full space of 18 action. Setting this to `False` (default) removes duplicate actions and leaves only unique actions.
+`full_action_space`：将此选项设置为 True 会将动作空间设置为完整的 18 个动作。设置为 `False`（默认）会移除重复的动作，只保留唯一的动作。
 
-`max_cycles`:  the number of frames (the number of steps that each agent can take) until game terminates.
+`max_cycles`：游戏终止前的帧数（每个智能体可以采取的步数）。
 
-`auto_rom_install_path`: The path to your AutoROM installation, installed
-with the [Farama-Foundation/AutoROM](https://github.com/Farama-Foundation/AutoROM) tool.
-This is the path you specified when installing AutoROM. For example, if
-you're using the boxing Atari environment, then the library will look for
-the rom at
-`/auto_rom_install_path/ROM/boxing/boxing.bin`.
-If this is not specified (has value `None`), then the library looks for roms
-installed at the default AutoROM path.
+`auto_rom_install_path`：使用 [Farama-Foundation/AutoROM](https://github.com/Farama-Foundation/AutoROM) 工具安装的 AutoROM 安装路径。
+这是您安装 AutoROM 时指定的路径。例如，如果您使用拳击 Atari 环境，
+那么库会在 `/auto_rom_install_path/ROM/boxing/boxing.bin` 路径查找 ROM。
+如果未指定（值为 `None`），则库会在默认的 AutoROM 路径查找已安装的 ROM。
 
+### 引用
 
-### Citation
-
-Multiplayer games within the Arcade Learning Environment were introduced in:
+街机学习环境的多人游戏在以下论文中引入：
 
 ```
 @article{terry2020arcade,
@@ -160,7 +154,7 @@ Multiplayer games within the Arcade Learning Environment were introduced in:
 }
 ```
 
-The Arcade Learning Environment was originally introduced in:
+街机学习环境最初在以下论文中引入：
 
 ```
 @Article{bellemare13arcade,
@@ -174,7 +168,7 @@ The Arcade Learning Environment was originally introduced in:
 }
 ```
 
-Various extensions to the Arcade Learning Environment were introduced in:
+街机学习环境的各种扩展在以下论文中引入：
 
 ```
 @article{machado2018revisiting,
@@ -185,4 +179,3 @@ Various extensions to the Arcade Learning Environment were introduced in:
   pages={523--562},
   year={2018}
 }
-```

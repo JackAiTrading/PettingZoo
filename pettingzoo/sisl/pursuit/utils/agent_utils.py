@@ -3,7 +3,7 @@ import numpy as np
 from pettingzoo.sisl.pursuit.utils.discrete_agent import DiscreteAgent
 
 #################################################################
-# Implements utility functions for multi-agent DRL
+# 实现多智能体深度强化学习的工具函数
 #################################################################
 
 
@@ -16,12 +16,13 @@ def create_agents(
     randinit=False,
     constraints=None,
 ):
-    """Initializes the agents on a map (map_matrix).
+    """在地图（map_matrix）上初始化智能体。
 
-    -nagents: the number of agents to put on the map
-    -randinit: if True will place agents in random, feasible locations
-               if False will place all agents at 0
-    expanded_mat: This matrix is used to spawn non-adjacent agents
+    参数：
+        -nagents：要放置在地图上的智能体数量
+        -randinit：如果为True，将智能体放置在随机的可行位置
+                  如果为False，将所有智能体放置在(0,0)
+        expanded_mat：此矩阵用于生成非相邻的智能体
     """
     xs, ys = map_matrix.shape
     agents = []
@@ -32,7 +33,7 @@ def create_agents(
             xinit, yinit = feasible_position_exp(
                 randomizer, map_matrix, expanded_mat, constraints=constraints
             )
-            # fill expanded_mat
+            # 填充expanded_mat
             expanded_mat[xinit + 1, yinit + 1] = -1
             expanded_mat[xinit + 2, yinit + 1] = -1
             expanded_mat[xinit, yinit + 1] = -1
@@ -47,7 +48,7 @@ def create_agents(
 
 
 def feasible_position_exp(randomizer, map_matrix, expanded_mat, constraints=None):
-    """Returns a feasible position on map (map_matrix)."""
+    """返回地图（map_matrix）上的一个可行位置。"""
     xs, ys = map_matrix.shape
     while True:
         if constraints is None:
@@ -63,9 +64,15 @@ def feasible_position_exp(randomizer, map_matrix, expanded_mat, constraints=None
 
 
 def set_agents(agent_matrix, map_matrix):
-    # check input sizes
+    """设置智能体
+
+    参数：
+        agent_matrix：智能体矩阵
+        map_matrix：地图矩阵
+    """
+    # 检查输入尺寸
     if agent_matrix.shape != map_matrix.shape:
-        raise ValueError("Agent configuration and map matrix have mis-matched sizes")
+        raise ValueError("智能体配置和地图矩阵的尺寸不匹配")
 
     agents = []
     xs, ys = agent_matrix.shape
@@ -75,7 +82,7 @@ def set_agents(agent_matrix, map_matrix):
             if n_agents > 0:
                 if map_matrix[i, j] == -1:
                     raise ValueError(
-                        "Trying to place an agent into a building: check map matrix and agent configuration"
+                        "试图将智能体放置在建筑物中：请检查地图矩阵和智能体配置"
                     )
                 agent = DiscreteAgent(xs, ys, map_matrix)
                 agent.set_position(i, j)

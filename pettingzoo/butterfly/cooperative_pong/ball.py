@@ -1,75 +1,156 @@
+"""
+球体类模块。
+
+这个模块实现了合作乒乓游戏中球的行为，包括移动、碰撞检测和物理模拟。
+"""
+
 import numpy as np
-import pygame
 
 
-def get_small_random_value(randomizer):
-    # 生成一个介于 [0, 1/100) 之间的小随机值
-    return (1 / 100) * randomizer.random()
+class Ball:
+    """球体类。
 
+    这个类实现了球的物理行为，包括位置更新、速度控制和碰撞检测。
 
-class Ball(pygame.sprite.Sprite):
-    def __init__(self, randomizer, dims, speed, bounce_randomness=False):
-        self.surf = pygame.Surface(dims)
-        self.rect = self.surf.get_rect()
-        self.speed_val = speed
-        self.speed = [
-            int(self.speed_val * np.cos(np.pi / 4)),
-            int(self.speed_val * np.sin(np.pi / 4)),
-        ]
+    属性:
+        pos (list): 球的位置 [x, y]
+        vel (list): 球的速度 [vx, vy]
+        size (int): 球的大小（直径）
+        speed_limit (int): 球的最大速度
+        bounce_randomness (float): 球反弹时的随机性因子
+    """
+
+    def __init__(self, pos, vel, size, speed_limit=15, bounce_randomness=False):
+        """初始化球体实例。
+
+        参数:
+            pos (list): 初始位置 [x, y]
+            vel (list): 初始速度 [vx, vy]
+            size (int): 球的大小
+            speed_limit (int, 可选): 最大速度限制，默认为15
+            bounce_randomness (bool, 可选): 是否启用反弹随机性，默认为False
+        """
+        self.pos = np.array(pos, dtype=np.float32)
+        self.vel = np.array(vel, dtype=np.float32)
+        self.size = size
+        self.speed_limit = speed_limit
         self.bounce_randomness = bounce_randomness
-        self.done = False
-        self.hit = False
-        self.randomizer = randomizer
+        self.contact = False
 
-    def update2(self, area, p0, p1):
-        # 移动球的矩形区域
-        self.rect.x += self.speed[0]
-        self.rect.y += self.speed[1]
+    def update(self, area, paddles):
+        """更新球的位置和速度。
 
-        if not area.contains(self.rect):
-            # 底部墙壁
-            if self.rect.bottom > area.bottom:
-                self.rect.bottom = area.bottom
-                self.speed[1] = -self.speed[1]
-            # 顶部墙壁
-            elif self.rect.top < area.top:
-                self.rect.top = area.top
-                self.speed[1] = -self.speed[1]
-            # 右侧或左侧墙壁
-            else:
-                return True
-                self.speed[0] = -self.speed[0]
+        处理与边界和球拍的碰撞，并更新球的位置。
 
-        else:
-            # 球和球拍是否碰撞？
-            # 添加一些随机性
-            r_val = 0
+        参数:
+            area (list): 游戏区域的尺寸 [宽度, 高度]
+            paddles (list): 球拍对象列表
+
+        返回:
+            bool: 如果球碰到左右边界则返回True，否则返回False
+        """
+        # 更新位置
+        self.pos += self.vel
+
+        # 检查与球拍的碰撞
+        for paddle in paddles:
+            if self.check_collision(paddle):
+                self.bounce(paddle)
+
+        # 检查与上下边界的碰撞
+        if self.pos[1] + self.size > area[1]:  # 下边界
+            self.vel[1] = -abs(self.vel[1])
+            self.pos[1] = area[1] - self.size
             if self.bounce_randomness:
-                r_val = get_small_random_value(self.randomizer)
+                self._add_bounce_randomness()
 
-            # 球在屏幕左半部分
-            if self.rect.center[0] < area.center[0]:
-                is_collision, self.rect, self.speed = p0.process_collision(
-                    self.rect, self.speed, 1
-                )
-                if is_collision:
-                    self.speed = [
-                        self.speed[0] + np.sign(self.speed[0]) * r_val,
-                        self.speed[1] + np.sign(self.speed[1]) * r_val,
-                    ]
-            # 球在右半部分
-            else:
-                is_collision, self.rect, self.speed = p1.process_collision(
-                    self.rect, self.speed, 2
-                )
-                if is_collision:
-                    self.speed = [
-                        self.speed[0] + np.sign(self.speed[0]) * r_val,
-                        self.speed[1] + np.sign(self.speed[1]) * r_val,
-                    ]
+        elif self.pos[1] < 0:  # 上边界
+            self.vel[1] = abs(self.vel[1])
+            self.pos[1] = 0
+            if self.bounce_randomness:
+                self._add_bounce_randomness()
 
-        return False
+        # 检查与左右边界的碰撞
+        out = False
+        if self.pos[0] + self.size > area[0]:  # 右边界
+            self.vel[0] = -abs(self.vel[0])
+            self.pos[0] = area[0] - self.size
+            out = True
+            if self.bounce_randomness:
+                self._add_bounce_randomness()
 
-    def draw(self, screen):
-        # screen.blit(self.surf, self.rect)
-        pygame.draw.rect(screen, (255, 255, 255), self.rect)
+        elif self.pos[0] < 0:  # 左边界
+            self.vel[0] = abs(self.vel[0])
+            self.pos[0] = 0
+            out = True
+            if self.bounce_randomness:
+                self._add_bounce_randomness()
+
+        # 限制速度
+        self.vel = np.clip(self.vel, -self.speed_limit, self.speed_limit)
+
+        return out
+
+    def check_collision(self, paddle):
+        """检查是否与球拍发生碰撞。
+
+        参数:
+            paddle: 球拍对象
+
+        返回:
+            bool: 如果发生碰撞则返回True，否则返回False
+        """
+        # 计算球和球拍的边界框
+        ball_rect = {
+            "left": self.pos[0],
+            "right": self.pos[0] + self.size,
+            "top": self.pos[1],
+            "bottom": self.pos[1] + self.size,
+        }
+        paddle_rect = {
+            "left": paddle.pos[0],
+            "right": paddle.pos[0] + paddle.size[0],
+            "top": paddle.pos[1],
+            "bottom": paddle.pos[1] + paddle.size[1],
+        }
+
+        # 检查边界框是否重叠
+        return (
+            ball_rect["left"] < paddle_rect["right"]
+            and ball_rect["right"] > paddle_rect["left"]
+            and ball_rect["top"] < paddle_rect["bottom"]
+            and ball_rect["bottom"] > paddle_rect["top"]
+        )
+
+    def bounce(self, paddle):
+        """处理与球拍的碰撞反弹。
+
+        参数:
+            paddle: 球拍对象
+        """
+        # 计算碰撞点相对于球拍中心的位置
+        paddle_center = paddle.pos + paddle.size / 2
+        ball_center = self.pos + self.size / 2
+        relative_pos = ball_center - paddle_center
+
+        # 根据碰撞点的位置调整反弹角度
+        if abs(relative_pos[0]) < abs(relative_pos[1]):  # 垂直碰撞
+            self.vel[1] = np.sign(relative_pos[1]) * abs(self.vel[1])
+        else:  # 水平碰撞
+            self.vel[0] = np.sign(relative_pos[0]) * abs(self.vel[0])
+
+        # 添加随机性（如果启用）
+        if self.bounce_randomness:
+            self._add_bounce_randomness()
+
+    def _add_bounce_randomness(self):
+        """添加反弹的随机性。
+
+        在球的速度上添加一些随机扰动，使游戏更有趣。
+        """
+        # 在速度上添加随机扰动
+        self.vel += np.random.uniform(-0.5, 0.5, size=2)
+        # 保持速度大小不变
+        speed = np.linalg.norm(self.vel)
+        if speed > 0:
+            self.vel = self.vel / speed * self.speed_limit

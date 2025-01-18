@@ -7,7 +7,10 @@ r"""
 :name: go
 ```
 
-This environment is part of the <a href='..'>classic environments</a>. Please read that page first for general information.
+这个模块实现了标准的围棋游戏，支持两个玩家对弈。
+游戏使用标准的围棋规则，包括提子、禁入点等规则。
+
+这个环境是 PettingZoo 中的经典环境之一。请阅读 <a href='..'>classic environments</a> 页面以获取更多信息。
 
 | Import             | `from pettingzoo.classic import go_v5` |
 |--------------------|----------------------------------------|
@@ -22,88 +25,47 @@ This environment is part of the <a href='..'>classic environments</a>. Please re
 | Observation Values | [0, 1]                                 |
 
 
-Go is a board game with 2 players, black and white. The black player starts by placing a black stone at an empty board intersection. The white player follows by placing a stone of their own, aiming to either surround more territory than their opponent or capture the opponent's stones. The game
-ends if both players sequentially decide to pass.
+Go 是一个棋盘游戏，两个玩家轮流下棋。黑棋先行，白棋后行。游戏的目标是控制棋盘上的更多区域，或者捕获对方的棋子。游戏结束时，如果双方连续两次跳过，则游戏结束。
 
-Our implementation is a wrapper for [MiniGo](https://github.com/tensorflow/minigo).
+我们的实现是对 [MiniGo](https://github.com/tensorflow/minigo) 的封装。
 
-### Arguments
+### 参数
 
-Go takes two optional arguments that define the board size (int) and komi compensation points (float). The default values for the board size and komi are 19 and 7.5, respectively.
+Go 接受两个可选参数：棋盘大小（int）和贴目数（float）。默认值分别为 19 和 7.5。
 
-``` python
-go_v5.env(board_size = 19, komi = 7.5)
+```python
+go_v5.env(board_size=19, komi=7.5)
 ```
 
-`board_size`: The length of each size of the board.
+`board_size`: 棋盘大小，通常为 19。
 
-`komi`: The number of points given to white to compensate it for the disadvantage inherent to moving second. 7.5 is the standard value for Chinese tournament Go, but may not be perfectly balanced.
+`komi`: 贴目数，用于平衡黑白双方优势。7.5 是中国围棋比赛的标准值，但可能不是完全平衡的。
 
-### Observation Space
+### 观察空间
 
-The observation is a dictionary which contains an `'observation'` element which is the usual RL observation described below, and an  `'action_mask'` which holds the legal moves, described in the Legal Actions Mask section.
+观察空间是一个字典，包含 `'observation'` 和 `'action_mask'` 两个元素。
 
+*   `'observation'`: 棋盘状态，形状为 `(N, N, 3)`，其中 `N` 是棋盘大小。第一个平面表示当前玩家的棋子，第二个平面表示对方的棋子，第三个平面表示当前玩家是黑棋还是白棋。
+*   `'action_mask'`: 合法动作掩码，形状为 `(N^2 + 1,)`，其中 `N` 是棋盘大小。每个元素表示对应位置是否是合法动作。
 
-The main observation shape is a function of the board size _N_ and has a shape of (N, N, 3). The first plane, (:, :, 0), represent the stones on the board for the current player while the second plane, (:, :, 1), encodes the stones of the opponent. The third plane, (:, :, 2), is all 1 if the
-current player is `black_0` or all 0 if the player is `white_0`. The state of the board is represented with the top left corner as (0, 0). For example, a (9, 9) board is
-```
-   0 1 2 3 4 5 6 7 8
- 0 . . . . . . . . .  0
- 1 . . . . . . . . .  1
- 2 . . . . . . . . .  2
- 3 . . . . . . . . .  3
- 4 . . . . . . . . .  4
- 5 . . . . . . . . .  5
- 6 . . . . . . . . .  6
- 7 . . . . . . . . .  7
- 8 . . . . . . . . .  8
-   0 1 2 3 4 5 6 7 8
-```
+### 动作空间
 
-|  Plane  | Description                                               |
-|:-------:|-----------------------------------------------------------|
-|    0    | Current Player's stones<br>_'`0`: no stone, `1`: stone_   |
-|    1    | Opponent Player's stones<br>_'`0`: no stone, `1`: stone_  |
-|    2    | Player<br>_'`0`: white, `1`: black_                       |
+动作空间是离散的，形状为 `(N^2 + 1,)`，其中 `N` 是棋盘大小。每个元素表示对应位置的动作。
 
-While rendering, the board coordinate system is [GTP](http://www.lysator.liu.se/~gunnar/gtp/).
-
-
-#### Legal Actions Mask
-
-The legal moves available to the current agent are found in the `action_mask` element of the dictionary observation. The `action_mask` is a binary vector where each index of the vector represents whether the action is legal or not. The `action_mask` will be all zeros for any agent except the one
-whose turn it is. Taking an illegal move ends the game with a reward of -1 for the illegally moving agent and a reward of 0 for all other agents.
-
-
-### Action Space
-
-Similar to the observation space, the action space is dependent on the board size _N_.
-
-|                          Action ID                           | Description                                                  |
-| :----------------------------------------------------------: | ------------------------------------------------------------ |
-| $0 \ldots (N-1)$ | Place a stone on the 1st row of the board.<br>_`0`: (0,0), `1`: (0,1), ..., `N-1`: (0,N-1)_ |
-| $N \ldots (2N- 1)$ | Place a stone on the 2nd row of the board.<br>_`N`: (1,0), `N+1`: (1,1), ..., `2N-1`: (1,N-1)_ |
-|                             ...                              | ...                                                          |
-| $(N^2-N) \ldots (N^2-1)$ | Place a stone on the Nth row of the board.<br>_`N^2-N`: (N-1,0), `N^2-N+1`: (N-1,1), ..., `N^2-1`: (N-1,N-1)_ |
-| $N^2$ | Pass                                                         |
-
-For example, you would use action `4` to place a stone on the board at the (0,3) location or action `N^2` to pass. You can transform a non-pass action `a` back into its 2D (x,y) coordinate by computing `(a//N, a%N)`. The total action space is
-$N^2+1$.
-
-### Rewards
+### 奖励
 
 | Winner | Loser |
 | :----: | :---: |
 | +1     | -1    |
 
-### Version History
+### 版本历史
 
-* v5: Changed observation space to proper AlphaZero style frame stacking (1.11.0)
-* v4: Fixed bug in how black and white pieces were saved in observation space (1.10.0)
-* v3: Fixed bug in arbitrary calls to observe() (1.8.0)
-* v2: Legal action mask in observation replaced illegal move list in infos (1.5.0)
-* v1: Bumped version of all environments due to adoption of new agent iteration scheme where all agents are iterated over after they are done (1.4.0)
-* v0: Initial versions release (1.0.0)
+*   v5: 更改观察空间为 AlphaZero 风格的帧堆叠 (1.11.0)
+*   v4: 修复黑白棋子在观察空间中的保存问题 (1.10.0)
+*   v3: 修复任意调用 observe() 的问题 (1.8.0)
+*   v2: 在观察空间中使用合法动作掩码替代非法动作列表 (1.5.0)
+*   v1: 更新所有环境以采用新的智能体迭代方案 (1.4.0)
+*   v0: 初始版本 (1.0.0)
 
 """
 from __future__ import annotations
@@ -141,6 +103,20 @@ def env(**kwargs):
 
 
 class raw_env(AECEnv, EzPickle):
+    """围棋游戏的主要环境类。
+
+    这个环境实现了标准的围棋游戏，支持两个玩家轮流对弈。
+
+    属性:
+        metadata (dict): 环境的元数据，包括版本信息和渲染模式
+        possible_agents (list): 可能的智能体列表，包括黑方和白方
+        board_size (int): 棋盘大小，通常为19
+        komi (float): 贴目数，用于平衡黑白双方优势
+        board (ndarray): 棋盘状态
+        action_spaces (dict): 每个玩家的动作空间
+        observation_spaces (dict): 每个玩家的观察空间
+    """
+
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "name": "go_v5",
@@ -155,6 +131,13 @@ class raw_env(AECEnv, EzPickle):
         render_mode: str | None = None,
         screen_height: int | None = 800,
     ):
+        """初始化围棋环境。
+
+        参数:
+            board_size (int, 可选): 棋盘大小，默认为19
+            komi (float, 可选): 贴目数，默认为7.5
+            render_mode (str, 可选): 渲染模式，可以是 "human" 或 "rgb_array"
+        """
         EzPickle.__init__(self, board_size, komi, render_mode, screen_height)
         # board_size: a int, representing the board size (board has a board_size x board_size shape)
         # komi: a float, representing points given to the second player.
@@ -202,12 +185,33 @@ class raw_env(AECEnv, EzPickle):
             self.clock = pygame.time.Clock()
 
     def observation_space(self, agent):
+        """获取指定玩家的观察空间。
+
+        参数:
+            agent (str): 玩家标识符
+
+        返回:
+            spaces.Dict: 玩家的观察空间
+        """
         return self.observation_spaces[agent]
 
     def action_space(self, agent):
+        """获取指定玩家的动作空间。
+
+        参数:
+            agent (str): 玩家标识符
+
+        返回:
+            spaces.Discrete: 玩家的动作空间
+        """
         return self.action_spaces[agent]
 
     def _overwrite_go_global_variables(self, board_size: int):
+        """覆盖 Go 全局变量。
+
+        参数:
+            board_size (int): 棋盘大小
+        """
         self._N = board_size
         go_base.N = self._N
         go_base.ALL_COORDS = [(i, j) for i in range(self._N) for j in range(self._N)]
@@ -232,15 +236,39 @@ class raw_env(AECEnv, EzPickle):
         return
 
     def _check_bounds(self, c):
+        """检查位置是否在棋盘范围内。
+
+        参数:
+            c (tuple): 位置
+
+        返回:
+            bool: 是否在棋盘范围内
+        """
         return 0 <= c[0] < self._N and 0 <= c[1] < self._N
 
     def _encode_player_plane(self, agent):
+        """编码玩家平面。
+
+        参数:
+            agent (str): 玩家标识符
+
+        返回:
+            ndarray: 玩家平面
+        """
         if agent == self.possible_agents[0]:
             return np.zeros([self._N, self._N], dtype=bool)
         else:
             return np.ones([self._N, self._N], dtype=bool)
 
     def _encode_board_planes(self, agent):
+        """编码棋盘平面。
+
+        参数:
+            agent (str): 玩家标识符
+
+        返回:
+            ndarray: 棋盘平面
+        """
         agent_factor = (
             go_base.BLACK if agent == self.possible_agents[0] else go_base.WHITE
         )
@@ -253,21 +281,69 @@ class raw_env(AECEnv, EzPickle):
         return current_agent_plane, opponent_agent_plane
 
     def _int_to_name(self, ind):
+        """将索引转换为玩家名称。
+
+        参数:
+            ind (int): 索引
+
+        返回:
+            str: 玩家名称
+        """
         return self.possible_agents[ind]
 
     def _name_to_int(self, name):
+        """将玩家名称转换为索引。
+
+        参数:
+            name (str): 玩家名称
+
+        返回:
+            int: 索引
+        """
         return self.possible_agents.index(name)
 
     def _convert_to_dict(self, list_of_list):
+        """将列表转换为字典。
+
+        参数:
+            list_of_list (list): 列表
+
+        返回:
+            dict: 字典
+        """
         return dict(zip(self.possible_agents, list_of_list))
 
     def _encode_legal_actions(self, actions):
+        """编码合法动作。
+
+        参数:
+            actions (ndarray): 动作
+
+        返回:
+            ndarray: 合法动作
+        """
         return np.where(actions == 1)[0]
 
     def _encode_rewards(self, result):
+        """编码奖励。
+
+        参数:
+            result (int): 结果
+
+        返回:
+            list: 奖励
+        """
         return [1, -1] if result == 1 else [-1, 1]
 
     def observe(self, agent):
+        """获取指定玩家的观察。
+
+        参数:
+            agent (str): 玩家标识符
+
+        返回:
+            dict: 观察
+        """
         current_agent_plane, opponent_agent_plane = self._encode_board_planes(agent)
         player_plane = self._encode_player_plane(agent)
 
@@ -281,6 +357,18 @@ class raw_env(AECEnv, EzPickle):
         return {"observation": observation, "action_mask": action_mask}
 
     def step(self, action):
+        """执行一步游戏。
+
+        参数:
+            action (int): 动作
+
+        返回:
+            observations (dict): 观察
+            rewards (dict): 奖励
+            terminations (dict): 终止状态
+            truncations (dict): 截断状态
+            infos (dict): 额外信息
+        """
         if (
             self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]
@@ -316,6 +404,16 @@ class raw_env(AECEnv, EzPickle):
             self.render()
 
     def reset(self, seed=None, options=None):
+        """重置游戏到初始状态。
+
+        参数:
+            seed (int, 可选): 随机种子
+            options (dict, 可选): 重置选项
+
+        返回:
+            observations (dict): 观察
+            infos (dict): 额外信息
+        """
         self._go = go_base.Position(board=None, komi=self._komi)
 
         self.agents = self.possible_agents[:]
@@ -335,6 +433,15 @@ class raw_env(AECEnv, EzPickle):
         self.board_history = np.zeros((self._N, self._N, 16), dtype=bool)
 
     def render(self):
+        """渲染当前游戏状态。
+
+        根据render_mode的不同，可以：
+        - "human": 在窗口中显示棋盘
+        - "rgb_array": 返回RGB数组形式的棋盘图像
+
+        返回:
+            ndarray or None: 如果render_mode为"rgb_array"，返回RGB数组；否则返回None
+        """
         if self.render_mode is None:
             gymnasium.logger.warn(
                 "You are calling render method without specifying any render mode."
@@ -434,6 +541,29 @@ class raw_env(AECEnv, EzPickle):
         )
 
     def close(self):
+        """关闭环境，释放资源。"""
         if self.screen is not None:
             pygame.quit()
             self.screen = None
+
+    def _check_liberty(self, position):
+        """检查指定位置的棋子是否有气。
+
+        参数:
+            position (tuple): 位置
+
+        返回:
+            bool: 是否有气
+        """
+        return go_base.liberty(position)
+
+    def _remove_group(self, position):
+        """移除指定位置的棋子组。
+
+        参数:
+            position (tuple): 位置
+
+        返回:
+            set: 被移除的所有棋子的位置
+        """
+        return go_base.remove_group(position)

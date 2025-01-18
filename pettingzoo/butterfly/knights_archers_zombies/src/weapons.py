@@ -1,3 +1,9 @@
+"""
+骑士弓箭手僵尸游戏中的武器类。
+
+这个模块定义了游戏中的各种武器，包括剑和箭。每种武器都有其独特的物理属性和行为。
+"""
+
 import math
 import os
 
@@ -9,7 +15,23 @@ from pettingzoo.butterfly.knights_archers_zombies.src.img import get_image
 
 
 class Arrow(pygame.sprite.Sprite):
+    """箭类。
+
+    这个类实现了弓箭手使用的箭，包括其物理属性和飞行行为。
+
+    属性:
+        image (pygame.Surface): 箭的图像
+        rect (pygame.Rect): 箭的矩形区域
+        pos (list): 箭的位置 [x坐标, y坐标]
+        direction (list): 箭的方向
+    """
+
     def __init__(self, archer):
+        """初始化箭。
+
+        参数:
+            archer (object): 弓箭手对象
+        """
         super().__init__()
         self.archer = archer
         self.image = get_image(os.path.join("img", "arrow.png"))
@@ -24,6 +46,10 @@ class Arrow(pygame.sprite.Sprite):
 
     @property
     def vector_state(self):
+        """返回箭的状态向量。
+
+        返回一个包含箭的位置和方向的向量。
+        """
         return np.array(
             [
                 self.rect.x / const.SCREEN_WIDTH,
@@ -33,6 +59,10 @@ class Arrow(pygame.sprite.Sprite):
         )
 
     def update(self):
+        """更新箭的位置和状态。
+
+        根据当前速度和方向更新箭的位置，并检查是否超出屏幕边界。
+        """
         if self.archer.alive:
             self.pos += self.direction * const.ARROW_SPEED
             self.rect.center = self.pos
@@ -41,6 +71,10 @@ class Arrow(pygame.sprite.Sprite):
 
     @property
     def is_active(self):
+        """检查箭是否处于活跃状态。
+
+        箭处于活跃状态当且仅当其在屏幕内。
+        """
         if self.rect.x < 0 or self.rect.y < 0:
             return False
         if self.rect.x > const.SCREEN_WIDTH or self.rect.y > const.SCREEN_HEIGHT:
@@ -49,6 +83,17 @@ class Arrow(pygame.sprite.Sprite):
 
 
 class Sword(pygame.sprite.Sprite):
+    """剑类。
+
+    这个类实现了骑士使用的剑，包括其物理属性和攻击行为。
+
+    属性:
+        image (pygame.Surface): 剑的图像
+        rect (pygame.Rect): 剑的矩形区域
+        direction (list): 剑的方向
+        phase (int): 剑的相位
+    """
+
     def __init__(self, knight):
         # 这个武器实际上是一个狼牙棒，但我们在所有地方都称它为剑
         super().__init__()
@@ -63,6 +108,10 @@ class Sword(pygame.sprite.Sprite):
 
     @property
     def vector_state(self):
+        """返回剑的状态向量。
+
+        返回一个包含剑的位置和方向的向量。
+        """
         return np.array(
             [
                 self.rect.x / const.SCREEN_WIDTH,
@@ -72,6 +121,10 @@ class Sword(pygame.sprite.Sprite):
         )
 
     def update(self):
+        """更新剑的位置和状态。
+
+        根据当前速度和方向更新剑的位置，并检查是否超出屏幕边界。
+        """
         if self.knight.action == 5:
             self.active = True
 
@@ -98,4 +151,8 @@ class Sword(pygame.sprite.Sprite):
 
     @property
     def is_active(self):
+        """检查剑是否处于活跃状态。
+
+        剑处于活跃状态当且仅当其处于攻击状态。
+        """
         return self.active

@@ -1,8 +1,33 @@
+"""
+骑士弓箭手僵尸游戏的手动控制策略。
+
+这个模块实现了骑士弓箭手僵尸游戏的手动控制接口，允许人类玩家使用键盘和鼠标控制游戏。
+"""
+
 import pygame
 
 
 class ManualPolicy:
+    """手动控制策略类。
+
+    这个类实现了手动控制策略的逻辑，包括键盘和鼠标输入处理。
+
+    属性:
+        env: 环境实例
+        agent_id (int): 智能体标识符
+        agent (str): 智能体名称
+        show_obs (bool): 是否显示观察
+        key_action_map (dict): 按键到动作的映射
+    """
+
     def __init__(self, env, agent_id: int = 0, show_obs: bool = False):
+        """初始化手动控制策略实例。
+
+        参数:
+            env: 环境实例
+            agent_id (int): 智能体标识符（默认为0）
+            show_obs (bool): 是否显示观察（默认为False）
+        """
         self.env = env
         self.agent_id = agent_id
         self.agent = self.env.agents[self.agent_id]
@@ -21,6 +46,23 @@ class ManualPolicy:
             self.action_mapping[pygame.K_SPACE] = 4  # weapon
 
     def __call__(self, observation, agent):
+        """手动控制策略函数。
+
+        根据键盘和鼠标输入返回相应的动作。
+        - WASD：移动
+        - 空格键/鼠标左键：攻击
+        - 其他键：不动
+
+        参数:
+            observation (ndarray): 当前观察
+            agent (str): 智能体标识符
+
+        返回:
+            int: 动作值
+            - 0: 不动
+            - 1-4: 移动
+            - 5: 攻击
+        """
         # only trigger when we are the correct agent
         assert (
             agent == self.agent
@@ -47,6 +89,11 @@ class ManualPolicy:
 
     @property
     def available_agents(self):
+        """获取可用的智能体列表。
+
+        返回:
+            list: 智能体标识符列表
+        """
         return self.env.agent_name_mapping
 
 

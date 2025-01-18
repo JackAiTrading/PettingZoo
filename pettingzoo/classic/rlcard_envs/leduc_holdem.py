@@ -1,75 +1,67 @@
-# noqa: D212, D415
 """
-# Leduc Hold'em
+勒杜克扑克游戏环境。
 
-```{figure} classic_leduc_holdem.gif
-:width: 140px
-:name: leduc_holdem
-```
+这个模块实现了勒杜克扑克，这是一个德州扑克的简化版本。
+游戏规则：2名玩家，2轮下注，使用6张牌（2种花色的J、Q、K）。每个玩家先收到一张牌，下注后揭示一张公共牌，再进行一轮下注。
 
-This environment is part of the <a href='..'>classic environments</a>. Please read that page first for general information.
+这个环境是经典环境的一部分。请先阅读该页面的通用信息。
 
-| Import             | `from pettingzoo.classic import leduc_holdem_v4` |
+| 导入             | `from pettingzoo.classic import leduc_holdem_v4` |
 |--------------------|--------------------------------------------------|
-| Actions            |                                                  |
-| Parallel API       | Yes                                              |
-| Manual Control     | No                                               |
-| Agents             | `agents= ['player_0', 'player_1']`               |
-| Agents             | 2                                                |
-| Action Shape       | Discrete(4)                                      |
-| Action Values      | Discrete(4)                                      |
-| Observation Shape  | (36,)                                            |
-| Observation Values | [0, 1]                                           |
+| 动作类型          | 离散                                             |
+| 并行API          | 是                                               |
+| 手动控制         | 否                                               |
+| 智能体           | `agents= ['player_0', 'player_1']`               |
+| 智能体数量       | 2                                                |
+| 动作形状         | Discrete(4)                                      |
+| 动作值           | Discrete(4)                                      |
+| 观察形状         | (36,)                                            |
+| 观察值           | [0, 1]                                           |
 
 
-Leduc Hold'em is a variation of Limit Texas Hold'em with fixed number of 2 players, 2 rounds and a deck of six cards (Jack, Queen, and King in 2 suits). At the beginning of the game, each player receives one card and, after betting, one public card is revealed.
-Another round follows. At the end, the player with the best hand wins and receives a reward (+1) and the loser receives -1. At any time, any player can fold.
+勒杜克扑克是限注德州扑克的一个变体，固定2名玩家，2轮下注，使用6张牌（2种花色的J、Q、K）。游戏开始时，每个玩家收到一张牌，下注后揭示一张公共牌。然后进行另一轮下注。最后，拥有最好牌型的玩家获胜并获得奖励（+1），输家获得-1。在任何时候，任何玩家都可以选择弃牌。
 
-Our implementation wraps [RLCard](http://rlcard.org/games.html#leduc-hold-em) and you can refer to its documentation for additional details. Please cite their work if you use this game in research.
+我们的实现封装了 [RLCard](http://rlcard.org/games.html#leduc-hold-em)，你可以参考其文档获取更多细节。如果在研究中使用这个游戏，请引用他们的工作。
 
-### Observation Space
+### 观察空间
 
-The observation is a dictionary which contains an `'observation'` element which is the usual RL observation described below, and an  `'action_mask'` which holds the legal moves, described in the Legal Actions Mask section.
+观察是一个字典，包含一个 `'observation'` 元素（即下面描述的常规RL观察）和一个 `'action_mask'`（包含合法动作，在合法动作掩码部分描述）。
 
-As described by [RLCard](https://github.com/datamllab/rlcard/blob/master/docs/games#leduc-holdem), the first 3 entries of the main observation space correspond to the player's hand (J, Q, and K) and the next 3 represent the public cards. Indexes 6 to 19 and 20 to 33 encode the number of chips by
-the current player and the opponent, respectively.
+如 [RLCard](https://github.com/datamllab/rlcard/blob/master/docs/games#leduc-holdem) 所述，主要观察空间的前3个条目对应玩家的手牌（J、Q和K），接下来的3个表示公共牌。索引6到19和20到33分别编码当前玩家和对手的筹码数量。
 
-|  Index  | Description                                                                  |
-|:-------:|------------------------------------------------------------------------------|
-|  0 - 2  | Current Player's Hand<br>_`0`: J, `1`: Q, `2`: K_                            |
-|  3 - 5  | Community Cards<br>_`3`: J, `4`: Q, `5`: K_                                  |
-|  6 - 20 | Current Player's Chips<br>_`6`: 0 chips, `7`: 1 chip, ..., `20`: 14 chips_   |
-| 21 - 35 | Opponent's Chips<br>_`21`: 0 chips, `22`: 1 chip, ..., `35`: 14 chips_       |
+|  索引   | 描述                                                       |
+|:-------:|-----------------------------------------------------------|
+|  0 - 2  | 当前玩家的手牌<br>_`0`: J, `1`: Q, `2`: K_                |
+|  3 - 5  | 公共牌<br>_`3`: J, `4`: Q, `5`: K_                        |
+|  6 - 20 | 当前玩家的筹码<br>_`6`: 0筹码, `7`: 1筹码, ..., `20`: 14筹码_ |
+| 21 - 35 | 对手的筹码<br>_`21`: 0筹码, `22`: 1筹码, ..., `35`: 14筹码_   |
 
+#### 合法动作掩码
 
-#### Legal Actions Mask
+当前智能体可用的合法动作可以在字典观察的 `action_mask` 元素中找到。`action_mask` 是一个二进制向量，其中每个索引表示该动作是否合法。除了当前轮到的智能体外，其他所有智能体的 `action_mask` 都是零。采取非法动作会导致游戏结束，非法行动的智能体获得-1的奖励，其他所有智能体获得0的奖励。
 
-The legal moves available to the current agent are found in the `action_mask` element of the dictionary observation. The `action_mask` is a binary vector where each index of the vector represents whether the action is legal or not. The `action_mask` will be all zeros for any agent except the one
-whose turn it is. Taking an illegal move ends the game with a reward of -1 for the illegally moving agent and a reward of 0 for all other agents.
+### 动作空间
 
-### Action Space
+| 动作ID  | 动作   |
+|:-------:|--------|
+|    0    | 跟注   |
+|    1    | 加注   |
+|    2    | 弃牌   |
+|    3    | 过牌   |
 
-| Action ID | Action |
-|:---------:|--------|
-|     0     | Call   |
-|     1     | Raise  |
-|     2     | Fold   |
-|     3     | Check  |
+### 奖励
 
-### Rewards
+|      赢家        |       输家        |
+| :-------------: | :-------------: |
+| +下注筹码/2      | -下注筹码/2      |
 
-|      Winner       |       Loser       |
-| :---------------: | :---------------: |
-| +raised chips / 2 | -raised chips / 2 |
+### 版本历史
 
-
-### Version History
-
-* v4: Upgrade to RLCard 1.0.3 (1.11.0)
-* v3: Fixed bug in arbitrary calls to observe() (1.8.0)
-* v2: Bumped RLCard version, bug fixes, legal action mask in observation replaced illegal move list in infos (1.5.0)
-* v1: Bumped RLCard version, fixed observation space, adopted new agent iteration scheme where all agents are iterated over after they are done (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v4: 升级到 RLCard 1.0.3 (1.11.0)
+* v3: 修复了任意调用 observe() 的错误 (1.8.0)
+* v2: 升级 RLCard 版本，修复错误，观察中的合法动作掩码取代了信息中的非法动作列表 (1.5.0)
+* v1: 升级 RLCard 版本，修复观察空间，采用新的智能体迭代方案 (1.4.0)
+* v0: 初始版本发布 (1.0.0)
 
 """
 from __future__ import annotations
@@ -86,6 +78,14 @@ from pettingzoo.utils import wrappers
 
 
 def get_image(path):
+    """获取指定路径的图像。
+
+    参数:
+        path (str): 图像文件路径
+
+    返回:
+        pygame.Surface: 加载的图像
+    """
     from os import path as os_path
 
     cwd = os_path.dirname(__file__)
@@ -94,6 +94,15 @@ def get_image(path):
 
 
 def get_font(path, size):
+    """获取指定路径和大小的字体。
+
+    参数:
+        path (str): 字体文件路径
+        size (int): 字体大小
+
+    返回:
+        pygame.font.Font: 加载的字体
+    """
     from os import path as os_path
 
     cwd = os_path.dirname(__file__)
@@ -102,6 +111,11 @@ def get_font(path, size):
 
 
 def env(**kwargs):
+    """创建勒杜克扑克环境的包装器。
+
+    返回:
+        AECEnv: 包装后的环境
+    """
     env = raw_env(**kwargs)
     env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
     env = wrappers.AssertOutOfBoundsWrapper(env)
@@ -110,6 +124,16 @@ def env(**kwargs):
 
 
 class raw_env(RLCardBase, EzPickle):
+    """勒杜克扑克游戏的主要环境类。
+
+    这个环境实现了勒杜克扑克，这是一个德州扑克的简化版本。
+
+    属性:
+        metadata (dict): 环境的元数据，包括版本信息和渲染模式
+        render_mode (str): 渲染模式
+        screen_height (int): 屏幕高度
+    """
+
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "name": "leduc_holdem_v4",
@@ -122,6 +146,12 @@ class raw_env(RLCardBase, EzPickle):
         render_mode: str | None = None,
         screen_height: int | None = 1000,
     ):
+        """初始化勒杜克扑克环境。
+
+        参数:
+            render_mode (str): 渲染模式，可以是 "human" 或 "rgb_array"
+            screen_height (int): 屏幕高度，默认为1000
+        """
         EzPickle.__init__(self, render_mode, screen_height)
         super().__init__("leduc-holdem", 2, (36,))
         self.render_mode = render_mode
@@ -131,12 +161,30 @@ class raw_env(RLCardBase, EzPickle):
             self.clock = pygame.time.Clock()
 
     def step(self, action):
+        """执行一步游戏。
+
+        参数:
+            action (int): 玩家的动作，可以是跟注(0)、加注(1)、弃牌(2)或过牌(3)
+
+        返回:
+            observations (dict): 每个玩家的观察
+            rewards (dict): 每个玩家的奖励
+            terminations (dict): 每个玩家的终止状态
+            truncations (dict): 每个玩家的截断状态
+            infos (dict): 每个玩家的额外信息
+        """
         super().step(action)
 
         if self.render_mode == "human":
             self.render()
 
     def render(self):
+        """渲染当前游戏状态。
+
+        根据render_mode的不同，可以：
+        - "human": 在窗口中显示游戏界面
+        - "rgb_array": 返回RGB数组形式的游戏界面
+        """
         if self.render_mode is None:
             gymnasium.logger.warn(
                 "You are calling render method without specifying any render mode."

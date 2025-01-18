@@ -1,9 +1,9 @@
 ---
-title: Classic Environments
+title: 经典环境
 firstpage:
 ---
 
-# Classic
+# 经典环境
 
 ```{toctree}
 :hidden:
@@ -23,20 +23,19 @@ classic/tictactoe
     :file: classic/list.html
 ```
 
-Classic environments represent implementations of popular turn-based human games and are mostly competitive.
+经典环境实现了流行的回合制人类游戏，主要是竞争性的。
 
+### 安装
 
-### Installation
-
-The unique dependencies for this set of environments can be installed via:
+这组环境的特定依赖项可以通过以下命令安装：
 
 ````bash
 pip install 'pettingzoo[classic]'
 ````
 
-### Usage
+### 使用方法
 
-To launch a [Connect Four](/environments/classic/connect_four/) environment with random agents:
+要启动一个带有随机智能体的[四子棋](/environments/classic/connect_four/)环境：
 ``` python
 from pettingzoo.classic import connect_four_v3
 
@@ -50,22 +49,21 @@ for agent in env.agent_iter():
         action = None
     else:
         mask = observation["action_mask"]
-        action = env.action_space(agent).sample(mask)  # this is where you would insert your policy
+        action = env.action_space(agent).sample(mask)  # 这里是您插入策略的地方
 
     env.step(action)
 env.close()
 ```
 
-The classic environments have a few differences from others in this library:
+经典环境与本库中的其他环境有一些不同：
 
-* No classic environments currently take any environment arguments.
-* All classic environments are rendered solely via printing to terminal.
-* Most environments only give rewards at the end of the games once an agent wins or losses, with a reward of 1 for winning and -1 for losing.
-* Many classic environments have illegal moves in the action space. These environments communicate the legal moves at any given time as part of the observation. This is done with dictionary observations where the `observation` element is the observation and the `action_mask` element is a binary vector which is 1 if the action is legal. Note that the `action_mask` observation will only have non-zero values right before the agents takes its step.
-* In environments with illegal moves, taking an illegal move will give a reward equal to losing the game to the illegally moving player and 0 to the other players before ending the game.
+* 目前所有经典环境都不需要任何环境参数。
+* 所有经典环境都仅通过终端打印进行渲染。
+* 大多数环境只在游戏结束时给出奖励，当智能体获胜时奖励为 1，失败时为 -1。
+* 许多经典环境的动作空间中包含非法动作。这些环境会在观察值中包含当前时刻的合法动作信息。这是通过字典类型的观察值实现的，其中 `observation` 元素是观察值，`action_mask` 元素是一个二进制向量，如果动作合法则对应位置为 1。请注意，`action_mask` 观察值只在智能体即将采取行动时才会有非零值。
+* 在包含非法动作的环境中，执行非法动作的智能体会获得与失败相同的奖励，其他智能体获得 0 奖励，然后游戏结束。
 
-
-Many of the classic environments are based on [RLCard](https://github.com/datamllab/rlcard). If you use these libraries in your research, please cite them:
+许多经典环境都基于 [RLCard](https://github.com/datamllab/rlcard)。如果您在研究中使用这些库，请引用它们：
 
 ```
 @article{zha2019rlcard,

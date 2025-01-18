@@ -1,9 +1,9 @@
 ---
-title: SISL Environments
+title: SISL 环境
 firstpage:
 ---
 
-# SISL
+# SISL 环境
 
 ```{toctree}
 :hidden:
@@ -16,18 +16,18 @@ sisl/waterworld
     :file: sisl/list.html
 ```
 
-The SISL environments are a set of three cooperative multi-agent benchmark environments, created at SISL (Stanford Intelligent Systems Laboratory)) and released as part of "Cooperative multi-agent control using deep reinforcement learning." The code was originally released at: [https://github.com/sisl/MADRL](https://github.com/sisl/MADRL)
+SISL 环境是一组三个合作性多智能体基准环境，由 SISL（斯坦福智能系统实验室）创建，作为"使用深度强化学习的合作多智能体控制"的一部分发布。代码最初发布在：[https://github.com/sisl/MADRL](https://github.com/sisl/MADRL)
 
-### Installation
+### 安装
 
-The unique dependencies for this set of environments can be installed via:
+这组环境的特定依赖项可以通过以下命令安装：
 
 ````bash
 pip install 'pettingzoo[sisl]'
 ````
 
-### Usage
-To launch a [Waterworld](/environments/sisl/waterworld/) environment with random agents:
+### 使用方法
+要启动一个带有随机智能体的[水世界](/environments/sisl/waterworld/)环境：
 
 ```python
 from pettingzoo.sisl import waterworld_v4
@@ -40,15 +40,15 @@ for agent in env.agent_iter():
     if termination or truncation:
         action = None
     else:
-        action = env.action_space(agent).sample() # this is where you would insert your policy
+        action = env.action_space(agent).sample() # 这里是您插入策略的地方
 
     env.step(action)
 env.close()
 ```
 
-Please note that we've made major bug fixes to all environments included. As such, we discourage directly comparing results on these environments to those in the original paper.
+请注意，我们对所有包含的环境进行了重大的错误修复。因此，我们不建议直接将这些环境的结果与原始论文中的结果进行比较。
 
-If you use these environments, please additionally cite:
+如果您使用这些环境，请同时引用：
 
 ```
 @inproceedings{gupta2017cooperative,
@@ -59,4 +59,3 @@ If you use these environments, please additionally cite:
   year={2017},
   organization={Springer}
 }
-```

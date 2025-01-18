@@ -37,27 +37,26 @@ class Pursuit:
         render_mode=None,
         constraint_window: float = 1.0,
     ):
-        """In evade pursuit a set of pursuers must 'tag' a set of evaders.
+        """在追捕游戏中，一组追捕者必须'标记'一组逃避者。
 
-        Required arguments:
-            x_size, y_size: World size
-            shared_reward: whether the rewards should be shared between all agents
-            n_evaders
-            n_pursuers
-            obs_range: how far each agent can see
-        Optional arguments:
-        pursuer controller: stationary policy of ally pursuers
-        evader controller: stationary policy of opponent evaders
+        必需参数：
+            x_size, y_size：世界大小
+            shared_reward：奖励是否在所有智能体之间共享
+            n_evaders：逃避者数量
+            n_pursuers：追捕者数量
+            obs_range：每个智能体的视野范围
 
-        tag_reward: reward for 'tagging' a single evader
-
-        max_cycles: after how many frames should the game end
-        n_catch: how surrounded evader needs to be, before removal
-        freeze_evaders: toggle evaders move or not
-        catch_reward: reward for pursuer who catches an evader
-        urgency_reward: reward added in each step
-        surround: toggles surround condition for evader removal
-        constraint_window: window in which agents can randomly spawn
+        可选参数：
+            pursuer_controller：盟友追捕者的固定策略
+            evader_controller：对手逃避者的固定策略
+            tag_reward：'标记'单个逃避者的奖励
+            max_cycles：游戏应该在多少帧后结束
+            n_catch：逃避者需要被包围到什么程度才会被移除
+            freeze_evaders：切换逃避者是否移动
+            catch_reward：捕获逃避者的奖励
+            urgency_reward：每步的紧迫感奖励
+            surround：切换逃避者移除的包围条件
+            constraint_window：智能体可以随机生成的窗口范围
         """
         self.x_size = x_size
         self.y_size = y_size
@@ -76,9 +75,9 @@ class Pursuit:
         self.latest_done_state = [False for _ in range(self.num_agents)]
         self.latest_obs = [None for _ in range(self.num_agents)]
 
-        # can see 7 grids around them by default
+        # 默认情况下可以看到周围7个格子
         self.obs_range = obs_range
-        # assert self.obs_range % 2 != 0, "obs_range should be odd"
+        # assert self.obs_range % 2 != 0, "obs_range应该是奇数"
         self.obs_offset = int((self.obs_range - 1) / 2)
         self.pursuers = agent_utils.create_agents(
             self.n_pursuers, self.map_matrix, self.obs_range, self.np_random
@@ -122,16 +121,16 @@ class Pursuit:
 
         self.current_agent_layer = np.zeros((x_size, y_size), dtype=np.int32)
 
-        self.tag_reward = tag_reward
+        self.tag_reward = tag_reward  # 标记单个逃避者的奖励
 
-        self.catch_reward = catch_reward
+        self.catch_reward = catch_reward  # 捕获逃避者的奖励
 
-        self.urgency_reward = urgency_reward
+        self.urgency_reward = urgency_reward  # 每步的紧迫感奖励
 
-        self.ally_actions = np.zeros(n_act_purs, dtype=np.int32)
-        self.opponent_actions = np.zeros(n_act_ev, dtype=np.int32)
+        self.ally_actions = np.zeros(n_act_purs, dtype=np.int32)  # 盟友动作
+        self.opponent_actions = np.zeros(n_act_ev, dtype=np.int32)  # 对手动作
 
-        max_agents_overlap = max(self.n_pursuers, self.n_evaders)
+        max_agents_overlap = max(self.n_pursuers, self.n_evaders)  # 最大智能体重叠数
         obs_space = spaces.Box(
             low=0,
             high=max_agents_overlap,
@@ -144,42 +143,47 @@ class Pursuit:
         self.observation_space = [obs_space for _ in range(self.n_pursuers)]
         self.act_dims = [n_act_purs for i in range(self.n_pursuers)]
 
-        self.evaders_gone = np.array([False for i in range(self.n_evaders)])
+        self.evaders_gone = np.array([False for i in range(self.n_evaders)])  # 逃避者是否被移除
 
-        self.surround = surround
+        self.surround = surround  # 是否使用包围条件
 
         self.render_mode = render_mode
         self.screen = None
-        self.constraint_window = constraint_window
+        self.constraint_window = constraint_window  # 生成窗口约束
 
-        self.surround_mask = np.array([[-1, 0], [1, 0], [0, 1], [0, -1]])
+        self.surround_mask = np.array([[-1, 0], [1, 0], [0, 1], [0, -1]])  # 包围掩码
 
-        self.model_state = np.zeros((4,) + self.map_matrix.shape, dtype=np.float32)
-        self.pixel_scale = 30
+        self.model_state = np.zeros((4,) + self.map_matrix.shape, dtype=np.float32)  # 模型状态
+        self.pixel_scale = 30  # 像素缩放比例
 
-        self.frames = 0
+        self.frames = 0  # 当前帧数
         self.reset()
 
     def observation_space(self, agent):
+        """返回指定智能体的观察空间"""
         return self.observation_spaces[agent]
 
     def action_space(self, agent):
+        """返回指定智能体的动作空间"""
         return self.action_spaces[agent]
 
     def close(self):
+        """关闭游戏窗口"""
         if self.screen is not None:
             pygame.quit()
             self.screen = None
 
     #################################################################
-    # The functions below are the interface with MultiAgentSiulator #
+    # 以下函数是与MultiAgentSimulator的接口 #
     #################################################################
 
     @property
     def agents(self):
+        """返回追捕者列表"""
         return self.pursuers
 
     def _seed(self, seed=None):
+        """设置随机种子"""
         self.np_random, seed_ = seeding.np_random(seed)
         try:
             policies = [self.evader_controller, self.pursuer_controller]
@@ -194,9 +198,11 @@ class Pursuit:
         return [seed_]
 
     def get_param_values(self):
+        """返回所有参数值"""
         return self.__dict__
 
     def reset(self):
+        """重置环境状态"""
         self.evaders_gone.fill(False)
 
         x_window_start = self.np_random.uniform(0.0, 1.0 - self.constraint_window)
@@ -242,24 +248,25 @@ class Pursuit:
         return self.safely_observe(0)
 
     def step(self, action, agent_id, is_last):
+        """执行一步游戏"""
         agent_layer = self.pursuer_layer
         opponent_layer = self.evader_layer
         opponent_controller = self.evader_controller
 
-        # actual action application, change the pursuer layer
+        # 应用动作，改变追捕者层
         agent_layer.move_agent(agent_id, action)
 
-        # Update only the pursuer layer
+        # 更新追捕者层
         self.model_state[1] = self.pursuer_layer.get_state_matrix()
 
         self.latest_reward_state = self.reward() / self.num_agents
 
         if is_last:
-            # Possibly change the evader layer
+            # 可能改变逃避者层
             ev_remove, pr_remove, pursuers_who_remove = self.remove_agents()
 
             for i in range(opponent_layer.n_agents()):
-                # controller input should be an observation, but doesn't matter right now
+                # 控制器输入应该是一个观察，但现在不重要
                 a = opponent_controller.act(self.model_state)
                 opponent_layer.move_agent(i, a)
 
@@ -267,7 +274,7 @@ class Pursuit:
             self.latest_reward_state += self.urgency_reward
             self.frames = self.frames + 1
 
-        # Update the remaining layers
+        # 更新剩余层
         self.model_state[0] = self.map_matrix
         self.model_state[2] = self.evader_layer.get_state_matrix()
 
@@ -281,7 +288,8 @@ class Pursuit:
             self.render()
 
     def draw_model_state(self):
-        # -1 is building pixel flag
+        """绘制模型状态"""
+        # -1 是建筑像素标志
         x_len, y_len = self.model_state[0].shape
         for x in range(x_len):
             for y in range(y_len):
@@ -297,6 +305,7 @@ class Pursuit:
                 pygame.draw.rect(self.screen, col, pos)
 
     def draw_pursuers_observations(self):
+        """绘制追捕者的观察"""
         for i in range(self.pursuer_layer.n_agents()):
             x, y = self.pursuer_layer.get_position(i)
             patch = pygame.Surface(
@@ -314,6 +323,7 @@ class Pursuit:
             )
 
     def draw_pursuers(self):
+        """绘制追捕者"""
         for i in range(self.pursuer_layer.n_agents()):
             x, y = self.pursuer_layer.get_position(i)
             center = (
@@ -324,6 +334,7 @@ class Pursuit:
             pygame.draw.circle(self.screen, col, center, int(self.pixel_scale / 3))
 
     def draw_evaders(self):
+        """绘制逃避者"""
         for i in range(self.evader_layer.n_agents()):
             x, y = self.evader_layer.get_position(i)
             center = (
@@ -335,6 +346,7 @@ class Pursuit:
             pygame.draw.circle(self.screen, col, center, int(self.pixel_scale / 3))
 
     def draw_agent_counts(self):
+        """绘制智能体数量"""
         font = pygame.font.SysFont("Comic Sans MS", self.pixel_scale * 2 // 3)
 
         agent_positions = defaultdict(int)
@@ -387,9 +399,10 @@ class Pursuit:
             self.screen.blit(text, (pos_x, pos_y - self.pixel_scale // 2))
 
     def render(self):
+        """渲染游戏"""
         if self.render_mode is None:
             gymnasium.logger.warn(
-                "You are calling render method without specifying any render mode."
+                "您正在调用渲染方法，而没有指定任何渲染模式。"
             )
             return
 
@@ -426,6 +439,7 @@ class Pursuit:
         )
 
     def save_image(self, file_name):
+        """保存游戏截图"""
         self.render()
         capture = pygame.surfarray.array3d(self.screen)
 
@@ -438,7 +452,8 @@ class Pursuit:
         pygame.image.save(subcapture, file_name)
 
     def reward(self):
-        es = self.evader_layer.get_state_matrix()  # evader positions
+        """计算奖励"""
+        es = self.evader_layer.get_state_matrix()  # 逃避者位置
         rewards = [
             self.tag_reward
             * np.sum(
@@ -463,36 +478,43 @@ class Pursuit:
 
     @property
     def is_terminal(self):
-        # ev = self.evader_layer.get_state_matrix()  # evader positions
+        """检查游戏是否结束"""
+        # ev = self.evader_layer.get_state_matrix()  # 逃避者位置
         # if np.sum(ev) == 0.0:
         if self.evader_layer.n_agents() == 0:
             return True
         return False
 
     def update_ally_controller(self, controller):
+        """更新盟友控制器"""
         self.ally_controller = controller
 
     def update_opponent_controller(self, controller):
+        """更新对手控制器"""
         self.opponent_controller = controller
 
     def n_agents(self):
+        """返回智能体数量"""
         return self.pursuer_layer.n_agents()
 
     def safely_observe(self, i):
+        """安全地观察指定智能体"""
         agent_layer = self.pursuer_layer
         obs = self.collect_obs(agent_layer, i)
         return obs
 
     def collect_obs(self, agent_layer, i):
+        """收集指定智能体的观察"""
         for j in range(self.n_agents()):
             if i == j:
                 return self.collect_obs_by_idx(agent_layer, i)
         assert False, "bad index"
 
     def collect_obs_by_idx(self, agent_layer, agent_idx):
-        # returns a flattened array of all the observations
+        """通过索引收集指定智能体的观察"""
+        # 返回一个所有观察的平面数组
         obs = np.zeros((3, self.obs_range, self.obs_range), dtype=np.float32)
-        obs[0].fill(1.0)  # border walls set to -0.1?
+        obs[0].fill(1.0)  # 边界墙设置为-0.1？
         xp, yp = agent_layer.get_position(agent_idx)
 
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self.obs_clip(xp, yp)
@@ -501,6 +523,7 @@ class Pursuit:
         return obs
 
     def obs_clip(self, x, y):
+        """裁剪观察"""
         xld = x - self.obs_offset
         xhd = x + self.obs_offset
         yld = y - self.obs_offset
@@ -518,11 +541,9 @@ class Pursuit:
         return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1
 
     def remove_agents(self):
-        """Remove agents that are caught.
-
-        Return tuple (n_evader_removed, n_pursuer_removed, purs_sur)
-        purs_sur: bool array, which pursuers surrounded an evader
-        """
+        """移除被捕获的智能体"""
+        # 返回元组（n_evader_removed，n_pursuer_removed，purs_sur）
+        # purs_sur：bool数组，哪些追捕者包围了逃避者
         n_pursuer_removed = 0
         n_evader_removed = 0
         removed_evade = []
@@ -560,7 +581,7 @@ class Pursuit:
                 ai += 1
             else:
                 if self.model_state[1, x, y] >= self.n_catch:
-                    # add prob remove?
+                    # 添加概率移除？
                     removed_evade.append(ai - rems)
                     self.evaders_gone[i] = True
                     rems += 1
@@ -573,7 +594,7 @@ class Pursuit:
         ai = 0
         for i in range(self.pursuer_layer.n_agents()):
             x, y = self.pursuer_layer.get_position(i)
-            # can remove pursuers probabilitcally here?
+            # 可以在这里随机移除追捕者吗？
         for ridx in removed_evade:
             self.evader_layer.remove_agent(ridx)
             n_evader_removed += 1
@@ -583,11 +604,8 @@ class Pursuit:
         return n_evader_removed, n_pursuer_removed, purs_sur
 
     def need_to_surround(self, x, y):
-        """Compute the number of surrounding grid cells.
-
-        Compute the number of surrounding grid cells in x,y position that are open
-        (no wall or obstacle)
-        """
+        """计算需要包围的格子数量"""
+        # 计算x，y位置周围需要包围的格子数量
         tosur = 4
         if x == 0 or x == (self.x_size - 1):
             tosur -= 1

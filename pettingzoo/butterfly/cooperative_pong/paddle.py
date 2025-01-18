@@ -1,71 +1,82 @@
-import pygame
+"""
+球拍类模块。
+
+这个模块实现了合作乒乓游戏中球拍的行为，包括移动和碰撞检测。
+每个球拍可以上下移动来击打球。
+"""
+
+import numpy as np
 
 
-class Paddle(pygame.sprite.Sprite):
-    def __init__(self, dims, speed):
-        self.surf = pygame.Surface(dims)
-        self.rect = self.surf.get_rect()
-        self.speed = speed
+class Paddle:
+    """球拍类。
 
-    def reset(self, seed=None, options=None):
-        pass
+    这个类实现了球拍的物理行为，包括位置更新和移动控制。
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, (255, 255, 255), self.rect)
+    属性:
+        pos (numpy.ndarray): 球拍的位置 [x, y]
+        vel (numpy.ndarray): 球拍的速度 [vx, vy]
+        size (numpy.ndarray): 球拍的尺寸 [宽度, 高度]
+        speed (float): 球拍的移动速度
+        area (list): 游戏区域的尺寸 [宽度, 高度]
+    """
 
-    def update(self, area, action):
-        # 动作：1 - 向上，2 - 向下
-        movepos = [0, 0]
-        if action > 0:
-            if action == 1:
-                movepos[1] = movepos[1] - self.speed
-            elif action == 2:
-                movepos[1] = movepos[1] + self.speed
+    def __init__(self, pos, size, speed, area):
+        """初始化球拍实例。
 
-            # 确保玩家保持在屏幕内
-            newpos = self.rect.move(movepos)
-            if area.contains(newpos):
-                self.rect = newpos
-
-    def process_collision(self, b_rect, b_speed, paddle_type):
-        """处理碰撞。
-
-        参数：
-            b_rect：球的矩形区域
-            b_speed：球的速度
-
-        返回：
-            is_collision：如果球与球拍碰撞则为 1
-            b_rect：新的球矩形区域
-            b_speed：新的球速度
+        参数:
+            pos (list): 初始位置 [x, y]
+            size (list): 球拍尺寸 [宽度, 高度]
+            speed (float): 移动速度
+            area (list): 游戏区域尺寸 [宽度, 高度]
         """
-        if not self.rect.colliderect(b_rect):
-            return False, b_rect, b_speed
-        # 处理从左侧或右侧的碰撞
-        if paddle_type == 1 and b_rect.left < self.rect.right:
-            b_rect.left = self.rect.right
-            if b_speed[0] < 0:
-                b_speed[0] *= -1
-        elif paddle_type == 2 and b_rect.right > self.rect.left:
-            b_rect.right = self.rect.left
-            if b_speed[0] > 0:
-                b_speed[0] *= -1
-        # 处理从顶部的碰撞
-        if (
-            b_rect.bottom > self.rect.top
-            and b_rect.top - b_speed[1] < self.rect.top
-            and b_speed[1] > 0
-        ):
-            b_rect.bottom = self.rect.top
-            if b_speed[1] > 0:
-                b_speed[1] *= -1
-        # 处理从底部的碰撞
-        elif (
-            b_rect.top < self.rect.bottom
-            and b_rect.bottom - b_speed[1] > self.rect.bottom
-            and b_speed[1] < 0
-        ):
-            b_rect.top = self.rect.bottom - 1
-            if b_speed[1] < 0:
-                b_speed[1] *= -1
-        return True, b_rect, b_speed
+        self.pos = np.array(pos, dtype=np.float32)
+        self.vel = np.zeros(2, dtype=np.float32)
+        self.size = np.array(size, dtype=np.float32)
+        self.speed = speed
+        self.area = area
+
+    def up(self):
+        """向上移动球拍。"""
+        self.vel[1] = -self.speed
+
+    def down(self):
+        """向下移动球拍。"""
+        self.vel[1] = self.speed
+
+    def left(self):
+        """向左移动球拍。"""
+        self.vel[0] = -self.speed
+
+    def right(self):
+        """向右移动球拍。"""
+        self.vel[0] = self.speed
+
+    def stop_vertical(self):
+        """停止垂直方向的移动。"""
+        self.vel[1] = 0
+
+    def stop_horizontal(self):
+        """停止水平方向的移动。"""
+        self.vel[0] = 0
+
+    def update(self):
+        """更新球拍的位置。
+
+        根据当前速度更新位置，并确保球拍不会移出游戏区域。
+        """
+        # 更新位置
+        self.pos += self.vel
+
+        # 确保球拍不会移出游戏区域
+        # 水平方向
+        if self.pos[0] < 0:
+            self.pos[0] = 0
+        elif self.pos[0] + self.size[0] > self.area[0]:
+            self.pos[0] = self.area[0] - self.size[0]
+
+        # 垂直方向
+        if self.pos[1] < 0:
+            self.pos[1] = 0
+        elif self.pos[1] + self.size[1] > self.area[1]:
+            self.pos[1] = self.area[1] - self.size[1]

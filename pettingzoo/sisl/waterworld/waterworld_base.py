@@ -19,6 +19,49 @@ FPS = 15
 
 
 class WaterworldBase:
+    """水世界环境类。
+
+    该环境模拟了一个水世界场景，其中有追捕者、逃避者、毒物和障碍物。
+
+    Attributes:
+        pixel_scale (int): 像素尺寸
+        clock (pygame.time.Clock): pygame时钟
+        FPS (int): 帧率
+        handlers (list): 碰撞处理器列表
+        n_coop (int): 捕获食物粒子所需的代理数量
+        n_evaders (int): 食物粒子数量
+        n_obstacles (int): 障碍物数量
+        n_poisons (int): 毒物数量
+        n_pursuers (int): 代理数量
+        n_sensors (int): 每个代理的传感器数量
+        base_radius (float): 代理半径
+        obstacle_radius (float): 障碍物半径
+        sensor_range (float): 传感器范围
+        pursuer_speed (float): 代理最大速度
+        evader_speed (float): 食物粒子最大速度
+        poison_speed (float): 毒物最大速度
+        speed_features (bool): 是否在状态空间中包含实体速度
+        pursuer_max_accel (float): 代理最大加速度
+        encounter_reward (float): 遇到食物粒子的奖励
+        food_reward (float): 获取食物粒子的奖励
+        local_ratio (float): 本地奖励与全局奖励的比例
+        poison_reward (float): 获取毒物的奖励（或惩罚）
+        thrust_penalty (float): 大动作的负面奖励的缩放因子
+        max_cycles (int): 最大循环次数
+        control_rewards (list): 控制奖励列表
+        behavior_rewards (list): 行为奖励列表
+        last_dones (list): 上一步结束标志列表
+        last_obs (list): 上一步观察列表
+        last_rewards (list): 上一步奖励列表
+        initial_obstacle_coord (list): 初始障碍物坐标
+        render_mode (str): 渲染模式
+        screen (pygame.Surface): pygame窗口
+        frames (int): 帧数
+        num_agents (int): 代理数量
+        observation_space (list): 观察空间列表
+        action_space (list): 动作空间列表
+    """
+
     def __init__(
         self,
         n_pursuers=2,
@@ -45,28 +88,28 @@ class WaterworldBase:
         render_mode=None,
         FPS=FPS,
     ):
-        """Input keyword arguments.
+        """输入关键字参数。
 
-        n_pursuers: number of agents
-        n_evaders: number of food particles present
-        n_poisons: number of poisons present
-        n_obstacles: number of obstacles
-        n_coop: number of agents required to capture a food particle
-        n_sensors: number of sensors on each agent
-        sensor_range: range of the sensor
-        radius: radius of the agent
-        obstacle_radius: radius of the obstacle
-        obstacle_coord: coordinates of the obstacles, this is an [n_obstacles, 2] array with values >0, <1
-        pursuer_max_accel: maximum acceleration of the agents
-        pursuer_speed: maximum speed of the agents
-        evader_speed: maximum speed of the food particles
-        poison_speed: maximum speed of the poison particles
-        poison_reward: reward (or penalty) for getting a poison particle
-        food_reward: reward for getting a food particle
-        encounter_reward: reward for being in the presence of food
-        thrust_penalty: scaling factor for the negative reard used to penalize large actions
-        local_ratio: proportion of reward allocated locally vs distributed globally among all agents
-        speed_features: whether to include entity speed in the state space
+        n_pursuers: 代理数量
+        n_evaders: 食物粒子数量
+        n_poisons: 毒物数量
+        n_obstacles: 障碍物数量
+        n_coop: 捕获食物粒子所需的代理数量
+        n_sensors: 每个代理的传感器数量
+        sensor_range: 传感器范围
+        radius: 代理半径
+        obstacle_radius: 障碍物半径
+        obstacle_coord: 障碍物坐标，形如[n_obstacles, 2]的数组，值域为(0, 1)
+        pursuer_max_accel: 代理最大加速度
+        pursuer_speed: 代理最大速度
+        evader_speed: 食物粒子最大速度
+        poison_speed: 毒物最大速度
+        poison_reward: 获取毒物的奖励（或惩罚）
+        food_reward: 获取食物粒子的奖励
+        encounter_reward: 遇到食物粒子的奖励
+        thrust_penalty: 大动作的负面奖励的缩放因子
+        local_ratio: 本地奖励与全局奖励的比例
+        speed_features: 是否在状态空间中包含实体速度
         """
         self.pixel_scale = 30 * 25
         self.clock = pygame.time.Clock()
@@ -108,7 +151,7 @@ class WaterworldBase:
         self.last_rewards = [np.float64(0) for _ in range(self.n_pursuers)]
 
         if obstacle_coord is not None and len(obstacle_coord) != self.n_obstacles:
-            raise ValueError("obstacle_coord does not have same length as n_obstacles")
+            raise ValueError("obstacle_coord的长度与n_obstacles不匹配")
         else:
             self.initial_obstacle_coord = obstacle_coord
 
@@ -120,7 +163,14 @@ class WaterworldBase:
         self._seed()
 
     def get_spaces(self):
-        """Define the action and observation spaces for all of the agents."""
+        """定义所有代理的动作和观察空间。
+
+        动作空间：2维连续空间，范围[-1,1]
+        观察空间：(8*n_sensors+2)维连续空间，包含：
+        - 传感器读数（位置和速度）
+        - 是否与食物碰撞
+        - 是否与毒物碰撞
+        """
         if self.speed_features:
             obs_dim = 8 * self.n_sensors + 2
         else:
@@ -144,11 +194,26 @@ class WaterworldBase:
         self.action_space = [act_space for i in range(self.n_pursuers)]
 
     def _seed(self, seed=None):
+        """设置随机种子。
+
+        参数：
+            seed: 随机种子值
+
+        返回：
+            [seed]: 使用的随机种子列表
+        """
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def add_obj(self):
-        """Create all moving object instances."""
+        """创建所有移动对象实例。
+
+        创建：
+        - 追捕者（智能体）
+        - 逃避者（食物）
+        - 毒物
+        - 障碍物
+        """
         self.pursuers = []
         self.evaders = []
         self.poisons = []
@@ -216,23 +281,31 @@ class WaterworldBase:
             )
 
     def close(self):
+        """关闭环境，清理资源。
+
+        关闭pygame窗口并释放相关资源。
+        """
         if self.screen is not None:
             pygame.quit()
             self.screen = None
 
     def convert_coordinates(self, value, option="position"):
-        """This function converts coordinates in pymunk into pygame coordinates.
+        """将pymunk坐标转换为pygame坐标。
 
-        The coordinate system in pygame is:
+        pygame坐标系：
                  (0, 0) +-------+ (WINDOWSIZE, 0)           + ──── → x
                         |       |                           │
                         |       |                           │
         (0, WINDOWSIZE) +-------+ (WINDOWSIZE, WINDOWSIZE)  ↓ y
-        The coordinate system in pymunk is:
+        pymunk坐标系：
         (0, WINDOWSIZE) +-------+ (WINDOWSIZE, WINDOWSIZE)  ↑ y
                         |       |                           │
                         |       |                           │
                  (0, 0) +-------+ (WINDOWSIZE, 0)           + ──── → x
+
+        参数：
+            value: 要转换的坐标值
+            option: 转换类型，可以是"position"或"velocity"
         """
         if option == "position":
             return int(value[0]), self.pixel_scale - int(value[1])
@@ -241,14 +314,18 @@ class WaterworldBase:
             return value[0], -value[1]
 
     def _generate_coord(self, radius):
-        """Generates a random coordinate for an object with given radius such that it does not collide with an obstacle.
+        """生成一个随机坐标，使得对象不与障碍物碰撞。
 
-        radius: radius of the object
+        参数：
+            radius: 对象半径
+
+        返回：
+            coord: 生成的随机坐标
         """
-        # Sample random coordinate (x, y) with x, y ∈ [0, pixel_scale]
+        # 在[0, pixel_scale]范围内随机生成坐标(x, y)
         coord = self.np_random.random(2) * self.pixel_scale
 
-        # If too close to obstacles, resample
+        # 如果太接近障碍物，则重新生成
         for obstacle in self.obstacles:
             x, y = obstacle.body.position
             while (
@@ -260,13 +337,23 @@ class WaterworldBase:
         return coord
 
     def _generate_speed(self, speed):
-        """Generates random speed (vx, vy) with vx, vy ∈ [-speed, speed]."""
+        """生成随机速度(vx, vy)，vx, vy ∈ [-speed, speed]。
+
+        参数：
+            speed: 速度范围
+
+        返回：
+            (vx, vy): 生成的随机速度
+        """
         _speed = (self.np_random.random(2) - 0.5) * 2 * speed
 
         return _speed[0], _speed[1]
 
     def add(self):
-        """Add all moving objects to PyMunk space."""
+        """将所有移动对象添加到PyMunk空间。
+
+        创建一个新的PyMunk空间，并将所有对象（追捕者、逃避者、毒物、障碍物）添加到空间中。
+        """
         self.space = pymunk.Space()
 
         for obj_list in [self.pursuers, self.evaders, self.poisons, self.obstacles]:
@@ -274,9 +361,9 @@ class WaterworldBase:
                 obj.add(self.space)
 
     def add_bounding_box(self):
-        """Create bounding boxes around the window so that the moving object will not escape the view window.
+        """创建边界框，防止移动对象逃离视窗。
 
-        The four bounding boxes are aligned in the following way:
+        四个边界框的排列方式如下：
         (-100, WINDOWSIZE + 100) ┌────┬────────────────────────────┬────┐ (WINDOWSIZE + 100, WINDOWSIZE + 100)
                                  │xxxx│////////////////////////////│xxxx│
                                  ├────┼────────────────────────────┼────┤
@@ -286,9 +373,9 @@ class WaterworldBase:
                                  ├────┼────────────────────────────┼────┤
                                  │xxxx│////////////////////////////│xxxx│
                     (-100, -100) └────┴────────────────────────────┴────┘ (WINDOWSIZE + 100, -100)
-        where "x" represents overlapped regions.
+        其中"x"表示重叠区域。
         """
-        # Bounding dox edges
+        # 边界框边缘
         pts = [
             (-100, -100),
             (self.pixel_scale + 100, -100),
@@ -306,13 +393,16 @@ class WaterworldBase:
             self.space.add(self.barriers[-1])
 
     def draw(self):
-        """Draw all moving objects and obstacles in PyGame."""
+        """在PyGame中绘制所有移动对象和障碍物。
+
+        遍历所有对象列表（追捕者、逃避者、毒物、障碍物），调用每个对象的draw方法进行绘制。
+        """
         for obj_list in [self.pursuers, self.evaders, self.poisons, self.obstacles]:
             for obj in obj_list:
                 obj.draw(self.screen, self.convert_coordinates)
 
     def add_handlers(self):
-        # Collision handlers for pursuers v.s. evaders & poisons
+        # 追捕者与逃避者、毒物的碰撞处理器
         self.handlers = []
 
         for pursuer in self.pursuers:
@@ -333,7 +423,7 @@ class WaterworldBase:
                 )
                 self.handlers[-1].begin = self.pursuer_poison_begin_callback
 
-        # Collision handlers for poisons v.s. evaders
+        # 毒物与逃避者的碰撞处理器
         for poison in self.poisons:
             for evader in self.evaders:
                 self.handlers.append(
@@ -343,7 +433,7 @@ class WaterworldBase:
                 )
                 self.handlers[-1].begin = self.return_false_begin_callback
 
-        # Collision handlers for evaders v.s. evaders
+        # 逃避者与逃避者的碰撞处理器
         for i in range(self.n_evaders):
             for j in range(i, self.n_evaders):
                 if not i == j:
@@ -355,7 +445,7 @@ class WaterworldBase:
                     )
                     self.handlers[-1].begin = self.return_false_begin_callback
 
-        # Collision handlers for poisons v.s. poisons
+        # 毒物与毒物的碰撞处理器
         for i in range(self.n_poisons):
             for j in range(i, self.n_poisons):
                 if not i == j:
@@ -367,7 +457,7 @@ class WaterworldBase:
                     )
                     self.handlers[-1].begin = self.return_false_begin_callback
 
-        # Collision handlers for pursuers v.s. pursuers
+        # 追捕者与追捕者的碰撞处理器
         for i in range(self.n_pursuers):
             for j in range(i, self.n_pursuers):
                 if not i == j:
@@ -380,10 +470,15 @@ class WaterworldBase:
                     self.handlers[-1].begin = self.return_false_begin_callback
 
     def reset(self):
+        """重置环境到初始状态。
+
+        返回：
+            observations: 所有智能体的初始观察列表
+        """
         self.add_obj()
         self.frames = 0
 
-        # Initialize obstacles positions
+        # 初始化障碍物位置
         if self.initial_obstacle_coord is None:
             for i, obstacle in enumerate(self.obstacles):
                 obstacle_position = (
@@ -400,12 +495,12 @@ class WaterworldBase:
                     self.initial_obstacle_coord[i][1] * self.pixel_scale,
                 )
 
-        # Add objects to space
+        # 将对象添加到空间
         self.add()
         self.add_handlers()
         self.add_bounding_box()
 
-        # Get observation
+        # 获取观察
         obs_list = self.observe_list()
 
         self.last_rewards = [np.float64(0) for _ in range(self.n_pursuers)]
@@ -417,36 +512,49 @@ class WaterworldBase:
         return obs_list[0]
 
     def step(self, action, agent_id, is_last):
+        """执行一步动作。
+
+        参数：
+            action: 要执行的动作
+            agent_id: 执行动作的智能体ID
+            is_last: 是否是最后一个智能体
+
+        返回：
+            observation: 观察
+            reward: 奖励
+            done: 是否结束
+            info: 额外信息
+        """
         action = np.asarray(action) * self.pursuer_max_accel
         action = action.reshape(2)
         thrust = np.linalg.norm(action)
         if thrust > self.pursuer_max_accel:
-            # Limit added thrust to self.pursuer_max_accel
+            # 限制加速到self.pursuer_max_accel
             action = action * (self.pursuer_max_accel / thrust)
 
         p = self.pursuers[agent_id]
 
-        # Clip pursuer speed
+        # 截断追捕者速度
         _velocity = np.clip(
             p.body.velocity + action * self.pixel_scale,
             -self.pursuer_speed,
             self.pursuer_speed,
         )
 
-        # Set pursuer speed
+        # 设置追捕者速度
         p.reset_velocity(_velocity[0], _velocity[1])
 
-        # Penalize large thrusts
+        # 惩罚大动作
         accel_penalty = self.thrust_penalty * math.sqrt((action**2).sum())
 
-        # Average thrust penalty among all agents, and assign each agent global portion designated by (1 - local_ratio)
+        # 平均惩罚在所有代理中，并分配每个代理的全局部分
         self.control_rewards = (
             (accel_penalty / self.n_pursuers)
             * np.ones(self.n_pursuers)
             * (1 - self.local_ratio)
         )
 
-        # Assign the current agent the local portion designated by local_ratio
+        # 分配当前代理的局部部分
         self.control_rewards[agent_id] += accel_penalty * self.local_ratio
 
         if is_last:
@@ -458,7 +566,7 @@ class WaterworldBase:
             for id in range(self.n_pursuers):
                 p = self.pursuers[id]
 
-                # reward for food caught, encountered and poison
+                # 奖励为捕获食物粒子、遇到食物粒子和毒物
                 self.behavior_rewards[id] = (
                     self.food_reward * p.shape.food_indicator
                     + self.encounter_reward * p.shape.food_touched_indicator
@@ -473,7 +581,7 @@ class WaterworldBase:
             local_reward = rewards
             global_reward = local_reward.mean()
 
-            # Distribute local and global rewards according to local_ratio
+            # 根据local_ratio分配局部奖励和全局奖励
             self.last_rewards = local_reward * self.local_ratio + global_reward * (
                 1 - self.local_ratio
             )
@@ -483,9 +591,22 @@ class WaterworldBase:
         return self.observe(agent_id)
 
     def observe(self, agent_id):
+        """获取指定智能体的观察。
+
+        参数：
+            agent_id: 智能体ID
+
+        返回：
+            observation: 智能体的观察
+        """
         return np.array(self.last_obs[agent_id], dtype=np.float32)
 
     def observe_list(self):
+        """获取所有智能体的观察列表。
+
+        返回：
+            observations: 所有智能体的观察列表
+        """
         observe_list = []
 
         for i, pursuer in enumerate(self.pursuers):
@@ -550,11 +671,10 @@ class WaterworldBase:
                 velocites=poison_velocities,
             )
 
-            # When there is only one pursuer the sensors will not sense
-            # another pursuer
+            # 当只有一个追捕者时，传感器不会感知其他追捕者
             if self.n_pursuers > 1:
                 for j, _pursuer in enumerate(self.pursuers):
-                    # Get sensor readings only for other pursuers
+                    # 只获取其他追捕者的传感器读数
                     if i == j:
                         continue
 
@@ -589,7 +709,7 @@ class WaterworldBase:
             else:
                 poison_obs = 0
 
-            # concatenate all observations
+            # 拼接所有观察
             if self.speed_features:
                 pursuer_observation = np.concatenate(
                     [
@@ -623,23 +743,24 @@ class WaterworldBase:
         return observe_list
 
     def get_sensor_readings(self, positions, sensor_range, velocites=None):
-        """Get readings from sensors.
+        """获取传感器读数。
 
-        positions: position readings for all objects by all sensors
-        velocites: velocity readings for all objects by all sensors
+        参数：
+            positions: 所有传感器对所有对象的位置读数
+            velocites: 所有传感器对所有对象的速度读数
         """
         distance_vals = np.concatenate(positions, axis=1)
 
-        # Sensor only reads the closest object
+        # 传感器只读取最近的对象
         min_idx = np.argmin(distance_vals, axis=1)
 
-        # Normalize sensor readings
+        # 归一化传感器读数
         sensor_distance_vals = np.amin(distance_vals, axis=1)
 
         if velocites is not None:
             velocity_vals = np.concatenate(velocites, axis=1)
 
-            # Get the velocity reading of the closest object
+            # 获取最近对象的速度读数
             sensor_velocity_vals = velocity_vals[np.arange(self.n_sensors), min_idx]
 
             return sensor_distance_vals, sensor_velocity_vals
@@ -647,17 +768,16 @@ class WaterworldBase:
         return sensor_distance_vals
 
     def pursuer_poison_begin_callback(self, arbiter, space, data):
-        """Called when a collision between a pursuer and a poison occurs.
+        """当追捕者与毒物发生碰撞时调用。
 
-        The poison indicator of the pursuer becomes 1, the pursuer gets
-        a penalty for this step.
+        追捕者的毒物指示器变为1，追捕者在这一步获得惩罚。
         """
         pursuer_shape, poison_shape = arbiter.shapes
 
-        # For giving reward to pursuer
+        # 给追捕者奖励
         pursuer_shape.poison_indicator += 1
 
-        # Reset poision position & velocity
+        # 重置毒物位置和速度
         x, y = self._generate_coord(poison_shape.radius)
         vx, vy = self._generate_speed(poison_shape.max_speed)
 
@@ -667,44 +787,42 @@ class WaterworldBase:
         return False
 
     def pursuer_evader_begin_callback(self, arbiter, space, data):
-        """Called when a collision between a pursuer and an evader occurs.
+        """当追捕者与逃避者发生碰撞时调用。
 
-        The counter of the evader increases by 1, if the counter reaches
-        n_coop, then, the pursuer catches the evader and gets a reward.
+        逃避者的计数器加1，如果计数器达到n_coop，则追捕者捕获逃避者并获得奖励。
         """
         pursuer_shape, evader_shape = arbiter.shapes
 
-        # Add one collision to evader
+        # 给逃避者添加一次碰撞
         evader_shape.counter += 1
 
-        # Indicate that food is touched by pursuer
+        # 表示食物被追捕者触碰
         pursuer_shape.food_touched_indicator += 1
 
         if evader_shape.counter >= self.n_coop:
-            # For giving reward to pursuer
+            # 给追捕者奖励
             pursuer_shape.food_indicator = 1
 
         return False
 
     def pursuer_evader_separate_callback(self, arbiter, space, data):
-        """Called when a collision between a pursuer and a poison ends.
+        """当追捕者与逃避者结束碰撞时调用。
 
-        If at this moment there are greater or equal than n_coop pursuers
-        that collides with this evader, the evader's position gets reset
-        and the pursuers involved will be rewarded.
+        如果此时有大于等于n_coop个追捕者与这个逃避者发生碰撞，则重置逃避者的位置，
+        并且涉及的追捕者将获得奖励。
         """
         pursuer_shape, evader_shape = arbiter.shapes
 
         if evader_shape.counter < self.n_coop:
-            # Remove one collision from evader
+            # 从逃避者移除一次碰撞
             evader_shape.counter -= 1
         else:
             evader_shape.counter = 0
 
-            # For giving reward to pursuer
+            # 给追捕者奖励
             pursuer_shape.food_indicator = 1
 
-            # Reset evader position & velocity
+            # 重置逃避者位置和速度
             x, y = self._generate_coord(evader_shape.radius)
             vx, vy = self._generate_speed(evader_shape.max_speed)
 
@@ -714,13 +832,18 @@ class WaterworldBase:
         pursuer_shape.food_touched_indicator -= 1
 
     def return_false_begin_callback(self, arbiter, space, data):
-        """Callback function that simply returns False."""
+        """简单返回False的回调函数。"""
         return False
 
     def render(self):
+        """渲染环境。
+
+        如果render_mode为human，则使用pygame窗口显示；
+        如果render_mode为rgb_array，则返回RGB数组。
+        """
         if self.render_mode is None:
             gymnasium.logger.warn(
-                "You are calling render method without specifying any render mode."
+                "你正在调用render方法但没有指定任何渲染模式。"
             )
             return
 
@@ -730,7 +853,7 @@ class WaterworldBase:
                 self.screen = pygame.display.set_mode(
                     (self.pixel_scale, self.pixel_scale)
                 )
-                pygame.display.set_caption("Waterworld")
+                pygame.display.set_caption("水世界")
             else:
                 self.screen = pygame.Surface((self.pixel_scale, self.pixel_scale))
 

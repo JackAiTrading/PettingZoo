@@ -7,36 +7,36 @@ class ManualPolicy:
         self.agent_id = agent_id
         self.agent = self.env.agents[self.agent_id]
 
-        # TO-DO: show current agent observation if this is True
+        # 待办：如果这个值为True，显示当前智能体的观察
         self.show_obs = show_obs
 
-        # action mappings for all agents are the same
+        # 所有智能体的动作映射都相同
         if True:
             self.default_action = 0
             self.action_mapping = dict()
-            self.action_mapping[pygame.K_UP] = 3  # right
-            self.action_mapping[pygame.K_DOWN] = 2  # down
-            self.action_mapping[pygame.K_LEFT] = 0  # left
-            self.action_mapping[pygame.K_RIGHT] = 1  # right
+            self.action_mapping[pygame.K_UP] = 3     # 上
+            self.action_mapping[pygame.K_DOWN] = 2   # 下
+            self.action_mapping[pygame.K_LEFT] = 0   # 左
+            self.action_mapping[pygame.K_RIGHT] = 1  # 右
 
     def __call__(self, observation, agent):
-        # only trigger when we are the correct agent
+        # 只在我们是正确的智能体时触发
         assert (
             agent == self.agent
-        ), f"Manual Policy only applied to agent: {self.agent}, but got tag for {agent}."
+        ), f"手动策略仅适用于智能体：{self.agent}，但获得了标签{agent}。"
 
-        # set the default action
+        # 设置默认动作
         action = self.default_action
 
-        # if we get a key, override action using the dict
+        # 如果我们获得了按键，使用字典覆盖动作
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    # escape to end
+                    # ESC键退出
                     exit()
 
                 elif event.key == pygame.K_BACKSPACE:
-                    # backspace to reset
+                    # 退格键重置
                     self.env.reset()
 
                 elif event.key in self.action_mapping:

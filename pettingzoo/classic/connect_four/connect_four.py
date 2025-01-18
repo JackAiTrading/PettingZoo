@@ -1,60 +1,56 @@
 # noqa: D212, D415
 """
-# Connect Four
+# 四子棋游戏环境
+
+这个模块实现了标准的四子棋游戏，支持两个玩家对弈。
+游戏目标是在垂直、水平或对角线方向上先连成四个棋子。
 
 ```{figure} classic_connect_four.gif
 :width: 140px
 :name: connect_four
 ```
 
-This environment is part of the <a href='..'>classic environments</a>. Please read that page first for general information.
+这个环境是 <a href='..'>经典环境</a> 的一部分。请先阅读该页面以获取一般信息。
 
-| Import             | `from pettingzoo.classic import connect_four_v3` |
+| 导入             | `from pettingzoo.classic import connect_four_v3` |
 |--------------------|--------------------------------------------------|
-| Actions            | Discrete                                         |
-| Parallel API       | Yes                                              |
-| Manual Control     | No                                               |
-| Agents             | `agents= ['player_0', 'player_1']`               |
-| Agents             | 2                                                |
-| Action Shape       | (1,)                                             |
-| Action Values      | Discrete(7)                                      |
-| Observation Shape  | (6, 7, 2)                                        |
-| Observation Values | [0,1]                                            |
+| 动作            | 离散                                         |
+| 并行 API       | 是                                              |
+| 手动控制     | 否                                               |
+| 智能体             | `agents= ['player_0', 'player_1']`               |
+| 智能体             | 2                                                |
+| 动作形状       | (1,)                                             |
+| 动作值        | 离散(7)                                      |
+| 观察形状       | (6, 7, 2)                                        |
+| 观察值        | [0,1]                                            |
 
 
-Connect Four is a 2-player turn based game, where players must connect four of their tokens vertically, horizontally or diagonally. The players drop their respective token in a column of a standing grid, where each token will fall until it reaches the bottom of the column or reaches an existing
-token. Players cannot place a token in a full column, and the game ends when either a player has made a sequence of 4 tokens, or when all 7 columns have been filled.
+四子棋是两个玩家轮流下棋的游戏，玩家必须在垂直、水平或对角线方向上连成四个棋子。玩家将他们的棋子掉落在棋盘的某一列中，棋子会掉落到棋盘底部或停留在现有的棋子上。玩家不能在满列中放置棋子，游戏结束时要么有玩家连成四个棋子，要么所有七列都被填满。
 
-### Observation Space
+### 观察空间
 
-The observation is a dictionary which contains an `'observation'` element which is the usual RL observation described below, and an  `'action_mask'` which holds the legal moves, described in the Legal Actions Mask section.
+观察是一个字典，它包含一个 `'observation'` 元素，这是通常的 RL 观察，如下所述，还有一个 `'action_mask'`，它保存了合法动作，如“合法动作掩码”部分所述。
 
+主观察空间是 6x7 网格的两个平面。每个平面代表特定玩家的棋子，每个网格位置代表相应玩家的棋子放置位置。1 表示玩家在该单元格中放置了棋子，0 表示他们没有在该单元格中放置棋子。0 表示单元格为空，或者另一个玩家在该单元格中放置了棋子。
 
-The main observation space is 2 planes of a 6x7 grid. Each plane represents a specific agent's tokens, and each location in the grid represents the placement of the corresponding agent's token. 1 indicates that the agent has a token placed in that cell, and 0 indicates they do not have a token in
-that cell. A 0 means that either the cell is empty, or the other agent has a token in that cell.
+#### 合法动作掩码
 
+当前玩家可用的合法动作在字典观察的 `action_mask` 元素中找到。`action_mask` 是一个二进制向量，其中每个索引代表动作是否合法。对于除了当前玩家之外的所有玩家，`action_mask` 都是全零。执行非法动作会以 -1 的奖励结束游戏，对于非法移动的玩家，其他玩家会获得 0 的奖励。
 
-#### Legal Actions Mask
+### 动作空间
 
-The legal moves available to the current agent are found in the `action_mask` element of the dictionary observation. The `action_mask` is a binary vector where each index of the vector represents whether the action is legal or not. The `action_mask` will be all zeros for any agent except the one
-whose turn it is. Taking an illegal move ends the game with a reward of -1 for the illegally moving agent and a reward of 0 for all other agents.
+动作空间是从 0 到 6（含）的整数集，其中动作表示应该在哪一列下落棋子。
 
+### 奖励
 
-### Action Space
+如果玩家成功连接四个棋子，他们将获得 1 分奖励。同时，对方玩家将获得 -1 分奖励。如果游戏结束时平局，双方玩家都将获得 0 分奖励。
 
-The action space is the set of integers from 0 to 6 (inclusive), where the action represents which column a token should be dropped in.
+### 版本历史
 
-### Rewards
-
-If an agent successfully connects four of their tokens, they will be rewarded 1 point. At the same time, the opponent agent will be awarded -1 points. If the game ends in a draw, both players are rewarded 0.
-
-
-### Version History
-
-* v3: Fixed bug in arbitrary calls to observe() (1.8.0)
-* v2: Legal action mask in observation replaced illegal move list in infos (1.5.0)
-* v1: Bumped version of all environments due to adoption of new agent iteration scheme where all agents are iterated over after they are done (1.4.0)
-* v0: Initial versions release (1.0.0)
+* v3: 修复了任意调用 observe() 的 bug (1.8.0)
+* v2: 观察中的合法动作掩码替换了信息中的非法动作列表 (1.5.0)
+* v1: 由于采用了新的智能体迭代方案，所有环境的版本都被提升了，在该方案中，所有智能体在完成后都会被迭代 (1.4.0)
+* v0: 初始版本发布 (1.0.0)
 
 """
 from __future__ import annotations
@@ -93,6 +89,18 @@ def env(**kwargs):
 
 
 class raw_env(AECEnv, EzPickle):
+    """四子棋游戏的主要环境类。
+
+    这个环境实现了标准的四子棋游戏，支持两个玩家轮流对弈。
+
+    属性：
+        metadata (dict): 环境的元数据，包括版本信息和渲染模式
+        possible_agents (list): 可能的智能体列表，包括玩家1和玩家2
+        board (ndarray): 棋盘状态，6x7的二维数组
+        action_spaces (dict): 每个玩家的动作空间
+        observation_spaces (dict): 每个玩家的观察空间
+    """
+
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "name": "connect_four_v3",
@@ -101,13 +109,19 @@ class raw_env(AECEnv, EzPickle):
     }
 
     def __init__(self, render_mode: str | None = None, screen_scaling: int = 9):
+        """初始化四子棋环境。
+
+        参数：
+            render_mode (str, 可选): 渲染模式，可以是 "human" 或 "rgb_array"
+            screen_scaling (int, 可选): 屏幕缩放因子，默认为 9
+        """
         EzPickle.__init__(self, render_mode, screen_scaling)
         super().__init__()
-        # 6 rows x 7 columns
-        # blank space = 0
-        # agent 0 -- 1
-        # agent 1 -- 2
-        # flat representation in row major order
+        # 6 行 x 7 列
+        # 空白格子 = 0
+        # 玩家 0 -- 1
+        # 玩家 1 -- 2
+        # 平面表示法中的行主序
         self.screen = None
         self.render_mode = render_mode
         self.screen_scaling = screen_scaling
@@ -133,20 +147,30 @@ class raw_env(AECEnv, EzPickle):
         if self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
-    # Key
+    # 键
     # ----
-    # blank space = 0
-    # agent 0 = 1
-    # agent 1 = 2
-    # An observation is list of lists, where each list represents a row
+    # 空白格子 = 0
+    # 玩家 0 = 1
+    # 玩家 1 = 2
+    # 观察是一个列表，其中每个列表代表一行
     #
-    # array([[0, 1, 1, 2, 0, 1, 0],
+    # 数组([[0, 1, 1, 2, 0, 1, 0],
     #        [1, 0, 1, 2, 2, 2, 1],
     #        [0, 1, 0, 0, 1, 2, 1],
     #        [1, 0, 2, 0, 1, 1, 0],
     #        [2, 0, 0, 0, 1, 1, 0],
     #        [1, 1, 2, 1, 0, 1, 0]], dtype=int8)
     def observe(self, agent):
+        """获取指定玩家的观察。
+
+        参数：
+            agent (str): 玩家标识符
+
+        返回：
+            dict: 玩家的观察，包括：
+                - observation: 棋盘状态
+                - action_mask: 合法动作掩码
+        """
         board_vals = np.array(self.board).reshape(6, 7)
         cur_player = self.possible_agents.index(agent)
         opp_player = (cur_player + 1) % 2
@@ -164,23 +188,56 @@ class raw_env(AECEnv, EzPickle):
         return {"observation": observation, "action_mask": action_mask}
 
     def observation_space(self, agent):
+        """获取指定玩家的观察空间。
+
+        参数：
+            agent (str): 玩家标识符
+
+        返回：
+            spaces.Dict: 玩家的观察空间
+        """
         return self.observation_spaces[agent]
 
     def action_space(self, agent):
+        """获取指定玩家的动作空间。
+
+        参数：
+            agent (str): 玩家标识符
+
+        返回：
+            spaces.Discrete: 玩家的动作空间
+        """
         return self.action_spaces[agent]
 
     def _legal_moves(self):
+        """获取当前玩家的合法动作。
+
+        返回：
+            list: 合法动作列表
+        """
         return [i for i in range(7) if self.board[i] == 0]
 
-    # action in this case is a value from 0 to 6 indicating position to move on the flat representation of the connect4 board
+    # 动作在本例中是一个值，从 0 到 6，表示在平面表示法中的棋盘上移动的位置
     def step(self, action):
+        """执行一步游戏。
+
+        参数：
+            action (int): 玩家的动作，表示在哪一列下落棋子（0-6）
+
+        返回：
+            observations (dict): 每个玩家的观察
+            rewards (dict): 每个玩家的奖励
+            terminations (dict): 每个玩家的终止状态
+            truncations (dict): 每个玩家的截断状态
+            infos (dict): 每个玩家的额外信息
+        """
         if (
             self.truncations[self.agent_selection]
             or self.terminations[self.agent_selection]
         ):
             return self._was_dead_step(action)
-        # assert valid move
-        assert self.board[0:7][action] == 0, "played illegal move."
+        # 断言有效动作
+        assert self.board[0:7][action] == 0, "玩家执行了非法动作。"
 
         piece = self.agents.index(self.agent_selection) + 1
         for i in list(filter(lambda x: x % 7 == action, list(range(41, -1, -1)))):
@@ -192,14 +249,14 @@ class raw_env(AECEnv, EzPickle):
 
         winner = self.check_for_winner()
 
-        # check if there is a winner
+        # 检查是否有玩家获胜
         if winner:
             self.rewards[self.agent_selection] += 1
             self.rewards[next_agent] -= 1
             self.terminations = {i: True for i in self.agents}
-        # check if there is a tie
+        # 检查是否平局
         elif all(x in [1, 2] for x in self.board):
-            # once either play wins or there is a draw, game over, both players are done
+            # 一旦任何玩家获胜或平局，游戏结束，所有玩家都完成了
             self.terminations = {i: True for i in self.agents}
 
         self.agent_selection = next_agent
@@ -210,7 +267,17 @@ class raw_env(AECEnv, EzPickle):
             self.render()
 
     def reset(self, seed=None, options=None):
-        # reset environment
+        """重置游戏到初始状态。
+
+        参数：
+            seed (int, 可选): 随机种子
+            options (dict, 可选): 重置选项
+
+        返回：
+            observations (dict): 每个玩家的初始观察
+            infos (dict): 每个玩家的初始信息
+        """
+        # 重置环境
         self.board = [0] * (6 * 7)
 
         self.agents = self.possible_agents[:]
@@ -225,9 +292,18 @@ class raw_env(AECEnv, EzPickle):
         self.agent_selection = self._agent_selector.reset()
 
     def render(self):
+        """渲染当前游戏状态。
+
+        根据 render_mode 的不同，可以：
+        - "human": 在窗口中显示棋盘
+        - "rgb_array": 返回 RGB 数组形式的棋盘图像
+
+        返回：
+            ndarray or None: 如果 render_mode 为 "rgb_array"，返回 RGB 数组；否则返回 None
+        """
         if self.render_mode is None:
             gymnasium.logger.warn(
-                "You are calling render method without specifying any render mode."
+                "您正在调用渲染方法，而没有指定任何渲染模式。"
             )
             return
 
@@ -238,12 +314,12 @@ class raw_env(AECEnv, EzPickle):
             pygame.init()
 
             if self.render_mode == "human":
-                pygame.display.set_caption("Connect Four")
+                pygame.display.set_caption("四子棋")
                 self.screen = pygame.display.set_mode((screen_width, screen_height))
             elif self.render_mode == "rgb_array":
                 self.screen = pygame.Surface((screen_width, screen_height))
 
-        # Load and scale all of the necessary images
+        # 加载和缩放所有必要的图像
         tile_size = (screen_width * (91 / 99)) / 7
 
         red_chip = get_image(os.path.join("img", "C4RedPiece.png"))
@@ -263,7 +339,7 @@ class raw_env(AECEnv, EzPickle):
 
         self.screen.blit(board_img, (0, 0))
 
-        # Blit the necessary chips and their positions
+        # 绘制必要的棋子及其位置
         for i in range(0, 42):
             if self.board[i] == 1:
                 self.screen.blit(
@@ -296,15 +372,23 @@ class raw_env(AECEnv, EzPickle):
         )
 
     def close(self):
+        """关闭环境，释放资源。"""
         if self.screen is not None:
             pygame.quit()
             self.screen = None
 
     def check_for_winner(self):
+        """检查是否有玩家获胜。
+
+        检查水平、垂直和对角线方向是否有四个相连的棋子。
+
+        返回：
+            bool: 是否有玩家获胜
+        """
         board = np.array(self.board).reshape(6, 7)
         piece = self.agents.index(self.agent_selection) + 1
 
-        # Check horizontal locations for win
+        # 检查水平位置是否获胜
         column_count = 7
         row_count = 6
 
@@ -318,7 +402,7 @@ class raw_env(AECEnv, EzPickle):
                 ):
                     return True
 
-        # Check vertical locations for win
+        # 检查垂直位置是否获胜
         for c in range(column_count):
             for r in range(row_count - 3):
                 if (
@@ -329,7 +413,7 @@ class raw_env(AECEnv, EzPickle):
                 ):
                     return True
 
-        # Check positively sloped diagonals
+        # 检查正斜率对角线是否获胜
         for c in range(column_count - 3):
             for r in range(row_count - 3):
                 if (
@@ -340,7 +424,7 @@ class raw_env(AECEnv, EzPickle):
                 ):
                     return True
 
-        # Check negatively sloped diagonals
+        # 检查负斜率对角线是否获胜
         for c in range(column_count - 3):
             for r in range(3, row_count):
                 if (

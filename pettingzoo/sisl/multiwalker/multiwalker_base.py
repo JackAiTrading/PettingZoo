@@ -21,7 +21,7 @@ from pettingzoo.sisl._utils import Agent
 MAX_AGENTS = 40
 
 FPS = 50
-SCALE = 30.0  # affects how fast-paced the game is, forces should be adjusted as well
+SCALE = 30.0  # 影响游戏的快慢，力也需要调整
 
 MOTORS_TORQUE = 80
 SPEED_HIP = 4
@@ -42,22 +42,24 @@ VIEWPORT_W = 600
 VIEWPORT_H = 400
 
 TERRAIN_STEP = 14 / SCALE
-TERRAIN_LENGTH = 200  # in steps
+TERRAIN_LENGTH = 200  # 步数
 TERRAIN_HEIGHT = VIEWPORT_H / SCALE / 4
-TERRAIN_GRASS = 10  # low long are grass spots, in steps
-TERRAIN_STARTPAD = 20  # in steps
+TERRAIN_GRASS = 10  # 草地长度，步数
+TERRAIN_STARTPAD = 20  # 起始平台长度，步数
 FRICTION = 2.5
 
-WALKER_SEPERATION = 10  # in steps
+WALKER_SEPERATION = 10  # 步数
 
 
 class ContactDetector(contactListener):
+    """碰撞检测器类，用于检测行走者和包裹的碰撞"""
     def __init__(self, env):
         contactListener.__init__(self)
         self.env = env
 
     def BeginContact(self, contact):
-        # if walkers fall on ground
+        """当两个物体开始接触时调用"""
+        # 如果行走者摔倒在地上
         for i, walker in enumerate(self.env.walkers):
             if walker.hull is not None:
                 if walker.hull == contact.fixtureA.body:
@@ -67,7 +69,7 @@ class ContactDetector(contactListener):
                     if self.env.package != contact.fixtureA.body:
                         self.env.fallen_walkers[i] = True
 
-        # if package is on the ground
+        # 如果包裹在地上
         if self.env.package == contact.fixtureA.body:
             if contact.fixtureB.body not in [w.hull for w in self.env.walkers]:
                 self.env.game_over = True
@@ -76,14 +78,15 @@ class ContactDetector(contactListener):
                 self.env.game_over = True
 
         # self.env.game_over = True
-        for walker in self.env.walkers:
+        for walker in self.walkers:
             if walker.hull is not None:
                 for leg in [walker.legs[1], walker.legs[3]]:
                     if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                         leg.ground_contact = True
 
     def EndContact(self, contact):
-        for walker in self.env.walkers:
+        """当两个物体结束接触时调用"""
+        for walker in self.walkers:
             if walker.hull is not None:
                 for leg in [walker.legs[1], walker.legs[3]]:
                     if leg in [contact.fixtureA.body, contact.fixtureB.body]:
@@ -91,6 +94,7 @@ class ContactDetector(contactListener):
 
 
 class BipedalWalker(Agent):
+    """双足行走者类，表示一个能够行走的智能体"""
     def __init__(
         self,
         world,
@@ -99,6 +103,16 @@ class BipedalWalker(Agent):
         n_walkers=2,
         seed=None,
     ):
+        """
+        初始化双足行走者。
+
+        参数：
+            world：物理世界对象
+            init_x：初始x坐标
+            init_y：初始y坐标
+            n_walkers：行走者数量
+            seed：随机种子
+        """
         self.world = world
         self._n_walkers = n_walkers
         self.hull = None
@@ -108,6 +122,7 @@ class BipedalWalker(Agent):
         self._seed(seed)
 
     def _destroy(self):
+        """销毁行走者的所有物理部件"""
         if not self.hull:
             return
         self.world.DestroyBody(self.hull)
@@ -118,10 +133,12 @@ class BipedalWalker(Agent):
         self.joints = []
 
     def _seed(self, seed=None):
+        """设置随机种子"""
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def _reset(self):
+        """重置行走者到初始状态"""
         self._destroy()
         init_x = self.init_x
         init_y = self.init_y
@@ -134,8 +151,8 @@ class BipedalWalker(Agent):
                 density=5.0,
                 friction=0.1,
                 groupIndex=self.walker_id,
-                restitution=0.0,
-            ),  # 0.99 bouncy
+                restitution=0.0,  # 弹性
+            ),
         )
         self.hull.color1 = (127, 51, 229)
         self.hull.color2 = (76, 76, 127)
@@ -145,7 +162,9 @@ class BipedalWalker(Agent):
 
         self.legs = []
         self.joints = []
+        # 创建双腿
         for i in [-1, +1]:
+            # 创建大腿
             leg = self.world.CreateDynamicBody(
                 position=(init_x, init_y - LEG_H / 2 - LEG_DOWN),
                 angle=(i * 0.05),
@@ -153,11 +172,12 @@ class BipedalWalker(Agent):
                     shape=polygonShape(box=(LEG_W / 2, LEG_H / 2)),
                     density=1.0,
                     restitution=0.0,
-                    groupIndex=self.walker_id,
-                ),  # collide with ground only
+                    groupIndex=self.walker_id,  # 只与地面碰撞
+                ),
             )
             leg.color1 = (153 - i * 25, 76 - i * 25, 127 - i * 25)
             leg.color2 = (102 - i * 25, 51 - i * 25, 76 - i * 25)
+            # 创建髋关节
             rjd = revoluteJointDef(
                 bodyA=self.hull,
                 bodyB=leg,
@@ -173,6 +193,7 @@ class BipedalWalker(Agent):
             self.legs.append(leg)
             self.joints.append(self.world.CreateJoint(rjd))
 
+            # 创建小腿
             lower = self.world.CreateDynamicBody(
                 position=(init_x, init_y - LEG_H * 3 / 2 - LEG_DOWN),
                 angle=(i * 0.05),
@@ -185,6 +206,7 @@ class BipedalWalker(Agent):
             )
             lower.color1 = (153 - i * 25, 76 - i * 25, 127 - i * 25)
             lower.color2 = (102 - i * 25, 51 - i * 25, 76 - i * 25)
+            # 创建膝关节
             rjd = revoluteJointDef(
                 bodyA=leg,
                 bodyB=lower,
@@ -214,6 +236,7 @@ class BipedalWalker(Agent):
         self.lidar = [LidarCallback() for _ in range(10)]
 
     def apply_action(self, action):
+        """应用动作"""
         self.joints[0].motorSpeed = float(SPEED_HIP * np.sign(action[0]))
         self.joints[0].maxMotorTorque = float(
             MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1)
@@ -232,6 +255,7 @@ class BipedalWalker(Agent):
         )
 
     def get_observation(self):
+        """获取观察"""
         pos = self.hull.position
         vel = self.hull.linearVelocity
 
@@ -245,13 +269,13 @@ class BipedalWalker(Agent):
             self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
 
         state = [
-            # Normal angles up to 0.5 here, but sure more is possible.
+            # 这里的正常角度最高到0.5，但可能会更高
             self.hull.angle,
             2.0 * self.hull.angularVelocity / FPS,
-            # Normalized to get -1..1 range
+            # 归一化到-1..1范围
             0.3 * vel.x * (VIEWPORT_W / SCALE) / FPS,
             0.3 * vel.y * (VIEWPORT_H / SCALE) / FPS,
-            # This will give 1.1 on high up, but it's still OK (and there should be spikes on hiting the ground, that's normal too)
+            # 这在高处会给出1.1，但这没问题（撞击地面时出现尖峰也是正常的）
             self.joints[0].angle,
             self.joints[0].speed / SPEED_HIP,
             self.joints[1].angle + 1.0,
@@ -271,7 +295,8 @@ class BipedalWalker(Agent):
 
     @property
     def observation_space(self):
-        # 24 original obs (joints, etc), 2 displacement obs for each neighboring walker, 3 for package
+        """观察空间"""
+        # 24个原始观察（关节等），每个相邻行走者2个位移观察，包裹3个
         return spaces.Box(
             low=np.float32(-np.inf),
             high=np.float32(np.inf),
@@ -281,12 +306,14 @@ class BipedalWalker(Agent):
 
     @property
     def action_space(self):
+        """动作空间"""
         return spaces.Box(
             low=np.float32(-1), high=np.float32(1), shape=(4,), dtype=np.float32
         )
 
 
 class MultiWalkerEnv:
+    """多行走者环境类"""
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": FPS}
 
     hardcore = False
@@ -306,19 +333,7 @@ class MultiWalkerEnv:
         max_cycles=500,
         render_mode=None,
     ):
-        """Initializes the `MultiWalkerEnv` class.
-
-        n_walkers: number of bipedal walkers in environment
-        position_noise: noise applied to agent positional sensor observations
-        angle_noise: noise applied to agent rotational sensor observations
-        forward_reward: reward applied for an agent standing, scaled by agent's x coordinate
-        fall_reward: reward applied when an agent falls down
-        shared_reward: whether reward is distributed among all agents or allocated locally
-        terminate_reward: reward applied for each fallen walker in environment
-        terminate_on_fall: toggles whether agent is done if it falls down
-        terrain_length: length of terrain in number of steps
-        max_cycles: after max_cycles steps all agents will return done
-        """
+        """初始化环境"""
         self.n_walkers = n_walkers
         self.position_noise = position_noise
         self.angle_noise = angle_noise
@@ -341,9 +356,11 @@ class MultiWalkerEnv:
         self.frames = 0
 
     def get_param_values(self):
+        """获取参数值"""
         return self.__dict__
 
     def setup(self):
+        """设置环境"""
         self.viewer = None
 
         self.world = Box2D.b2World()
@@ -365,7 +382,7 @@ class MultiWalkerEnv:
             high=+np.float32(np.inf),
             shape=(
                 self.n_walkers * 24 + 3,
-            ),  # 24 is the observation space of each walker, 3 is the package observation space
+            ),  # 24 是每个行走者的观察空间，3 是包裹的观察空间
             dtype=np.float32,
         )
 
@@ -377,9 +394,11 @@ class MultiWalkerEnv:
 
     @property
     def agents(self):
+        """获取智能体列表"""
         return self.walkers
 
     def _seed(self, seed=None):
+        """设置随机种子"""
         self.np_random, seed_ = seeding.np_random(seed)
         self.seed_val = seed_
         for walker in getattr(self, "walkers", []):
@@ -387,6 +406,7 @@ class MultiWalkerEnv:
         return [seed_]
 
     def _destroy(self):
+        """销毁环境"""
         if not self.terrain:
             return
         self.world.contactListener = None
@@ -400,11 +420,13 @@ class MultiWalkerEnv:
             walker._destroy()
 
     def close(self):
+        """关闭环境"""
         if self.screen is not None:
             pygame.quit()
             self.screen = None
 
     def reset(self):
+        """重置环境"""
         self.setup()
         self.world.contactListener_bug_workaround = ContactDetector(self)
         self.world.contactListener = self.world.contactListener_bug_workaround
@@ -436,6 +458,7 @@ class MultiWalkerEnv:
         return self.observe(0)
 
     def scroll_subroutine(self):
+        """滚动子程序"""
         xpos = np.zeros(self.n_walkers)
         obs = []
         done = False
@@ -452,7 +475,7 @@ class MultiWalkerEnv:
             walker_obs = self.walkers[i].get_observation()
             neighbor_obs = []
             for j in [i - 1, i + 1]:
-                # if no neighbor (for edge walkers)
+                # 如果没有邻居（对于边缘行走者）
                 if j < 0 or j == self.n_walkers or self.walkers[j].hull is None:
                     neighbor_obs.append(0.0)
                     neighbor_obs.append(0.0)
@@ -509,7 +532,8 @@ class MultiWalkerEnv:
         return rewards, done, obs
 
     def step(self, action, agent_id, is_last):
-        # action is array of size 4
+        """执行一步"""
+        # action 是大小为 4 的数组
         action = action.reshape(4)
         assert self.walkers[agent_id].hull is not None, agent_id
         self.walkers[agent_id].apply_action(action)
@@ -530,6 +554,7 @@ class MultiWalkerEnv:
             self.render()
 
     def get_last_rewards(self):
+        """获取最后的奖励"""
         return dict(
             zip(
                 list(range(self.n_walkers)),
@@ -538,9 +563,11 @@ class MultiWalkerEnv:
         )
 
     def get_last_dones(self):
+        """获取最后的完成状态"""
         return dict(zip(list(range(self.n_walkers)), self.last_dones))
 
     def get_last_obs(self):
+        """获取最后的观察"""
         return dict(
             zip(
                 list(range(self.n_walkers)),
@@ -549,11 +576,13 @@ class MultiWalkerEnv:
         )
 
     def observe(self, agent):
+        """获取观察"""
         o = self.last_obs[agent]
         o = np.array(o, dtype=np.float32)
         return o
 
     def state(self):
+        """获取状态"""
         all_walker_obs = self.get_last_obs()
         all_walker_obs = np.array(list(all_walker_obs.values())).flatten()
         package_obs = np.array(
@@ -568,11 +597,12 @@ class MultiWalkerEnv:
         return global_state
 
     def render(self, close=False):
+        """渲染环境"""
         if close:
             self.close()
             return
 
-        offset = 200  # compensates for the negative coordinates
+        offset = 200  # 补偿负坐标
         render_scale = SCALE / self.package_scale / 0.75
         if self.screen is None:
             pygame.init()
@@ -718,6 +748,7 @@ class MultiWalkerEnv:
             )
 
     def _generate_package(self):
+        """生成包裹"""
         init_x = np.mean(self.start_x)
         init_y = TERRAIN_HEIGHT + 3 * LEG_H
         self.package = self.world.CreateDynamicBody(
@@ -732,14 +763,15 @@ class MultiWalkerEnv:
                 density=1.0,
                 friction=0.5,
                 categoryBits=0x004,
-                # maskBits=0x001,  # collide only with ground
+                # maskBits=0x001,  # 只与地面碰撞
                 restitution=0.0,
-            ),  # 0.99 bouncy
+            ),  # 0.99 弹性
         )
         self.package.color1 = (127, 102, 229)
         self.package.color2 = (76, 76, 127)
 
     def _generate_terrain(self, hardcore):
+        """生成地形"""
         GRASS, STUMP, STAIRS, PIT, _STATES_ = range(5)
         state = GRASS
         velocity = 0.0
@@ -879,7 +911,8 @@ class MultiWalkerEnv:
         self.terrain.reverse()
 
     def _generate_clouds(self):
-        # Sorry for the clouds, couldn't resist
+        """生成云朵"""
+        # 抱歉，云朵我没能抵制住
         self.cloud_poly = []
         for i in range(self.terrain_length // 20):
             x = self.np_random.uniform(0, self.terrain_length) * TERRAIN_STEP
