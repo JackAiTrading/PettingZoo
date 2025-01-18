@@ -1,16 +1,16 @@
 ---
-title: "Tutorial: Action Masking"
+title: "教程：动作掩码"
 ---
 
-# Tutorial: Action Masking
+# 教程：动作掩码
 
-## Introduction
+## 简介
 
-In many environments, it is natural for some actions to be invalid at certain times. For example, in a game of chess, it is impossible to move a pawn forward if it is already at the front of the board. In PettingZoo, we can use action masking to prevent invalid actions from being taken.
+在许多环境中，某些动作在特定时刻自然是无效的。例如，在国际象棋游戏中，如果一个兵已经在棋盘的最前面，就不可能再向前移动。在 PettingZoo 中，我们可以使用动作掩码来防止执行无效动作。
 
-Action masking is a more natural way of handling invalid actions than having an action have no effect, which was how we handled bumping into walls in the previous tutorial.
+动作掩码是处理无效动作的一种更自然的方式，比起在前一个教程中我们处理撞墙的方式（让动作没有效果）更为合适。
 
-## Code
+## 代码
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/CustomEnvironment/tutorial3_action_masking.py

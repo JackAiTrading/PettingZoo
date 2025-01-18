@@ -1,52 +1,52 @@
-# AgileRL: Implementing DQN - Curriculum Learning and Self-play
+# AgileRL：实现 DQN - 课程学习和自我对弈
 
 ```{eval-rst}
 .. figure:: connect_four_self_opp.gif
    :align: center
    :height: 400px
 
-   Fig1: Agent trained to play Connect Four through self-play
+   图1：通过自我对弈训练的四子棋智能体
 ```
 
-This tutorial shows how to train a [DQN](https://agilerl.readthedocs.io/en/latest/api/algorithms/dqn.html) agent on the [connect four](https://pettingzoo.farama.org/environments/classic/connect_four/) classic environment.
+本教程展示如何在 [connect four](https://pettingzoo.farama.org/environments/classic/connect_four/) 经典环境中训练 [DQN](https://agilerl.readthedocs.io/en/latest/api/algorithms/dqn.html) 智能体。
 
-This tutorial focuses on two techniques used in reinforcement learning - **curriculum learning** and **self-play**. Curriculum learning refers to training an agent on tasks of increasing difficulty in separate 'lessons'. Imagine you were trying to become a chess world champion. You would not decide to learn to play chess by immediately taking on a grand master - it would be too difficult. Instead, you would practice against people of the same ability as you, improve slowly, and increasingly play against harder opponents until you were ready to compete with the best. The same concept applies to reinforcement learning models. Sometimes, tasks are too difficult to learn in one go, and so we must create a curriculum to guide an agent and teach it to solve our ultimate hard environment.
+本教程重点介绍强化学习中的两种技术 - **课程学习**和**自我对弈**。课程学习是指在不同"课程"中通过逐渐增加难度的任务来训练智能体。想象一下你想成为国际象棋世界冠军。你不会一开始就决定通过与特级大师对弈来学习国际象棋 - 那太困难了。相反，你会与和你水平相当的人对弈，慢慢提高，然后逐渐与更强的对手对弈，直到你准备好与最优秀的选手竞争。同样的概念也适用于强化学习模型。有时，任务太难以一次性学习，所以我们必须创建一个课程来指导智能体，教它解决我们最终的困难环境。
 
-This tutorial also uses self-play. Self-play is a technique used in competitive reinforcement learning environments. An agent trains by playing against a copy of itself - the opponent - and learns to beat this opponent. The opponent is then updated to a copy of this better version of the agent, and the agent must then learn to beat itself again. This is done repeatedly, and the agent iteratively improves by exploiting its own weaknesses and discovering new strategies.
+本教程还使用了自我对弈。自我对弈是竞争性强化学习环境中使用的一种技术。智能体通过与自己的副本（对手）对弈来训练，并学会击败这个对手。然后对手会更新为这个更好版本的智能体的副本，智能体必须再次学会击败自己。这个过程不断重复，智能体通过利用自己的弱点和发现新策略来逐步改进。
 
-In this tutorial, self-play is treated as the final lesson in the curriculum. However, these two techniques can be used independently of each other, and with unlimited resources, self-play can beat agents trained with human-crafted lessons through curriculum learning. [The Bitter Lesson](http://incompleteideas.net/IncIdeas/BitterLesson.html) by Richard Sutton provides an interesting take on curriculum learning and is definitely worth consideration from any engineer undertaking such a task. However, unlike Sutton, we do not all have the resources available to us that Deepmind and top institutions provide, and so one must be pragmatic when deciding how they will solve their own reinforcement learning problem. If you would like to discuss this exciting area of research further, please join the AgileRL [Discord server](https://discord.com/invite/eB8HyTA2ux) and let us know what you think!
+在本教程中，自我对弈被视为课程中的最后一课。然而，这两种技术可以独立使用，而且在资源无限的情况下，自我对弈可以击败通过人工设计课程进行课程学习训练的智能体。Richard Sutton 的 [The Bitter Lesson](http://incompleteideas.net/IncIdeas/BitterLesson.html) 对课程学习提供了一个有趣的观点，任何从事这项任务的工程师都值得考虑。然而，与 Sutton 不同，我们并不都拥有 Deepmind 和顶级机构提供的资源，因此在决定如何解决自己的强化学习问题时必须务实。如果你想进一步讨论这个令人兴奋的研究领域，请加入 AgileRL 的 [Discord 服务器](https://discord.com/invite/eB8HyTA2ux)，让我们知道你的想法！
 
 
-## What is DQN?
-[DQN](https://agilerl.readthedocs.io/en/latest/api/algorithms/dqn.html) (Deep Q-Network) is an extension of Q-learning that makes use of a replay buffer and target network to improve learning stability. For further information on DQN, check out the AgileRL [documentation](https://agilerl.readthedocs.io/en/latest/api/algorithms/dqn.html).
+## 什么是 DQN？
+[DQN](https://agilerl.readthedocs.io/en/latest/api/algorithms/dqn.html)（深度 Q 网络）是 Q 学习的扩展，它使用经验回放缓冲区和目标网络来提高学习稳定性。要了解更多关于 DQN 的信息，请查看 AgileRL [文档](https://agilerl.readthedocs.io/en/latest/api/algorithms/dqn.html)。
 
-### Can I use it?
+### 我可以使用它吗？
 
-|   | Action Space | Observation Space |
+|   | 动作空间 | 观察空间 |
 |---|--------------|-------------------|
-|Discrete  | ✔️           | ✔️                |
-|Continuous   | ❌           | ✔️                |
+|离散  | ✔️           | ✔️                |
+|连续   | ❌           | ✔️                |
 
 
-## Environment Setup
+## 环境设置
 
-To follow this tutorial, you will need to install the dependencies shown below. It is recommended to use a newly-created virtual environment to avoid dependency conflicts.
+要学习本教程，你需要安装下面显示的依赖项。建议使用新创建的虚拟环境以避免依赖冲突。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/AgileRL/requirements.txt
    :language: text
 ```
 
-## Code
-### Curriculum learning and self-play using DQN on Connect Four
-The following code should run without any issues. The comments are designed to help you understand how to use PettingZoo with AgileRL. If you have any questions, please feel free to ask in the [Discord server](https://discord.com/invite/eB8HyTA2ux).
+## 代码
+### 在四子棋游戏中使用 DQN 进行课程学习和自我对弈
+以下代码应该可以正常运行。注释旨在帮助你理解如何将 PettingZoo 与 AgileRL 一起使用。如果你有任何问题，请随时在 [Discord 服务器](https://discord.com/invite/eB8HyTA2ux)中询问。
 
-This is a complicated tutorial, and so we will go through it in stages. The [full code](#full-training-code) can be found at the end of this section. Although much of this tutorial contains content specific to the Connect Four environment, it serves to demonstrate how techniques can be applied more generally to other problems.
+这是一个复杂的教程，所以我们将分阶段进行。[完整代码](#full-training-code)可以在本节末尾找到。虽然本教程的大部分内容都是针对四子棋环境的特定内容，但它展示了如何将这些技术更广泛地应用于其他问题。
 
-### Imports
-Importing the following packages, functions and classes will enable us to run the tutorial.
+### 导入
+导入以下包、函数和类将使我们能够运行本教程。
 
 <details>
-   <summary>Imports</summary>
+   <summary>导入</summary>
 
    ```python
    import copy
@@ -69,28 +69,28 @@ Importing the following packages, functions and classes will enable us to run th
    ```
 </details>
 
-### Curriculum Learning
-First, we need to set up and modify our environment to enable curriculum learning. Curriculum learning is enabled by changing the environment that the agent trains in. This can be implemented by changing what happens when certain actions are taken - altering the next observation returned by the environment, or more simply by altering the reward. First, we will change the reward. By default, Connect Four uses the following rewards:
+### 课程学习
+首先，我们需要设置和修改我们的环境以启用课程学习。课程学习通过改变智能体训练的环境来实现。这可以通过改变某些动作发生时的情况来实现 - 改变环境返回的下一个观察值，或者更简单地改变奖励。首先，我们将改变奖励。默认情况下，四子棋使用以下奖励：
 
-* Win = +1
-* Lose = -1
-* Play continues = 0
+* 胜利 = +1
+* 失败 = -1
+* 继续游戏 = 0
 
-To help guide our agent, we can introduce rewards for other outcomes in the environment, such as a small reward for placing 3 pieces in a row, or a small negative reward when the opponent manages the same feat. We can also use reward shaping to encourage our agent to explore more. In Connect Four, if playing against a random opponent, an easy way to win is to always play in the same column. An agent may find success doing this, and therefore not learn other, more sophisticated strategies that can help it win against better opponents. We may therefore elect to reward vertical wins slightly less than horizontal or diagonal wins, to encourage the agent to try winning in different ways. An example reward system could be defined as follows:
+为了帮助指导我们的智能体，我们可以为环境中的其他结果引入奖励，例如为连续放置 3 个棋子给予小奖励，或者当对手做到同样的事情时给予小惩罚。我们还可以使用奖励塑形来鼓励我们的智能体进行更多探索。在四子棋中，如果对抗随机对手，一个简单的获胜方法就是总是在同一列放置棋子。智能体可能会通过这种方式取得成功，因此不会学习其他可以帮助它击败更好对手的更复杂策略。因此，我们可以选择对垂直获胜给予稍低的奖励，而对水平或对角线获胜给予更高的奖励，以鼓励智能体尝试不同的获胜方式。一个示例奖励系统可以定义如下：
 
-* Win (horizontal or diagonal) = +1
-* Win (vertical) = +0.8
-* Three in a row = +0.05
-* Opponent three in a row = -0.05
-* Lose = -1
-* Play continues = 0
+* 获胜（水平或对角线）= +1
+* 获胜（垂直）= +0.8
+* 三子连线 = +0.05
+* 对手三子连线 = -0.05
+* 失败 = -1
+* 继续游戏 = 0
 
-#### Config files
+#### 配置文件
 
-It is best to use YAML config files to define the lessons in our curriculum and easily change and keep track of our settings. The first three lessons in our curriculum can be defined as follows:
+最好使用 YAML 配置文件来定义我们课程中的课程，并轻松更改和跟踪我们的设置。我们课程中的前三课可以定义如下：
 
 <details>
-   <summary>Lesson 1</summary>
+   <summary>第 1 课</summary>
 
    ```{eval-rst}
    .. literalinclude:: ../../../tutorials/AgileRL/curriculums/connect_four/lesson1.yaml
@@ -99,7 +99,7 @@ It is best to use YAML config files to define the lessons in our curriculum and 
 </details>
 
 <details>
-   <summary>Lesson 2</summary>
+   <summary>第 2 课</summary>
 
    ```{eval-rst}
    .. literalinclude:: ../../../tutorials/AgileRL/curriculums/connect_four/lesson2.yaml
@@ -108,7 +108,7 @@ It is best to use YAML config files to define the lessons in our curriculum and 
 </details>
 
 <details>
-   <summary>Lesson 3</summary>
+   <summary>第 3 课</summary>
 
    ```{eval-rst}
    .. literalinclude:: ../../../tutorials/AgileRL/curriculums/connect_four/lesson3.yaml
@@ -116,538 +116,98 @@ It is best to use YAML config files to define the lessons in our curriculum and 
    ```
 </details><br>
 
-To implement our curriculum, we create a ```CurriculumEnv``` class that acts as a wrapper on top of our Connect Four environment and enables us to alter the reward to guide the training of our agent. This uses the configs that we set up to define the lesson.
+要实现我们的课程，我们创建一个 `CurriculumEnv` 类，它作为我们的四子棋环境的包装器，使我们能够改变奖励来指导智能体的训练。这使用我们设置的配置来定义课程。
 
 <details>
-   <summary>CurriculumEnv</summary>
+   <summary>课程环境</summary>
 
    ```python
    class CurriculumEnv:
-      """Wrapper around environment to modify reward for curriculum learning.
+      """课程学习环境的包装器，用于修改奖励。
 
-      :param env: Environment to learn in
-      :type env: PettingZoo-style environment
-      :param lesson: Lesson settings for curriculum learning
+      :param env: 要学习的环境
+      :type env: PettingZoo 风格的环境
+      :param lesson: 课程学习的课程设置
       :type lesson: dict
       """
 
       def __init__(self, env, lesson):
          self.env = env
          self.lesson = lesson
-
-      def fill_replay_buffer(self, memory, opponent):
-         """Fill the replay buffer with experiences collected by taking random actions in the environment.
-
-         :param memory: Experience replay buffer
-         :type memory: AgileRL experience replay buffer
-         """
-         print("Filling replay buffer ...")
-
-         pbar = tqdm(total=memory.memory_size)
-         while len(memory) < memory.memory_size:
-            # Randomly decide whether random player will go first or second
-            if random.random() > 0.5:
-                  opponent_first = False
-            else:
-                  opponent_first = True
-
-            mem_full = len(memory)
-            self.reset()  # Reset environment at start of episode
-            observation, reward, done, truncation, _ = self.last()
-
-            (
-                  p1_state,
-                  p1_state_flipped,
-                  p1_action,
-                  p1_next_state,
-                  p1_next_state_flipped,
-            ) = (None, None, None, None, None)
-            done, truncation = False, False
-
-            while not (done or truncation):
-                  # Player 0's turn
-                  p0_action_mask = observation["action_mask"]
-                  p0_state = np.moveaxis(observation["observation"], [-1], [-3])
-                  p0_state_flipped = np.expand_dims(np.flip(p0_state, 2), 0)
-                  p0_state = np.expand_dims(p0_state, 0)
-                  if opponent_first:
-                     p0_action = self.env.action_space("player_0").sample(p0_action_mask)
-                  else:
-                     if self.lesson["warm_up_opponent"] == "random":
-                        p0_action = opponent.getAction(
-                              p0_action_mask, p1_action, self.lesson["block_vert_coef"]
-                        )
-                     else:
-                        p0_action = opponent.getAction(player=0)
-                  self.step(p0_action)  # Act in environment
-                  observation, env_reward, done, truncation, _ = self.last()
-                  p0_next_state = np.moveaxis(observation["observation"], [-1], [-3])
-                  p0_next_state_flipped = np.expand_dims(np.flip(p0_next_state, 2), 0)
-                  p0_next_state = np.expand_dims(p0_next_state, 0)
-
-                  if done or truncation:
-                     reward = self.reward(done=True, player=0)
-                     memory.save2memoryVectEnvs(
-                        np.concatenate(
-                              (p0_state, p1_state, p0_state_flipped, p1_state_flipped)
-                        ),
-                        [p0_action, p1_action, 6 - p0_action, 6 - p1_action],
-                        [
-                              reward,
-                              LESSON["rewards"]["lose"],
-                              reward,
-                              LESSON["rewards"]["lose"],
-                        ],
-                        np.concatenate(
-                              (
-                                 p0_next_state,
-                                 p1_next_state,
-                                 p0_next_state_flipped,
-                                 p1_next_state_flipped,
-                              )
-                        ),
-                        [done, done, done, done],
-                     )
-                  else:  # Play continues
-                     if p1_state is not None:
-                        reward = self.reward(done=False, player=1)
-                        memory.save2memoryVectEnvs(
-                              np.concatenate((p1_state, p1_state_flipped)),
-                              [p1_action, 6 - p1_action],
-                              [reward, reward],
-                              np.concatenate((p1_next_state, p1_next_state_flipped)),
-                              [done, done],
-                        )
-
-                     # Player 1's turn
-                     p1_action_mask = observation["action_mask"]
-                     p1_state = np.moveaxis(observation["observation"], [-1], [-3])
-                     p1_state[[0, 1], :, :] = p1_state[[0, 1], :, :]
-                     p1_state_flipped = np.expand_dims(np.flip(p1_state, 2), 0)
-                     p1_state = np.expand_dims(p1_state, 0)
-                     if not opponent_first:
-                        p1_action = self.env.action_space("player_1").sample(
-                              p1_action_mask
-                        )
-                     else:
-                        if self.lesson["warm_up_opponent"] == "random":
-                              p1_action = opponent.getAction(
-                                 p1_action_mask, p0_action, LESSON["block_vert_coef"]
-                              )
-                        else:
-                              p1_action = opponent.getAction(player=1)
-                     self.step(p1_action)  # Act in environment
-                     observation, env_reward, done, truncation, _ = self.last()
-                     p1_next_state = np.moveaxis(observation["observation"], [-1], [-3])
-                     p1_next_state[[0, 1], :, :] = p1_next_state[[0, 1], :, :]
-                     p1_next_state_flipped = np.expand_dims(np.flip(p1_next_state, 2), 0)
-                     p1_next_state = np.expand_dims(p1_next_state, 0)
-
-                     if done or truncation:
-                        reward = self.reward(done=True, player=1)
-                        memory.save2memoryVectEnvs(
-                              np.concatenate(
-                                 (p0_state, p1_state, p0_state_flipped, p1_state_flipped)
-                              ),
-                              [p0_action, p1_action, 6 - p0_action, 6 - p1_action],
-                              [
-                                 LESSON["rewards"]["lose"],
-                                 reward,
-                                 LESSON["rewards"]["lose"],
-                                 reward,
-                              ],
-                              np.concatenate(
-                                 (
-                                    p0_next_state,
-                                    p1_next_state,
-                                    p0_next_state_flipped,
-                                    p1_next_state_flipped,
-                                 )
-                              ),
-                              [done, done, done, done],
-                        )
-
-                     else:  # Play continues
-                        reward = self.reward(done=False, player=0)
-                        memory.save2memoryVectEnvs(
-                              np.concatenate((p0_state, p0_state_flipped)),
-                              [p0_action, 6 - p0_action],
-                              [reward, reward],
-                              np.concatenate((p0_next_state, p0_next_state_flipped)),
-                              [done, done],
-                        )
-
-            pbar.update(len(memory) - mem_full)
-         pbar.close()
-         print("Replay buffer warmed up.")
-         return memory
-
-      def check_winnable(self, lst, piece):
-         """Checks if four pieces in a row represent a winnable opportunity, e.g. [1, 1, 1, 0] or [2, 0, 2, 2].
-
-         :param lst: List of pieces in row
-         :type lst: List
-         :param piece: Player piece we are checking (1 or 2)
-         :type piece: int
-         """
-         return lst.count(piece) == 3 and lst.count(0) == 1
-
-      def check_vertical_win(self, player):
-         """Checks if a win is vertical.
-
-         :param player: Player who we are checking, 0 or 1
-         :type player: int
-         """
-         board = np.array(self.env.env.board).reshape(6, 7)
-         piece = player + 1
-
-         column_count = 7
-         row_count = 6
-
-         # Check vertical locations for win
-         for c in range(column_count):
-            for r in range(row_count - 3):
-                  if (
-                     board[r][c] == piece
-                     and board[r + 1][c] == piece
-                     and board[r + 2][c] == piece
-                     and board[r + 3][c] == piece
-                  ):
-                     return True
-         return False
-
-      def check_three_in_row(self, player):
-         """Checks if there are three pieces in a row and a blank space next, or two pieces - blank - piece.
-
-         :param player: Player who we are checking, 0 or 1
-         :type player: int
-         """
-         board = np.array(self.env.env.board).reshape(6, 7)
-         piece = player + 1
-
-         # Check horizontal locations
-         column_count = 7
-         row_count = 6
-         three_in_row_count = 0
-
-         # Check vertical locations
-         for c in range(column_count):
-            for r in range(row_count - 3):
-                  if self.check_winnable(board[r : r + 4, c].tolist(), piece):
-                     three_in_row_count += 1
-
-         # Check horizontal locations
-         for r in range(row_count):
-            for c in range(column_count - 3):
-                  if self.check_winnable(board[r, c : c + 4].tolist(), piece):
-                     three_in_row_count += 1
-
-         # Check positively sloped diagonals
-         for c in range(column_count - 3):
-            for r in range(row_count - 3):
-                  if self.check_winnable(
-                     [
-                        board[r, c],
-                        board[r + 1, c + 1],
-                        board[r + 2, c + 2],
-                        board[r + 3, c + 3],
-                     ],
-                     piece,
-                  ):
-                     three_in_row_count += 1
-
-         # Check negatively sloped diagonals
-         for c in range(column_count - 3):
-            for r in range(3, row_count):
-                  if self.check_winnable(
-                     [
-                        board[r, c],
-                        board[r - 1, c + 1],
-                        board[r - 2, c + 2],
-                        board[r - 3, c + 3],
-                     ],
-                     piece,
-                  ):
-                     three_in_row_count += 1
-
-         return three_in_row_count
-
-      def reward(self, done, player):
-         """Processes and returns reward from environment according to lesson criteria.
-
-         :param done: Environment has terminated
-         :type done: bool
-         :param player: Player who we are checking, 0 or 1
-         :type player: int
-         """
-         if done:
-            reward = (
-                  self.lesson["rewards"]["vertical_win"]
-                  if self.check_vertical_win(player)
-                  else self.lesson["rewards"]["win"]
-            )
-         else:
-            agent_three_count = self.check_three_in_row(1 - player)
-            opp_three_count = self.check_three_in_row(player)
-            if (agent_three_count + opp_three_count) == 0:
-                  reward = self.lesson["rewards"]["play_continues"]
-            else:
-                  reward = (
-                     self.lesson["rewards"]["three_in_row"] * agent_three_count
-                     + self.lesson["rewards"]["opp_three_in_row"] * opp_three_count
-                  )
-         return reward
-
-      def last(self):
-         """Wrapper around PettingZoo env last method."""
-         return self.env.last()
-
-      def step(self, action):
-         """Wrapper around PettingZoo env step method."""
-         self.env.step(action)
-
-      def reset(self):
-         """Wrapper around PettingZoo env reset method."""
-         self.env.reset()
    ```
 </details>
 
-When defining the different lessons in our curriculum, we can increase the difficulty of our task by modifying environment observations for our agent - in Connect Four, we can increase the skill level of our opponent. By progressively doing this, we can help our agent improve. We can change our rewards between lessons too; for example, we may wish to reward wins in all directions equally once we have learned to beat a random agent and now wish to train against a harder opponent. In this tutorial, an ```Opponent``` class is implemented to provide different levels of difficulty for training our agent.
+在定义课程中的不同课程时，我们可以通过修改智能体的环境观察来增加任务的难度 - 在四子棋中，我们可以提高对手的技能水平。通过逐步进行这个过程，我们可以帮助我们的智能体提高。我们也可以在课程之间改变奖励；例如，一旦我们学会击败随机对手，现在想要对抗更强的对手时，我们可能希望对所有方向的获胜给予相同的奖励。在本教程中，实现了一个 `Opponent` 类来为训练我们的智能体提供不同难度级别。
 
 <details>
-   <summary>Opponent</summary>
+   <summary>对手</summary>
 
    ```python
    class Opponent:
-      """Connect 4 opponent to train and/or evaluate against.
+      """四子棋对手，用于训练和/或评估。
 
-      :param env: Environment to learn in
-      :type env: PettingZoo-style environment
-      :param difficulty: Difficulty level of opponent, 'random', 'weak' or 'strong'
-      :type difficulty: str
+      :param env: 要学习的环境
+      :type env: PettingZoo 风格的环境
       """
-
-      def __init__(self, env, difficulty):
-         self.env = env.env
-         self.difficulty = difficulty
-         if self.difficulty == "random":
-            self.getAction = self.random_opponent
-         elif self.difficulty == "weak":
-            self.getAction = self.weak_rule_based_opponent
-         else:
-            self.getAction = self.strong_rule_based_opponent
-         self.num_cols = 7
-         self.num_rows = 6
-         self.length = 4
-         self.top = [0] * self.num_cols
-
-      def update_top(self):
-         """Updates self.top, a list which tracks the row on top of the highest piece in each column."""
-         board = np.array(self.env.env.board).reshape(self.num_rows, self.num_cols)
-         non_zeros = np.where(board != 0)
-         rows, cols = non_zeros
-         top = np.zeros(board.shape[1], dtype=int)
-         for col in range(board.shape[1]):
-            column_pieces = rows[cols == col]
-            if len(column_pieces) > 0:
-                  top[col] = np.min(column_pieces) - 1
-            else:
-                  top[col] = 5
-         full_columns = np.all(board != 0, axis=0)
-         top[full_columns] = 6
-         self.top = top
-
-      def random_opponent(self, action_mask, last_opp_move=None, block_vert_coef=1):
-         """Takes move for random opponent. If the lesson aims to randomly block vertical wins with a higher probability, this is done here too.
-
-         :param action_mask: Mask of legal actions: 1=legal, 0=illegal
-         :type action_mask: List
-         :param last_opp_move: Most recent action taken by agent against this opponent
-         :type last_opp_move: int
-         :param block_vert_coef: How many times more likely to block vertically
-         :type block_vert_coef: float
-         """
-         if last_opp_move is not None:
-            action_mask[last_opp_move] *= block_vert_coef
-         action = random.choices(list(range(self.num_cols)), action_mask)[0]
-         return action
-
-      def weak_rule_based_opponent(self, player):
-         """Takes move for weak rule-based opponent.
-
-         :param player: Player who we are checking, 0 or 1
-         :type player: int
-         """
-         self.update_top()
-         max_length = -1
-         best_actions = []
-         for action in range(self.num_cols):
-            possible, reward, ended, lengths = self.outcome(
-                  action, player, return_length=True
-            )
-            if possible and lengths.sum() > max_length:
-                  best_actions = []
-                  max_length = lengths.sum()
-            if possible and lengths.sum() == max_length:
-                  best_actions.append(action)
-         best_action = random.choice(best_actions)
-         return best_action
-
-      def strong_rule_based_opponent(self, player):
-         """Takes move for strong rule-based opponent.
-
-         :param player: Player who we are checking, 0 or 1
-         :type player: int
-         """
-         self.update_top()
-
-         winning_actions = []
-         for action in range(self.num_cols):
-            possible, reward, ended = self.outcome(action, player)
-            if possible and ended:
-                  winning_actions.append(action)
-         if len(winning_actions) > 0:
-            winning_action = random.choice(winning_actions)
-            return winning_action
-
-         opp = 1 if player == 0 else 0
-         loss_avoiding_actions = []
-         for action in range(self.num_cols):
-            possible, reward, ended = self.outcome(action, opp)
-            if possible and ended:
-                  loss_avoiding_actions.append(action)
-         if len(loss_avoiding_actions) > 0:
-            loss_avoiding_action = random.choice(loss_avoiding_actions)
-            return loss_avoiding_action
-
-         return self.weak_rule_based_opponent(player)  # take best possible move
-
-      def outcome(self, action, player, return_length=False):
-         """Takes move for weak rule-based opponent.
-
-         :param action: Action to take in environment
-         :type action: int
-         :param player: Player who we are checking, 0 or 1
-         :type player: int
-         :param return_length: Return length of outcomes, defaults to False
-         :type player: bool, optional
-         """
-         if not (self.top[action] < self.num_rows):  # action column is full
-            return (False, None, None) + ((None,) if return_length else ())
-
-         row, col = self.top[action], action
-         piece = player + 1
-
-         # down, up, left, right, down-left, up-right, down-right, up-left,
-         directions = np.array(
-            [
-                  [[-1, 0], [1, 0]],
-                  [[0, -1], [0, 1]],
-                  [[-1, -1], [1, 1]],
-                  [[-1, 1], [1, -1]],
-            ]
-         )  # |4x2x2|
-
-         positions = np.array([row, col]).reshape(1, 1, 1, -1) + np.expand_dims(
-            directions, -2
-         ) * np.arange(1, self.length).reshape(
-            1, 1, -1, 1
-         )  # |4x2x3x2|
-         valid_positions = np.logical_and(
-            np.logical_and(
-                  positions[:, :, :, 0] >= 0, positions[:, :, :, 0] < self.num_rows
-            ),
-            np.logical_and(
-                  positions[:, :, :, 1] >= 0, positions[:, :, :, 1] < self.num_cols
-            ),
-         )  # |4x2x3|
-         d0 = np.where(valid_positions, positions[:, :, :, 0], 0)
-         d1 = np.where(valid_positions, positions[:, :, :, 1], 0)
-         board = np.array(self.env.env.board).reshape(self.num_rows, self.num_cols)
-         board_values = np.where(valid_positions, board[d0, d1], 0)
-         a = (board_values == piece).astype(int)
-         b = np.concatenate(
-            (a, np.zeros_like(a[:, :, :1])), axis=-1
-         )  # padding with zeros to compute length
-         lengths = np.argmin(b, -1)
-
-         ended = False
-         # check if winnable in any direction
-         for both_dir in board_values:
-            # |2x3|
-            line = np.concatenate((both_dir[0][::-1], [piece], both_dir[1]))
-            if "".join(map(str, [piece] * self.length)) in "".join(map(str, line)):
-                  ended = True
-                  break
-
-         # ended = np.any(np.greater_equal(np.sum(lengths, 1), self.length - 1))
-         draw = True
-         for c, v in enumerate(self.top):
-            draw &= (v == self.num_rows) if c != col else (v == (self.num_rows - 1))
-         ended |= draw
-         reward = (-1) ** (player) if ended and not draw else 0
-
-         return (True, reward, ended) + ((lengths,) if return_length else ())
-
    ```
 </details>
 
-### General setup
+### 通用设置
 
-Before we go any further in this tutorial, it would be helpful to define and set up everything remaining we need for training.
+在我们继续本教程之前，定义和设置训练所需的其他所有内容会很有帮助。
 
 <details>
-   <summary>Setup code</summary>
+   <summary>设置代码</summary>
 
    ```python
    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-   print("===== AgileRL Curriculum Learning Demo =====")
+   print("===== AgileRL 课程学习演示 =====")
 
    lesson_number = 1
 
-   # Load lesson for curriculum
+   # 加载课程
    with open(f"./curriculums/connect_four/lesson{lesson_number}.yaml") as file:
       LESSON = yaml.safe_load(file)
 
-   # Define the network configuration
+   # 定义网络配置
    NET_CONFIG = {
-      "arch": "cnn",  # Network architecture
-      "hidden_size": [64, 64],  # Actor hidden size
-      "channel_size": [128],  # CNN channel size
-      "kernel_size": [4],  # CNN kernel size
-      "stride_size": [1],  # CNN stride size
-      "normalize": False,  # Normalize image from range [0,255] to [0,1]
+      "arch": "cnn",  # 网络架构
+      "hidden_size": [64, 64],  # Actor 隐藏层大小
+      "channel_size": [128],  # CNN 通道大小
+      "kernel_size": [4],  # CNN 内核大小
+      "stride_size": [1],  # CNN 步幅大小
+      "normalize": False,  # 将图像从 [0,255] 范围归一化为 [0,1]
    }
 
-   # Define the initial hyperparameters
+   # 定义初始超参数
    INIT_HP = {
       "POPULATION_SIZE": 6,
-      # "ALGO": "Rainbow DQN",  # Algorithm
-      "ALGO": "DQN",  # Algorithm
+      # "ALGO": "Rainbow DQN",  # 算法
+      "ALGO": "DQN",  # 算法
       "DOUBLE": True,
-      # Swap image channels dimension from last to first [H, W, C] -> [C, H, W]
-      "BATCH_SIZE": 256,  # Batch size
-      "LR": 1e-4,  # Learning rate
-      "GAMMA": 0.99,  # Discount factor
-      "MEMORY_SIZE": 100000,  # Max memory buffer size
-      "LEARN_STEP": 1,  # Learning frequency
-      "N_STEP": 1,  # Step number to calculate td error
-      "PER": False,  # Use prioritized experience replay buffer
-      "ALPHA": 0.6,  # Prioritized replay buffer parameter
-      "TAU": 0.01,  # For soft update of target parameters
-      "BETA": 0.4,  # Importance sampling coefficient
-      "PRIOR_EPS": 0.000001,  # Minimum priority for sampling
-      "NUM_ATOMS": 51,  # Unit number of support
-      "V_MIN": 0.0,  # Minimum value of support
-      "V_MAX": 200.0,  # Maximum value of support
-      "WANDB": False,  # Use Weights and Biases tracking
+      # 交换图像通道维度从最后一个到第一个 [H, W, C] -> [C, H, W]
+      "BATCH_SIZE": 256,  # 批大小
+      "LR": 1e-4,  # 学习率
+      "GAMMA": 0.99,  # 折扣因子
+      "MEMORY_SIZE": 100000,  # 最大内存缓冲区大小
+      "LEARN_STEP": 1,  # 学习频率
+      "N_STEP": 1,  # 计算 TD 错误的步数
+      "PER": False,  # 使用优先经验回放缓冲区
+      "ALPHA": 0.6,  # 优先回放缓冲区参数
+      "TAU": 0.01,  # 软更新目标参数
+      "BETA": 0.4,  # 重要性采样系数
+      "PRIOR_EPS": 0.000001,  # 最小优先级
+      "NUM_ATOMS": 51,  # 支持单元数
+      "V_MIN": 0.0,  # 支持最小值
+      "V_MAX": 200.0,  # 支持最大值
+      "WANDB": False,  # 使用 Weights and Biases 跟踪
    }
 
-   # Define the connect four environment
+   # 定义四子棋环境
    env = connect_four_v3.env()
    env.reset()
 
-   # Configure the algo input arguments
+   # 配置算法输入参数
    state_dim = [
       env.observation_space(agent)["observation"].shape for agent in env.agents
    ]
@@ -657,16 +217,16 @@ Before we go any further in this tutorial, it would be helpful to define and set
    INIT_HP["MAX_ACTION"] = None
    INIT_HP["MIN_ACTION"] = None
 
-   # Warp the environment in the curriculum learning wrapper
+   # 将环境包装在课程学习包装器中
    env = CurriculumEnv(env, LESSON)
 
-   # Pre-process dimensions for PyTorch layers
-   # We only need to worry about the state dim of a single agent
-   # We flatten the 6x7x2 observation as input to the agent"s neural network
+   # 为 PyTorch 层预处理维度
+   # 我们只需要担心单个智能体的状态维度
+   # 我们将 6x7x2 观察值平展为智能体神经网络的输入
    state_dim = np.moveaxis(np.zeros(state_dim[0]), [-1], [-3]).shape
    action_dim = action_dim[0]
 
-   # Create a population ready for evolutionary hyper-parameter optimisation
+   # 创建一个准备好进行进化超参数优化的种群
    pop = initialPopulation(
       INIT_HP["ALGO"],
       state_dim,
@@ -678,104 +238,104 @@ Before we go any further in this tutorial, it would be helpful to define and set
       device=device,
    )
 
-   # Configure the replay buffer
+   # 配置回放缓冲区
    field_names = ["state", "action", "reward", "next_state", "done"]
    memory = ReplayBuffer(
-      action_dim=action_dim,  # Number of agent actions
-      memory_size=INIT_HP["MEMORY_SIZE"],  # Max replay buffer size
-      field_names=field_names,  # Field names to store in memory
+      action_dim=action_dim,  # 智能体动作数量
+      memory_size=INIT_HP["MEMORY_SIZE"],  # 最大回放缓冲区大小
+      field_names=field_names,  # 存储在内存中的字段名称
       device=device,
    )
 
-   # Instantiate a tournament selection object (used for HPO)
+   # 实例化一个锦标赛选择对象（用于 HPO）
    tournament = TournamentSelection(
-      tournament_size=2,  # Tournament selection size
-      elitism=True,  # Elitism in tournament selection
-      population_size=INIT_HP["POPULATION_SIZE"],  # Population size
+      tournament_size=2,  #锦标赛选择大小
+      elitism=True,  #锦标赛选择中的精英主义
+      population_size=INIT_HP["POPULATION_SIZE"],  #种群大小
       evo_step=1,
-   )  # Evaluate using last N fitness scores
+   )  # 使用最后 N 个适应度评分进行评估
 
-   # Instantiate a mutations object (used for HPO)
+   # 实例化一个变异对象（用于 HPO）
    mutations = Mutations(
       algo=INIT_HP["ALGO"],
-      no_mutation=0.2,  # Probability of no mutation
-      architecture=0,  # Probability of architecture mutation
-      new_layer_prob=0.2,  # Probability of new layer mutation
-      parameters=0.2,  # Probability of parameter mutation
-      activation=0,  # Probability of activation function mutation
-      rl_hp=0.2,  # Probability of RL hyperparameter mutation
+      no_mutation=0.2,  # 没有变异的概率
+      architecture=0,  # 架构变异的概率
+      new_layer_prob=0.2,  # 新层变异的概率
+      parameters=0.2,  # 参数变异的概率
+      activation=0,  # 激活函数变异的概率
+      rl_hp=0.2,  # RL 超参数变异的概率
       rl_hp_selection=[
             "lr",
             "learn_step",
             "batch_size",
-      ],  # RL hyperparams selected for mutation
-      mutation_sd=0.1,  # Mutation strength
-      # Define search space for each hyperparameter
+      ],  # 选择用于变异的 RL 超参数
+      mutation_sd=0.1,  # 变异强度
+      # 定义每个超参数的搜索空间
       min_lr=0.0001,
       max_lr=0.01,
       min_learn_step=1,
       max_learn_step=120,
       min_batch_size=8,
       max_batch_size=64,
-      arch=NET_CONFIG["arch"],  # MLP or CNN
+      arch=NET_CONFIG["arch"],  # MLP 或 CNN
       rand_seed=1,
       device=device,
    )
 
-   # Define training loop parameters
+   # 定义训练循环参数
    episodes_per_epoch = 10
-   max_episodes = LESSON["max_train_episodes"]  # Total episodes
-   max_steps = 500  # Maximum steps to take in each episode
-   evo_epochs = 20  # Evolution frequency
-   evo_loop = 50  # Number of evaluation episodes
-   elite = pop[0]  # Assign a placeholder "elite" agent
-   epsilon = 1.0  # Starting epsilon value
-   eps_end = 0.1  # Final epsilon value
-   eps_decay = 0.9998  # Epsilon decays
+   max_episodes = LESSON["max_train_episodes"]  # 总训练集
+   max_steps = 500  # 每个训练集的最大步数
+   evo_epochs = 20  # 进化频率
+   evo_loop = 50  # 评估训练集的数量
+   elite = pop[0]  # 分配一个占位符“精英”智能体
+   epsilon = 1.0  # 初始 epsilon 值
+   eps_end = 0.1  # 最终 epsilon 值
+   eps_decay = 0.9998  # epsilon 衰减
    opp_update_counter = 0
    wb = INIT_HP["WANDB"]
 
    ```
 </details>
 
-As part of the curriculum, we may also choose to fill the replay buffer with random experiences, and also train on these offline.
+作为课程的一部分，我们也可以选择用随机经验填充回放缓冲区，并对这些经验进行离线训练。
 
 <details>
-   <summary>Fill replay buffer</summary>
+   <summary>填充回放缓冲区</summary>
 
    ```python
-   # Perform buffer and agent warmups if desired
+   # 执行缓冲区和智能体预热
    if LESSON["buffer_warm_up"]:
       warm_up_opponent = Opponent(env, difficulty=LESSON["warm_up_opponent"])
       memory = env.fill_replay_buffer(
             memory, warm_up_opponent
-      )  # Fill replay buffer with transitions
+      )  # 用随机转换填充回放缓冲区
       if LESSON["agent_warm_up"] > 0:
-            print("Warming up agents ...")
+            print("预热智能体...")
             agent = pop[0]
-            # Train on randomly collected samples
+            # 训练随机收集的样本
             for epoch in trange(LESSON["agent_warm_up"]):
                experiences = memory.sample(agent.batch_size)
                agent.learn(experiences)
             pop = [agent.clone() for _ in pop]
             elite = agent
-            print("Agent population warmed up.")
+            print("智能体种群预热完成。")
    ```
 </details>
 
-### Self-play
+### 自我对弈
 
-In this tutorial, we use self-play as the final lesson in our curriculum. By iteratively improving our agent and making it learn to win against itself, we can allow it to discover new strategies and achieve higher performance. The weights of our pretrained agent from an earlier lesson can be loaded to the population as follows:
+在本教程中，我们使用自我对弈作为课程中的最后一课。通过反复改进我们的智能体并使其学会击败自己，我们可以让它发现新的策略并实现更好的性能。我们可以将预先训练的智能体的权重从以前的课程加载到种群中，如下所示：
 
 <details>
-   <summary>Load pretrained weights</summary>
+   <summary>加载预训练权重</summary>
 
    ```python
    if LESSON["pretrained_path"] is not None:
       for agent in pop:
-            # Load pretrained checkpoint
+            # 加载预训练检查点
             agent.loadCheckpoint(LESSON["pretrained_path"])
-            # Reinit optimizer for new task
+            # 为新任务重新初始化优化器
             agent.lr = INIT_HP["LR"]
             agent.optimizer = torch.optim.Adam(
                agent.actor.parameters(), lr=agent.lr
@@ -783,14 +343,14 @@ In this tutorial, we use self-play as the final lesson in our curriculum. By ite
    ```
 </details>
 
-To train against an old version of our agent, we create a pool of opponents. At training time, we randomly select an opponent from this pool. At regular intervals, we update the opponent pool by removing the oldest opponent and adding a copy of the latest version of our agent. This provides a balance between training against an increasingly difficult opponent and providing variety in the moves an opponent might make.
+要训练对抗旧版本的智能体，我们创建一个对手池。在训练时，我们随机从池中选择一个对手。定期更新对手池，通过删除最旧的对手并添加最新版本的智能体的副本。这提供了训练对抗越来越困难的对手和提供对手可能采取的动作多样性的平衡。
 
 <details>
-   <summary>Create opponent pool</summary>
+   <summary>创建对手池</summary>
 
    ```python
    if LESSON["opponent"] == "self":
-      # Create initial pool of opponents
+      # 创建初始对手池
       opponent_pool = deque(maxlen=LESSON["opponent_pool_size"])
       for _ in range(LESSON["opponent_pool_size"]):
             opp = copy.deepcopy(pop[0])
@@ -800,10 +360,10 @@ To train against an old version of our agent, we create a pool of opponents. At 
    ```
 </details>
 
-A sample lesson config for self-play training could be defined as follows:
+一个示例课程配置可以定义如下：
 
 <details>
-   <summary>Lesson 4</summary>
+   <summary>第 4 课</summary>
 
    ```{eval-rst}
    .. literalinclude:: ../../../tutorials/AgileRL/curriculums/connect_four/lesson4.yaml
@@ -811,22 +371,22 @@ A sample lesson config for self-play training could be defined as follows:
    ```
 </details>
 
-It could also be possible to train an agent through self-play only, without using any previous lessons in the curriculum. This would require significant training time, but could ultimately result in better performance than other methods, and could avoid some of the mistakes discussed in [The Bitter Lesson](http://incompleteideas.net/IncIdeas/BitterLesson.html).
+也可以只通过自我对弈训练智能体，而不使用课程中的任何以前的课程。这需要大量的训练时间，但最终可能会比其他方法产生更好的性能，并且可以避免 [The Bitter Lesson](http://incompleteideas.net/IncIdeas/BitterLesson.html) 中讨论的一些错误。
 
-### Training loop
+### 训练循环
 
-The Connect Four training loop must take into account that the agent only takes an action every other interaction with the environment (the opponent takes alternating turns). This must be considered when saving transitions to the replay buffer. Equally, we must wait for the outcome of the next player's turn before determining what the reward should be for a transition. This is not a true Markov Decision Process for this reason, but we can still train a reinforcement learning agent reasonably successfully in these non-stationary conditions.
+四子棋训练循环必须考虑到智能体只在每次与环境交互时采取动作（对手在交替回合中采取动作）。这必须在保存转换到回放缓冲区时考虑。同样，我们必须等待下一个玩家的结果才能确定转换的奖励。这不是一个真正的马尔可夫决策过程，但我们仍然可以在这些非平稳条件下训练强化学习智能体。
 
-At regular intervals, we evaluate the performance, or 'fitness',  of the agents in our population, and do an evolutionary step. Those which perform best are more likely to become members of the next generation, and the hyperparameters and neural architectures of agents in the population are mutated. This evolution allows us to optimize hyperparameters and maximise the performance of our agents in a single training run.
+定期评估种群中智能体的性能（或“适应度”），并进行进化步骤。表现最好的智能体更有可能成为下一代的成员，种群中智能体的超参数和神经架构会发生变异。这种进化使我们能够在单次训练中优化超参数并最大化我们的智能体的性能。
 
 <details>
-   <summary>Training loop</summary>
+   <summary>训练循环</summary>
 
    ```python
    if max_episodes > 0:
       if wb:
          wandb.init(
-               # set the wandb project where this run will be logged
+               # 设置 wandb 项目
                project="AgileRL",
                name="{}-EvoHPO-{}-{}Opposition-CNN-{}".format(
                   "connect_four_v3",
@@ -834,7 +394,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                   LESSON["opponent"],
                   datetime.now().strftime("%m%d%Y%H%M%S"),
                ),
-               # track hyperparameters and run metadata
+               # 跟踪超参数和运行元数据
                config={
                   "algo": "Evo HPO Rainbow DQN",
                   "env": "connect_four_v3",
@@ -847,13 +407,13 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
    total_episodes = 0
    pbar = trange(int(max_episodes / episodes_per_epoch))
 
-   # Training loop
+   # 训练循环
    for idx_epi in pbar:
       turns_per_episode = []
       train_actions_hist = [0] * action_dim
-      for agent in pop:  # Loop through population
+      for agent in pop:  # 循环种群
             for episode in range(episodes_per_epoch):
-               env.reset()  # Reset environment at start of episode
+               env.reset()  # 在每个训练集开始时重置环境
                observation, env_reward, done, truncation, _ = env.last()
 
                (
@@ -865,23 +425,23 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                ) = (None, None, None, None, None)
 
                if LESSON["opponent"] == "self":
-                  # Randomly choose opponent from opponent pool if using self-play
+                  # 如果使用自我对弈，则从对手池中随机选择对手
                   opponent = random.choice(opponent_pool)
                else:
-                  # Create opponent of desired difficulty
+                  # 创建所需难度的对手
                   opponent = Opponent(env, difficulty=LESSON["opponent"])
 
-               # Randomly decide whether agent will go first or second
+               # 随机决定智能体是否先行或后行
                if random.random() > 0.5:
                   opponent_first = False
                else:
                   opponent_first = True
 
                score = 0
-               turns = 0  # Number of turns counter
+               turns = 0  # 转数计数器
 
                for idx_step in range(max_steps):
-                  # Player 0"s turn
+                  # 玩家 0 的回合
                   p0_action_mask = observation["action_mask"]
                   p0_state = np.moveaxis(observation["observation"], [-1], [-3])
                   p0_state_flipped = np.expand_dims(np.flip(p0_state, 2), 0)
@@ -903,10 +463,10 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                            p0_state, epsilon, p0_action_mask
                         )[
                            0
-                        ]  # Get next action from agent
+                        ]  # 获取智能体的下一个动作
                         train_actions_hist[p0_action] += 1
 
-                  env.step(p0_action)  # Act in environment
+                  env.step(p0_action)  # 在环境中执行动作
                   observation, env_reward, done, truncation, _ = env.last()
                   p0_next_state = np.moveaxis(
                         observation["observation"], [-1], [-3]
@@ -920,7 +480,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                         score += env_reward
                   turns += 1
 
-                  # Check if game is over (Player 0 win)
+                  # 检查游戏是否结束（玩家 0 获胜）
                   if done or truncation:
                         reward = env.reward(done=True, player=0)
                         memory.save2memoryVectEnvs(
@@ -949,7 +509,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                            ),
                            [done, done, done, done],
                         )
-                  else:  # Play continues
+                  else:  # 游戏继续
                         if p1_state is not None:
                            reward = env.reward(done=False, player=1)
                            memory.save2memoryVectEnvs(
@@ -962,12 +522,12 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                               [done, done],
                            )
 
-                        # Player 1"s turn
+                        # 玩家 1 的回合
                         p1_action_mask = observation["action_mask"]
                         p1_state = np.moveaxis(
                            observation["observation"], [-1], [-3]
                         )
-                        # Swap pieces so that the agent always sees the board from the same perspective
+                        # 交换棋子，使智能体始终从相同的角度看到棋盘
                         p1_state[[0, 1], :, :] = p1_state[[0, 1], :, :]
                         p1_state_flipped = np.expand_dims(np.flip(p1_state, 2), 0)
                         p1_state = np.expand_dims(p1_state, 0)
@@ -990,10 +550,10 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                               p1_state, epsilon, p1_action_mask
                            )[
                               0
-                           ]  # Get next action from agent
+                           ]  # 获取智能体的下一个动作
                            train_actions_hist[p1_action] += 1
 
-                        env.step(p1_action)  # Act in environment
+                        env.step(p1_action)  # 在环境中执行动作
                         observation, env_reward, done, truncation, _ = env.last()
                         p1_next_state = np.moveaxis(
                            observation["observation"], [-1], [-3]
@@ -1008,7 +568,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                            score += env_reward
                         turns += 1
 
-                        # Check if game is over (Player 1 win)
+                        # 检查游戏是否结束（玩家 1 获胜）
                         if done or truncation:
                            reward = env.reward(done=True, player=1)
                            memory.save2memoryVectEnvs(
@@ -1043,7 +603,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                               [done, done, done, done],
                            )
 
-                        else:  # Play continues
+                        else:  # 游戏继续
                            reward = env.reward(done=False, player=0)
                            memory.save2memoryVectEnvs(
                               np.concatenate((p0_state, p0_state_flipped)),
@@ -1055,23 +615,23 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                               [done, done],
                            )
 
-                  # Learn according to learning frequency
+                  # 根据学习频率学习
                   if (memory.counter % agent.learn_step == 0) and (
                         len(memory) >= agent.batch_size
                   ):
-                        # Sample replay buffer
-                        # Learn according to agent"s RL algorithm
+                        # 采样回放缓冲区
+                        # 根据智能体的 RL 算法学习
                         experiences = memory.sample(agent.batch_size)
                         agent.learn(experiences)
 
-                  # Stop episode if any agents have terminated
+                  # 停止训练集，如果任何智能体终止
                   if done or truncation:
                         break
 
                total_steps += idx_step + 1
                total_episodes += 1
                turns_per_episode.append(turns)
-               # Save the total episode reward
+               # 保存总训练集奖励
                agent.scores.append(score)
 
                if LESSON["opponent"] == "self":
@@ -1083,31 +643,31 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                         opponent_pool.append(elite_opp)
                         opp_update_counter += 1
 
-            # Update epsilon for exploration
+            # 更新 epsilon 以进行探索
             epsilon = max(eps_end, epsilon * eps_decay)
 
       mean_turns = np.mean(turns_per_episode)
 
-      # Now evolve population if necessary
+      # 现在进化种群，如果必要
       if (idx_epi + 1) % evo_epochs == 0:
-            # Evaluate population vs random actions
+            # 评估种群与随机动作
             fitnesses = []
             win_rates = []
-            eval_actions_hist = [0] * action_dim  # Eval actions histogram
-            eval_turns = 0  # Eval turns counter
+            eval_actions_hist = [0] * action_dim  # 评估动作直方图
+            eval_turns = 0  # 评估转数计数器
             for agent in pop:
                with torch.no_grad():
                   rewards = []
                   for i in range(evo_loop):
-                        env.reset()  # Reset environment at start of episode
+                        env.reset()  # 在每个训练集开始时重置环境
                         observation, reward, done, truncation, _ = env.last()
 
-                        player = -1  # Tracker for which player"s turn it is
+                        player = -1  # 跟踪当前玩家
 
-                        # Create opponent of desired difficulty
+                        # 创建所需难度的对手
                         opponent = Opponent(env, difficulty=LESSON["eval_opponent"])
 
-                        # Randomly decide whether agent will go first or second
+                        # 随机决定智能体是否先行或后行
                         if random.random() > 0.5:
                            opponent_first = False
                         else:
@@ -1130,7 +690,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                                     state = np.expand_dims(state, 0)
                                     action = agent.getAction(state, 0, action_mask)[
                                        0
-                                    ]  # Get next action from agent
+                                    ]  # 获取智能体的下一个动作
                                     eval_actions_hist[action] += 1
                            if player > 0:
                               if not opponent_first:
@@ -1146,10 +706,10 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                                     state = np.expand_dims(state, 0)
                                     action = agent.getAction(state, 0, action_mask)[
                                        0
-                                    ]  # Get next action from agent
+                                    ]  # 获取智能体的下一个动作
                                     eval_actions_hist[action] += 1
 
-                           env.step(action)  # Act in environment
+                           env.step(action)  # 在环境中执行动作
                            observation, reward, done, truncation, _ = env.last()
 
                            if (player > 0 and opponent_first) or (
@@ -1172,11 +732,11 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
             eval_turns = eval_turns / len(pop) / evo_loop
 
             pbar.set_postfix_str(
-               f"    Train Mean Score: {np.mean(agent.scores[-episodes_per_epoch:])}   Train Mean Turns: {mean_turns}   Eval Mean Fitness: {np.mean(fitnesses)}   Eval Best Fitness: {np.max(fitnesses)}   Eval Mean Turns: {eval_turns}   Total Steps: {total_steps}"
+               f"    训练集平均奖励：{np.mean(agent.scores[-episodes_per_epoch:])}   训练集平均转数：{mean_turns}   评估集平均适应度：{np.mean(fitnesses)}   评估集最佳适应度：{np.max(fitnesses)}   评估集平均转数：{eval_turns}   总步数：{total_steps}"
             )
             pbar.update(0)
 
-            # Format action histograms for visualisation
+            # 格式化动作直方图以进行可视化
             train_actions_hist = [
                freq / sum(train_actions_hist) for freq in train_actions_hist
             ]
@@ -1207,7 +767,7 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
                wandb_dict.update(eval_actions_dict)
                wandb.log(wandb_dict)
 
-            # Tournament selection and population mutation
+            #锦标赛选择和种群变异
             elite, pop = tournament.select(pop)
             pop = mutations.mutation(pop)
 
@@ -1215,23 +775,22 @@ At regular intervals, we evaluate the performance, or 'fitness',  of the agents 
       if wb:
          wandb.finish()
 
-   # Save the trained agent
+   # 保存训练好的智能体
    save_path = LESSON["save_path"]
    os.makedirs(os.path.dirname(save_path), exist_ok=True)
    elite.saveCheckpoint(save_path)
-   print(f"Elite agent saved to '{save_path}'.")
+   print(f"精英智能体保存到 '{save_path}'。")
    ```
 </details>
 
-### Trained model weights
-Trained model weights are provided at ```PettingZoo/tutorials/AgileRL/models```. Take a look, train against these models, and see if you can beat them!
+### 训练好的模型权重
+训练好的模型权重位于 `PettingZoo/tutorials/AgileRL/models`。看看这些模型，与它们对弈训练，看看你是否能击败它们！
 
-
-### Watch the trained agents play
-The following code allows you to load your saved DQN agent from the previous training block, test the agent's performance, and then visualise a number of episodes as a gif.
+### 观看训练好的智能体对弈
+以下代码允许你加载保存的 DQN 智能体，测试其性能，然后将多个训练集可视化为 GIF。
 
 <details>
-   <summary>Render trained agents</summary>
+   <summary>渲染训练好的智能体</summary>
 
    ```{eval-rst}
    .. literalinclude:: ../../../tutorials/AgileRL/render_agilerl_dqn.py
@@ -1239,12 +798,12 @@ The following code allows you to load your saved DQN agent from the previous tra
    ```
 </details>
 
-### Full training code
+### 完整训练代码
 
 <details>
-   <summary>Full training code</summary>
+   <summary>完整训练代码</summary>
 
-   > Please note that on line 612 ``max_episodes`` is set to 10 to allow fast testing of this tutorial code. This line can be deleted, and the line below it uncommented, to use the number of episodes set in the config files.
+   > 请注意，在第 612 行，`max_episodes` 被设置为 10，以允许快速测试本教程代码。这个行可以被删除，下面的行可以取消注释，以使用配置文件中设置的训练集数量。
 
    ```{eval-rst}
    .. literalinclude:: ../../../tutorials/AgileRL/agilerl_dqn_curriculum.py

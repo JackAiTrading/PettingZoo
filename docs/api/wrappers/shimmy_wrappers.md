@@ -1,29 +1,29 @@
 ---
-title: Shimmy Compatibility Wrappers
+title: Shimmy 兼容性包装器
 ---
 
-# Shimmy Compatibility Wrappers
+# Shimmy 兼容性包装器
 
-The [Shimmy](https://shimmy.farama.org/) package (`pip install shimmy`) allows commonly used external reinforcement learning environments to be used with PettingZoo and Gymnasium.
+[Shimmy](https://shimmy.farama.org/) 包（`pip install shimmy`）允许将常用的外部强化学习环境与 PettingZoo 和 Gymnasium 一起使用。
 
-## Supported multi-agent environments:
+## 支持的多智能体环境：
 
 ### [OpenSpiel](https://shimmy.farama.org/contents/open_spiel/)
-* 70+ implementations of various board games
+* 70 多种各类棋盘游戏的实现
 
 ### [DeepMind Control Soccer](https://shimmy.farama.org/contents/dm_multi/)
-* Multi-agent robotics environment where teams of agents compete in soccer.
+* 多智能体机器人环境，智能体团队在足球比赛中竞争。
 
 ### [DeepMind Melting Pot](https://github.com/deepmind/meltingpot)
-* Suite of test scenarios for multi-agent reinforcement learning
-* Assesses generalization to novel social situations:
-  * familiar and unfamiliar individuals
-  * social interactions: cooperation, competition, deception, reciprocation, trust, stubbornness
-* 50+ substrates and 250+ test scenarios
+* 多智能体强化学习的测试场景套件
+* 评估对新社交情况的泛化能力：
+  * 熟悉和不熟悉的个体
+  * 社交互动：合作、竞争、欺骗、互惠、信任、固执
+* 50 多个基础环境和 250 多个测试场景
 
-## Usage
+## 用法
 
-To load a DeepMind Control [multi-agent soccer game](https://github.com/deepmind/dm_control/blob/main/dm_control/locomotion/soccer/README.md):
+加载 DeepMind Control [多智能体足球游戏](https://github.com/deepmind/dm_control/blob/main/dm_control/locomotion/soccer/README.md)：
 
 ```python notest
 from shimmy import DmControlMultiAgentCompatibilityV0
@@ -34,12 +34,11 @@ env = DmControlMultiAgentCompatibilityV0(env, render_mode="human")
 
 observations, infos = env.reset()
 while env.agents:
-    actions = {agent: env.action_space(agent).sample() for agent in env.agents}  # this is where you would insert your policy
+    actions = {agent: env.action_space(agent).sample() for agent in env.agents}  # 这里是您插入策略的地方
     observations, rewards, terminations, truncations, infos = env.step(actions)
 ```
 
-
-To load an OpenSpiel game of [backgammon](https://github.com/deepmind/open_spiel/blob/master/docs/games.md#backgammon), wrapped with [TerminateIllegalWrapper](https://pettingzoo.farama.org/api/wrappers/pz_wrappers/#pettingzoo.utils.wrappers.TerminateIllegalWrapper):
+加载一个 OpenSpiel [双陆棋](https://github.com/deepmind/open_spiel/blob/master/docs/games.md#backgammon)游戏，使用 [TerminateIllegalWrapper](https://pettingzoo.farama.org/api/wrappers/pz_wrappers/#pettingzoo.utils.wrappers.TerminateIllegalWrapper) 包装：
 ```python notest
 from shimmy import OpenSpielCompatibilityV0
 from pettingzoo.utils import TerminateIllegalWrapper
@@ -53,13 +52,12 @@ for agent in env.agent_iter():
     if termination or truncation:
         action = None
     else:
-        action = env.action_space(agent).sample(info["action_mask"])  # this is where you would insert your policy
+        action = env.action_space(agent).sample(info["action_mask"])  # 这里是您插入策略的地方
     env.step(action)
     env.render()
 ```
 
-
-To load a Melting Pot [prisoner's dilemma in the matrix](https://github.com/deepmind/meltingpot/blob/main/docs/substrate_scenario_details.md#prisoners-dilemma-in-the-matrix) substrate:
+加载一个 Melting Pot [矩阵中的囚徒困境](https://github.com/deepmind/meltingpot/blob/main/docs/substrate_scenario_details.md#prisoners-dilemma-in-the-matrix)基础环境：
 
 ```python notest
 from shimmy import MeltingPotCompatibilityV0
@@ -72,19 +70,18 @@ while env.agents:
 env.close()
 ```
 
+更多信息，请参见 [Shimmy 文档](https://shimmy.farama.org)。
 
-For more information, see [Shimmy documentation](https://shimmy.farama.org).
-
-## Multi-Agent Compatibility Wrappers:
+## 多智能体兼容性包装器：
 ```{eval-rst}
 - :external:py:class:`shimmy.dm_control_multiagent_compatibility.DmControlMultiAgentCompatibilityV0`
 - :external:py:class:`shimmy.openspiel_compatibility.OpenSpielCompatibilityV0`
 - :external:py:class:`shimmy.meltingpot_compatibility.MeltingPotCompatibilityV0`
 ```
 
-## Citation
+## 引用
 
-If you use this in your research, please cite:
+如果您在研究中使用了这个项目，请引用：
 
 ```
 @software{shimmy2022github,

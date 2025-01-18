@@ -1,18 +1,18 @@
 ---
-title: "Tutorial: Testing Your Environment"
+title: "教程：测试您的环境"
 ---
 
-# Tutorial: Testing Your Environment
+# 教程：测试您的环境
 
-## Introduction
+## 简介
 
-Now that our environment is complete, we can test it to make sure it works as intended. PettingZoo has a built-in testing suite that can be used to test your environment.
+现在我们的环境已经完成，我们可以测试它以确保它按预期工作。PettingZoo 有一个内置的测试套件，可以用来测试您的环境。
 
-## Code
+## 代码
 
-Note: This code can be added to the bottom of the same file, without using any imports, but it is best practice to keep tests in a separate file, and use modular imports, as shown below..
+注意：这段代码可以添加到同一个文件的底部，而不需要使用任何导入，但最佳实践是将测试保存在一个单独的文件中，并使用模块化导入，如下所示。
 
-Relative importing is used for simplicity, and assumes your custom environment is in the same directory. If your test is in another location (e.g., a root-level `/test/` directory), it is recommended to import using absolute path.
+为了简单起见，这里使用相对导入，并假设您的自定义环境在同一目录中。如果您的测试在其他位置（例如，根级别的 `/test/` 目录），建议使用绝对路径导入。
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/CustomEnvironment/tutorial4_testing_the_environment.py

@@ -1,24 +1,24 @@
 ---
-title: "LangChain: Creating LLM agents"
+title: "LangChain：创建 LLM 智能体"
 ---
 
-# LangChain: Creating LLM agents
+# LangChain：创建 LLM 智能体
 
-This tutorial will demonstrate how to use LangChain to create LLM agents that can interact with PettingZoo environments.
+本教程将演示如何使用 LangChain 创建可以与 PettingZoo 环境交互的 LLM 智能体。
 
-This tutorial was created from LangChain's documentation: [Simulated Environment: PettingZoo](https://python.langchain.com/en/latest/use_cases/agent_simulations/petting_zoo.html).
+本教程改编自 LangChain 的文档：[模拟环境：PettingZoo](https://python.langchain.com/en/latest/use_cases/agent_simulations/petting_zoo.html)。
 
-> For many applications of LLM agents, the environment is real (internet, database, REPL, etc). However, we can also define agents to interact in simulated environments like text-based games. This is an example of how to create a simple agent-environment interaction loop with PettingZoo.
+> 对于 LLM 智能体的许多应用来说，环境是真实的（互联网、数据库、REPL 等）。但是，我们也可以定义智能体在模拟环境中进行交互，比如基于文本的游戏。这是一个如何使用 PettingZoo 创建简单的智能体-环境交互循环的示例。
 
 
-## Environment Setup
-To follow this tutorial, you will need to install the dependencies shown below. It is recommended to use a newly-created virtual environment to avoid dependency conflicts.
+## 环境设置
+要学习本教程，您需要安装下面显示的依赖项。建议使用新创建的虚拟环境以避免依赖冲突。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/requirements.txt
    :language: text
 ```
 
-## Environment Loop
+## 环境循环
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/langchain_example.py
    :pyobject: main
@@ -26,24 +26,25 @@ To follow this tutorial, you will need to install the dependencies shown below. 
 ```
 
 
-## Gymnasium Agent
-Here we reproduce the same `GymnasiumAgent` defined from the [LangChain Gymnasium example](https://python.langchain.com/en/latest/use_cases/agent_simulations/gymnasium.html). If after multiple retries it does not take a valid action, it simply takes a random action.
+## Gymnasium 智能体
+这里我们重现了来自 [LangChain Gymnasium 示例](https://python.langchain.com/en/latest/use_cases/agent_simulations/gymnasium.html) 的相同 `GymnasiumAgent`。如果多次重试后仍未采取有效行动，它会简单地采取随机行动。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/gymnasium_agent.py
    :language: python
 ```
-## PettingZoo Agent
-The `PettingZooAgent` extends the `GymnasiumAgent` to the multi-agent setting. The main differences are:
-- `PettingZooAgent` takes in a `name` argument to identify it among multiple agents
-- the function `get_docs` is implemented differently because the `PettingZoo` repo structure is structured differently from the `Gymnasium` repo
+
+## PettingZoo 智能体
+`PettingZooAgent` 将 `GymnasiumAgent` 扩展到多智能体设置。主要区别是：
+- `PettingZooAgent` 接受一个 `name` 参数来在多个智能体中识别它
+- `get_docs` 函数的实现方式不同，因为 `PettingZoo` 仓库结构与 `Gymnasium` 仓库结构不同
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/pettingzoo_agent.py
    :language: python
 ```
 
-### Rock-Paper-Scissors
-We can now run a simulation of a multi-agent rock, paper, scissors game using the `PettingZooAgent`.
+### 石头剪刀布
+我们现在可以使用 `PettingZooAgent` 运行一个多智能体石头剪刀布游戏的模拟。
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/langchain_example.py
@@ -52,81 +53,82 @@ We can now run a simulation of a multi-agent rock, paper, scissors game using th
 ```
 
 ```text
-Observation: 3
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+观察：3
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
 
-Observation: 3
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+观察：3
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
 
-Observation: 1
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+观察：1
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 2
+动作：2
 
-Observation: 1
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+观察：1
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
 
-Observation: 1
-Reward: 1
-Termination: False
-Truncation: False
-Return: 1
+观察：1
+奖励：1
+终止：False
+截断：False
+返回：1
 
-Action: 0
+动作：0
 
-Observation: 2
-Reward: -1
-Termination: False
-Truncation: False
-Return: -1
+观察：2
+奖励：-1
+终止：False
+截断：False
+返回：-1
 
-Action: 0
+动作：0
 
-Observation: 0
-Reward: 0
-Termination: False
-Truncation: True
-Return: 1
+观察：0
+奖励：0
+终止：False
+截断：True
+返回：1
 
-Action: None
+动作：None
 
-Observation: 0
-Reward: 0
-Termination: False
-Truncation: True
-Return: -1
+观察：0
+奖励：0
+终止：False
+截断：True
+返回：-1
 
-Action: None
+动作：None
 ```
 
 
-## Action Masking Agent
-Some `PettingZoo` environments provide an `action_mask` to tell the agent which actions are valid. The `ActionMaskAgent` subclasses `PettingZooAgent` to use information from the `action_mask` to select actions.
+## 动作掩码智能体
+一些 `PettingZoo` 环境提供 `action_mask` 来告诉智能体哪些动作是有效的。`ActionMaskAgent` 继承 `PettingZooAgent` 以使用来自 `action_mask` 的信息来选择动作。
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/action_masking_agent.py
    :language: python
 ```
-### Tic-Tac-Toe
-Here is an example of a Tic-Tac-Toe game that uses the `ActionMaskAgent`.
+
+### 井字棋
+这是一个使用 `ActionMaskAgent` 的井字棋游戏示例。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/langchain_example.py
    :pyobject: tic_tac_toe
@@ -134,7 +136,7 @@ Here is an example of a Tic-Tac-Toe game that uses the `ActionMaskAgent`.
 ```
 
 ```text
-Observation: {'observation': array([[[0, 0],
+观察：{'observation': array([[[0, 0],
         [0, 0],
         [0, 0]],
 
@@ -145,12 +147,12 @@ Observation: {'observation': array([[[0, 0],
        [[0, 0],
         [0, 0],
         [0, 0]]], dtype=int8), 'action_mask': array([1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 0
+动作：0
      |     |
   X  |  -  |  -
 _____|_____|_____
@@ -161,7 +163,7 @@ _____|_____|_____
   -  |  -  |  -
      |     |
 
-Observation: {'observation': array([[[0, 1],
+观察：{'observation': array([[[0, 1],
         [0, 0],
         [0, 0]],
 
@@ -172,12 +174,12 @@ Observation: {'observation': array([[[0, 1],
        [[0, 0],
         [0, 0],
         [0, 0]]], dtype=int8), 'action_mask': array([0, 1, 1, 1, 1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
      |     |
   X  |  -  |  -
 _____|_____|_____
@@ -188,7 +190,7 @@ _____|_____|_____
   -  |  -  |  -
      |     |
 
-Observation: {'observation': array([[[1, 0],
+观察：{'observation': array([[[1, 0],
         [0, 1],
         [0, 0]],
 
@@ -199,169 +201,9 @@ Observation: {'observation': array([[[1, 0],
        [[0, 0],
         [0, 0],
         [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 1, 1, 1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
-
-Action: 2
-     |     |
-  X  |  -  |  -
-_____|_____|_____
-     |     |
-  O  |  -  |  -
-_____|_____|_____
-     |     |
-  X  |  -  |  -
-     |     |
-
-Observation: {'observation': array([[[0, 1],
-        [1, 0],
-        [0, 1]],
-
-       [[0, 0],
-        [0, 0],
-        [0, 0]],
-
-       [[0, 0],
-        [0, 0],
-        [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 0, 1, 1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
-
-Action: 3
-     |     |
-  X  |  O  |  -
-_____|_____|_____
-     |     |
-  O  |  -  |  -
-_____|_____|_____
-     |     |
-  X  |  -  |  -
-     |     |
-
-Observation: {'observation': array([[[1, 0],
-        [0, 1],
-        [1, 0]],
-
-       [[0, 1],
-        [0, 0],
-        [0, 0]],
-
-       [[0, 0],
-        [0, 0],
-        [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 0, 0, 1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
-
-Action: 4
-     |     |
-  X  |  O  |  -
-_____|_____|_____
-     |     |
-  O  |  X  |  -
-_____|_____|_____
-     |     |
-  X  |  -  |  -
-     |     |
-
-Observation: {'observation': array([[[0, 1],
-        [1, 0],
-        [0, 1]],
-
-       [[1, 0],
-        [0, 1],
-        [0, 0]],
-
-       [[0, 0],
-        [0, 0],
-        [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 0, 0, 0, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
-
-Action: 5
-     |     |
-  X  |  O  |  -
-_____|_____|_____
-     |     |
-  O  |  X  |  -
-_____|_____|_____
-     |     |
-  X  |  O  |  -
-     |     |
-
-Observation: {'observation': array([[[1, 0],
-        [0, 1],
-        [1, 0]],
-
-       [[0, 1],
-        [1, 0],
-        [0, 1]],
-
-       [[0, 0],
-        [0, 0],
-        [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 0, 0, 0, 0, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
-
-Action: 6
-     |     |
-  X  |  O  |  X
-_____|_____|_____
-     |     |
-  O  |  X  |  -
-_____|_____|_____
-     |     |
-  X  |  O  |  -
-     |     |
-
-Observation: {'observation': array([[[0, 1],
-        [1, 0],
-        [0, 1]],
-
-       [[1, 0],
-        [0, 1],
-        [1, 0]],
-
-       [[0, 1],
-        [0, 0],
-        [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 0, 0, 0, 0, 0, 1, 1], dtype=int8)}
-Reward: -1
-Termination: True
-Truncation: False
-Return: -1
-
-Action: None
-
-Observation: {'observation': array([[[1, 0],
-        [0, 1],
-        [1, 0]],
-
-       [[0, 1],
-        [1, 0],
-        [0, 1]],
-
-       [[1, 0],
-        [0, 0],
-        [0, 0]]], dtype=int8), 'action_mask': array([0, 0, 0, 0, 0, 0, 0, 1, 1], dtype=int8)}
-Reward: 1
-Termination: True
-Truncation: False
-Return: 1
-
-Action: None
 ```
-
-### Texas Holdem' No Limit
-Here is an example of a Texas Hold'em No Limit game that uses the `ActionMaskAgent`.
+### 德州扑克无限注
+这是一个使用 `ActionMaskAgent` 的德州扑克无限注游戏示例。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/LangChain/langchain_example.py
    :pyobject: texas_holdem_no_limit
@@ -369,168 +211,167 @@ Here is an example of a Texas Hold'em No Limit game that uses the `ActionMaskAge
 ```
 
 ```text
-Observation: {'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 1., 0., 0., 0., 0.,
        0., 0., 2.], dtype=float32), 'action_mask': array([1, 1, 0, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
 
-Observation: {'observation': array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.,
        0., 0., 2.], dtype=float32), 'action_mask': array([1, 1, 0, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
 
-Observation: {'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 1.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 1., 2.], dtype=float32), 'action_mask': array([1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 1
+动作：1
 
-Observation: {'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 2., 2.], dtype=float32), 'action_mask': array([1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 0
+动作：0
 
-Observation: {'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 1.,
        0., 0., 0., 0., 0., 1., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 2., 2.], dtype=float32), 'action_mask': array([1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 2
+动作：2
 
-Observation: {'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 1., 0., 0., 1., 1., 0., 0., 1., 0., 0., 0., 0.,
        0., 2., 6.], dtype=float32), 'action_mask': array([1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 2
+动作：2
 
-Observation: {'observation': array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+观察：{'observation': array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
        0., 0., 0., 0., 0., 1., 0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0.,
        0., 2., 8.], dtype=float32), 'action_mask': array([1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 3
+动作：3
 
-Observation: {'observation': array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+观察：{'observation': array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
         0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,
         0.,  0.,  0.,  0.,  1.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,
         1.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
         6., 20.], dtype=float32), 'action_mask': array([1, 1, 1, 1, 1], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 4
+动作：4
 
-Observation: {'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
+观察：{'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,   1.,   1.,
          0.,   0.,   1.,   0.,   0.,   0.,   0.,   0.,   8., 100.],
       dtype=float32), 'action_mask': array([1, 1, 0, 0, 0], dtype=int8)}
-Reward: 0
-Termination: False
-Truncation: False
-Return: 0
+奖励：0
+终止：False
+截断：False
+返回：0
 
-Action: 4
-[WARNING]: Illegal move made, game terminating with current player losing.
-obs['action_mask'] contains a mask of all legal moves that can be chosen.
+动作：4
+[WARNING]：非法动作，游戏终止，当前玩家输掉。
 
-Observation: {'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
+观察：{'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,   1.,   1.,
          0.,   0.,   1.,   0.,   0.,   0.,   0.,   0.,   8., 100.],
       dtype=float32), 'action_mask': array([1, 1, 0, 0, 0], dtype=int8)}
-Reward: -1.0
-Termination: True
-Truncation: True
-Return: -1.0
+奖励：-1.0
+终止：True
+截断：True
+返回：-1.0
 
-Action: None
+动作：None
 
-Observation: {'observation': array([  0.,   0.,   1.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
+观察：{'observation': array([  0.,   0.,   1.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,   1.,   0.,
          0.,   0.,   0.,   0.,   1.,   0.,   0.,   0.,  20., 100.],
       dtype=float32), 'action_mask': array([1, 1, 0, 0, 0], dtype=int8)}
-Reward: 0
-Termination: True
-Truncation: True
-Return: 0
+奖励：0
+终止：True
+截断：True
+返回：0
 
-Action: None
+动作：None
 
-Observation: {'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
+观察：{'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
          1.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,   1.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0., 100., 100.],
       dtype=float32), 'action_mask': array([1, 1, 0, 0, 0], dtype=int8)}
-Reward: 0
-Termination: True
-Truncation: True
-Return: 0
+奖励：0
+终止：True
+截断：True
+返回：0
 
-Action: None
+动作：None
 
-Observation: {'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
+观察：{'observation': array([  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   1.,   1.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   1.,   0.,   0.,   1.,   0.,
          0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   2., 100.],
       dtype=float32), 'action_mask': array([1, 1, 0, 0, 0], dtype=int8)}
-Reward: 0
-Termination: True
-Truncation: True
-Return: 0
+奖励：0
+终止：True
+截断：True
+返回：0
 
-Action: None
+动作：None
 ```
 
 
 
-## Full Code
+## 完整代码
 
-The following code should run without any issues. The comments are designed to help you understand how to use PettingZoo with LangChain. If you have any questions, please feel free to ask in the [Discord server](https://discord.gg/nhvKkYa6qX).
+以下代码应该可以正常运行。注释旨在帮助您了解如何使用 PettingZoo 与 LangChain。如果您有任何问题，请随时在 [Discord 服务器](https://discord.gg/nhvKkYa6qX) 中提问。
 
 ```{eval-rst}
 

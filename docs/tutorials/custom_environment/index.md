@@ -1,25 +1,25 @@
 ---
-title: "Custom Environment Tutorial"
+title: "自定义环境教程"
 ---
 
-# Custom Environment Tutorial
+# 自定义环境教程
 
-These tutorials walk you though the full process of creating a custom environment from scratch, and are recommended as a starting point for anyone new to PettingZoo.
+这些教程将指导您从头开始创建自定义环境的完整过程，建议作为 PettingZoo 新手的入门起点。
 
-1. [Project Structure](/tutorials/custom_environment/1-project-structure.md)
+1. [项目结构](/tutorials/custom_environment/1-project-structure.md)
 
-2. [Environment Logic](/tutorials/custom_environment/2-environment-logic.md)
+2. [环境逻辑](/tutorials/custom_environment/2-environment-logic.md)
 
-3. [Action Masking](/tutorials/custom_environment/3-action-masking.md)
+3. [动作掩码](/tutorials/custom_environment/3-action-masking.md)
 
-4. [Testing Your Environment](/tutorials/custom_environment/4-testing-your-environment.md)
+4. [测试您的环境](/tutorials/custom_environment/4-testing-your-environment.md)
 
-For a simpler example environment, including both [AEC](/api/aec/) and [Parallel](/api/parallel/) implementations, see our [Environment Creation](/content/environment_creation/) documentation.
+如需查看更简单的环境示例，包括 [AEC](/api/aec/) 和 [Parallel](/api/parallel/) 实现，请参阅我们的[环境创建](/content/environment_creation/)文档。
 
 
 ```{toctree}
 :hidden:
-:caption: Environment Creation
+:caption: 环境创建
 
 1-project-structure
 2-environment-logic

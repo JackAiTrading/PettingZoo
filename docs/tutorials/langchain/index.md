@@ -2,42 +2,42 @@
 title: "LangChain"
 ---
 
-# LangChain Tutorial
+# LangChain 教程
 
-This tutorial provides an example of using [LangChain](https://github.com/hwchase17/langchain) create LLM agents that can interact with PettingZoo environments:
+本教程提供了使用 [LangChain](https://github.com/hwchase17/langchain) 创建可以与 PettingZoo 环境交互的 LLM 智能体的示例：
 
-* [LangChain: Creating LLM Agents](/tutorials/langchain/langchain.md): _Create LLM Agents using LangChain_
+* [LangChain：创建 LLM 智能体](/tutorials/langchain/langchain.md)：_使用 LangChain 创建 LLM 智能体_
 
 
-## LangChain Overview
+## LangChain 概述
 
-[LangChain](https://github.com/hwchase17/langchain) is a framework for developing applications powered by language models through composability.
+[LangChain](https://github.com/hwchase17/langchain) 是一个通过组合性来开发语言模型驱动应用程序的框架。
 
-There are six main areas that LangChain is designed to help with. These are, in increasing order of complexity:
+LangChain 旨在帮助解决六个主要领域的问题。按复杂度递增排序如下：
 
-### 📃 LLMs and Prompts:
+### 📃 LLM 和提示：
 
-This includes prompt management, prompt optimization, a generic interface for all LLMs, and common utilities for working with LLMs.
+这包括提示管理、提示优化、所有 LLM 的通用接口以及使用 LLM 的常用工具。
 
-### 🔗 Chains:
+### 🔗 链式调用：
 
-Chains go beyond a single LLM call and involve sequences of calls (whether to an LLM or a different utility). LangChain provides a standard interface for chains, lots of integrations with other tools, and end-to-end chains for common applications.
+链式调用超越了单一的 LLM 调用，涉及一系列调用（无论是对 LLM 还是其他工具的调用）。LangChain 为链式调用提供了标准接口，与其他工具的大量集成，以及用于常见应用的端到端链式调用。
 
-### 📚 Data Augmented Generation:
+### 📚 数据增强生成：
 
-Data Augmented Generation involves specific types of chains that first interact with an external data source to fetch data for use in the generation step. Examples include summarization of long pieces of text and question/answering over specific data sources.
+数据增强生成涉及特定类型的链式调用，这些调用首先与外部数据源交互以获取数据，用于生成步骤。示例包括长文本摘要和针对特定数据源的问答。
 
-### 🤖 Agents:
+### 🤖 智能体：
 
-Agents involve an LLM making decisions about which Actions to take, taking that Action, seeing an Observation, and repeating that until done. LangChain provides a standard interface for agents, a selection of agents to choose from, and examples of end-to-end agents.
+智能体涉及 LLM 决定采取哪些行动，执行该行动，观察结果，并重复这个过程直到完成。LangChain 为智能体提供了标准接口，可供选择的智能体，以及端到端智能体的示例。
 
-### 🧠 Memory:
+### 🧠 记忆：
 
-Memory refers to persisting state between calls of a chain/agent. LangChain provides a standard interface for memory, a collection of memory implementations, and examples of chains/agents that use memory.
+记忆指的是在链式调用/智能体的调用之间保持状态。LangChain 提供了记忆的标准接口，一系列记忆实现，以及使用记忆的链式调用/智能体示例。
 
-### 🧐 Evaluation:
+### 🧐 评估：
 
-[BETA] Generative models are notoriously hard to evaluate with traditional metrics. One new way of evaluating them is using language models themselves to do the evaluation. LangChain provides some prompts/chains for assisting in this.
+[测试版] 生成模型很难用传统指标进行评估。评估它们的一种新方法是使用语言模型本身来进行评估。LangChain 提供了一些提示/链式调用来协助这一过程。
 
 
 ```{toctree}

@@ -4,7 +4,7 @@ env = pistonball_v6.parallel_env(render_mode="human")
 observations, infos = env.reset()
 
 while env.agents:
-    # this is where you would insert your policy
+    # 这里是你插入策略的地方
     actions = {agent: env.action_space(agent).sample() for agent in env.agents}
 
     observations, rewards, terminations, truncations, infos = env.step(actions)

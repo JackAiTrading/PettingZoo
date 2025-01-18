@@ -1,36 +1,36 @@
-# AgileRL: Implementing MADDPG
-This tutorial shows how to train an [MADDPG](https://agilerl.readthedocs.io/en/latest/api/algorithms/maddpg.html) agent on the [space invaders](https://pettingzoo.farama.org/environments/atari/space_invaders/) atari environment.
+# AgileRL：实现 MADDPG
+本教程展示如何在 [space invaders](https://pettingzoo.farama.org/environments/atari/space_invaders/) Atari 环境中训练 [MADDPG](https://agilerl.readthedocs.io/en/latest/api/algorithms/maddpg.html) 智能体。
 
-## What is MADDPG?
-[MADDPG](https://agilerl.readthedocs.io/en/latest/api/algorithms/maddpg.html) (Multi-Agent Deep Deterministic Policy Gradients) extends the [DDPG](https://agilerl.readthedocs.io/en/latest/api/algorithms/ddpg.html) (Deep Deterministic Policy Gradients) algorithm to enable cooperative or competitive training of multiple agents in complex environments, enhancing the stability and convergence of the learning process through decentralized actor and centralized critic architectures. For further information on MADDPG, check out the AgileRL [documentation](https://agilerl.readthedocs.io/en/latest/api/algorithms/maddpg.html).
+## 什么是 MADDPG？
+[MADDPG](https://agilerl.readthedocs.io/en/latest/api/algorithms/maddpg.html)（多智能体深度确定性策略梯度）扩展了 [DDPG](https://agilerl.readthedocs.io/en/latest/api/algorithms/ddpg.html)（深度确定性策略梯度）算法，通过分散的演员和集中的评论家架构，实现了多个智能体在复杂环境中的合作或竞争训练，提高了学习过程的稳定性和收敛性。要了解更多关于 MADDPG 的信息，请查看 AgileRL [文档](https://agilerl.readthedocs.io/en/latest/api/algorithms/maddpg.html)。
 
-### Can I use it?
+### 我可以使用它吗？
 
-|   | Action Space | Observation Space |
+|   | 动作空间 | 观察空间 |
 |---|--------------|-------------------|
-|Discrete  | ✔️           | ✔️                |
-|Continuous   | ✔️           | ✔️                |
+|离散  | ✔️           | ✔️                |
+|连续   | ✔️           | ✔️                |
 
 
-## Environment Setup
+## 环境设置
 
-To follow this tutorial, you will need to install the dependencies shown below. It is recommended to use a newly-created virtual environment to avoid dependency conflicts.
+要学习本教程，你需要安装下面显示的依赖项。建议使用新创建的虚拟环境以避免依赖冲突。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/AgileRL/requirements.txt
    :language: text
 ```
 
-## Code
-### Train multiple agents using MADDPG
-The following code should run without any issues. The comments are designed to help you understand how to use PettingZoo with AgileRL. If you have any questions, please feel free to ask in the [Discord server](https://discord.com/invite/eB8HyTA2ux).
+## 代码
+### 使用 MADDPG 训练多个智能体
+以下代码应该可以正常运行。注释旨在帮助你理解如何将 PettingZoo 与 AgileRL 一起使用。如果你有任何问题，请随时在 [Discord 服务器](https://discord.com/invite/eB8HyTA2ux)中询问。
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/AgileRL/agilerl_maddpg.py
    :language: python
 ```
 
-### Watch the trained agents play
-The following code allows you to load your saved MADDPG alogorithm from the previous training block, test the algorithms performance, and then visualise a number of episodes as a gif.
+### 观看训练好的智能体对弈
+以下代码允许你从之前的训练块中加载保存的 MADDPG 算法，测试算法性能，然后将多个回合的过程可视化为 gif。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/AgileRL/render_agilerl_maddpg.py
    :language: python

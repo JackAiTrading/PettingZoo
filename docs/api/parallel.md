@@ -1,25 +1,25 @@
 ---
-title: Parallel
+title: 并行
 ---
 
 
-# Parallel API
+# 并行 API
 
-In addition to the main API, we have a secondary parallel API for environments where all agents have simultaneous actions and observations. An environment with parallel API support can be created via `<game>.parallel_env()`. This API is based around the paradigm of *Partially Observable Stochastic Games* (POSGs) and the details are similar to [RLlib's MultiAgent environment specification](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical), except we allow for different observation and action spaces between the agents.
+除了主要的 API 外，我们还有一个次要的并行 API，用于所有智能体具有同时动作和观察的环境。支持并行 API 的环境可以通过 `<game>.parallel_env()` 创建。这个 API 基于*部分可观察随机游戏*（POSGs）范式，其细节类似于 [RLlib 的多智能体环境规范](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical)，但我们允许智能体之间有不同的观察和动作空间。
 
-For a comparison with the AEC API, see [About AEC](https://pettingzoo.farama.org/api/aec/#about-aec). For more information, see [*PettingZoo: A Standard API for Multi-Agent Reinforcement Learning*](https://arxiv.org/pdf/2009.14471.pdf).
+有关与 AEC API 的比较，请参见[关于 AEC](https://pettingzoo.farama.org/api/aec/#about-aec)。更多信息，请参见[*PettingZoo：多智能体强化学习的标准 API*](https://arxiv.org/pdf/2009.14471.pdf)。
 
-[PettingZoo Wrappers](/api/wrappers/pz_wrappers/) can be used to convert between Parallel and AEC environments, with some restrictions (e.g., an AEC env must only update once at the end of each cycle).
+[PettingZoo 包装器](/api/wrappers/pz_wrappers/)可用于在并行和 AEC 环境之间转换，但有一些限制（例如，AEC 环境必须只在每个循环结束时更新一次）。
 
-## Examples
+## 示例
 
-[PettingZoo Butterfly](/environments/butterfly/) provides standard examples of Parallel environments, such as [Pistonball](/environments/butterfly/pistonball).
+[PettingZoo Butterfly](/environments/butterfly/) 提供了并行环境的标准示例，如 [Pistonball](/environments/butterfly/pistonball)。
 
-We provide tutorials for creating two custom Parallel environments: [Rock-Paper-Scissors (Parallel)](https://pettingzoo.farama.org/content/environment_creation/#example-custom-parallel-environment), and a simple [gridworld environment](/tutorials/custom_environment/2-environment-logic/)
+我们提供了创建两个自定义并行环境的教程：[石头剪刀布（并行）](https://pettingzoo.farama.org/content/environment_creation/#example-custom-parallel-environment)和一个简单的[网格世界环境](/tutorials/custom_environment/2-environment-logic/)。
 
-## Usage
+## 用法
 
-Parallel environments can be interacted with as follows:
+可以按以下方式与并行环境交互：
 
 ``` python
 from pettingzoo.butterfly import pistonball_v6
@@ -27,7 +27,7 @@ parallel_env = pistonball_v6.parallel_env(render_mode="human")
 observations, infos = parallel_env.reset(seed=42)
 
 while parallel_env.agents:
-    # this is where you would insert your policy
+    # 这里是你插入策略的地方
     actions = {agent: parallel_env.action_space(agent).sample() for agent in parallel_env.agents}
 
     observations, rewards, terminations, truncations, infos = parallel_env.step(actions)
@@ -43,46 +43,98 @@ parallel_env.close()
 
     .. py:attribute:: agents
 
-        A list of the names of all current agents, typically integers. These may be changed as an environment progresses (i.e. agents can be added or removed).
+        所有当前智能体的名称列表，通常是整数。这些可能会随着环境的进展而改变（即可以添加或删除智能体）。
 
         :type: list[AgentID]
 
     .. py:attribute:: num_agents
 
-        The length of the agents list.
+        agents 列表的长度。
 
         :type: int
 
     .. py:attribute:: possible_agents
 
-        A list of all possible_agents the environment could generate. Equivalent to the list of agents in the observation and action spaces. This cannot be changed through play or resetting.
+        环境可能生成的所有可能智能体的列表。等同于观察和动作空间中的智能体列表。这不能通过游戏或重置来改变。
 
         :type: list[AgentID]
 
     .. py:attribute:: max_num_agents
 
-        The length of the possible_agents list.
+        possible_agents 列表的长度。
 
         :type: int
 
     .. py:attribute:: observation_spaces
 
-        A dict of the observation spaces of every agent, keyed by name. This cannot be changed through play or resetting.
+        每个智能体的观察空间字典，以名称为键。这不能通过游戏或重置来改变。
 
         :type: Dict[AgentID, gym.spaces.Space]
 
     .. py:attribute:: action_spaces
 
-        A dict of the action spaces of every agent, keyed by name. This cannot be changed through play or resetting.
+        每个智能体的动作空间字典，以名称为键。这不能通过游戏或重置来改变。
 
         :type: Dict[AgentID, gym.spaces.Space]
 
     .. automethod:: step
+
+        执行所有智能体的动作。
+
+        参数:
+            actions (dict): 一个字典，包含每个智能体的动作，以智能体名称为键。
+
+        返回:
+            tuple: 包含以下元素的元组：
+                - observations (dict): 每个智能体的新观察的字典
+                - rewards (dict): 每个智能体的奖励的字典
+                - terminations (dict): 每个智能体的终止状态的字典
+                - truncations (dict): 每个智能体的截断状态的字典
+                - infos (dict): 每个智能体的附加信息的字典
+
     .. automethod:: reset
+
+        重置环境到初始状态，并返回第一个观察。
+
+        参数:
+            seed (int, optional): 随机数生成器的种子。
+            options (dict, optional): 用于自定义重置行为的其他选项。
+
+        返回:
+            tuple: 包含以下元素的元组：
+                - observations (dict): 每个智能体的初始观察的字典
+                - infos (dict): 每个智能体的附加信息的字典
+
     .. automethod:: render
+
+        渲染环境。
+
     .. automethod:: close
+
+        关闭环境，清理任何打开的资源。
+
     .. automethod:: state
+
+        返回环境的全局状态。
+
     .. automethod:: observation_space
+
+        返回指定智能体的观察空间。
+
+        参数:
+            agent (str): 智能体的名称
+
+        返回:
+            gym.spaces.Space: 智能体的观察空间
+
     .. automethod:: action_space
+
+        返回指定智能体的动作空间。
+
+        参数:
+            agent (str): 智能体的名称
+
+        返回:
+            gym.spaces.Space: 智能体的动作空间
 
 ```

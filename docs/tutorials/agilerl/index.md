@@ -1,20 +1,20 @@
-# AgileRL Tutorial
+# AgileRL 教程
 
-These tutorials provide an introductory guide to using [AgileRL](https://github.com/AgileRL/AgileRL) with PettingZoo. AgileRL's multi-agent algorithms make use of the PettingZoo parallel API and allow users to train multiple-agents in parallel in both competitive and co-operative environments. This tutorial includes the following:
+这些教程提供了使用 [AgileRL](https://github.com/AgileRL/AgileRL) 与 PettingZoo 的入门指南。AgileRL 的多智能体算法使用 PettingZoo 并行 API，允许用户在竞争性和合作性环境中并行训练多个智能体。本教程包括以下内容：
 
-* [DQN](DQN.md): _Train a DQN agent to play Connect Four through curriculum learning and self-play_
-* [MADDPG](MADDPG.md): _Train an MADDPG agent to play multi-agent atari games_
-* [MATD3](MATD3.md): _Train an MATD3 agent to play multi-particle-environment games_
+* [DQN](DQN.md)：_通过课程学习和自我对弈训练 DQN 智能体玩四子棋_
+* [MADDPG](MADDPG.md)：_训练 MADDPG 智能体玩多智能体 Atari 游戏_
+* [MATD3](MATD3.md)：_训练 MATD3 智能体玩多粒子环境游戏_
 
-## AgileRL Overview
+## AgileRL 概述
 
-AgileRL is a deep reinforcement learning framework focused on streamlining training for reinforcement learning models. Using [evolutionary hyper-parameter optimisation](https://agilerl.readthedocs.io/en/latest/api/hpo/index.html) (HPO), AgileRL allows users to train models significantly faster and more accurately when compared with traditional HPO techniques. AgileRL's multi-agent algorithms orchestrate the training of multiple agents at the same time, and benchmarking has shown up to 4x increase in return in a shorter time-frame when compared with implementations of the very same algorithms in other reinforcement learning libraries.
+AgileRL 是一个专注于简化强化学习模型训练的深度强化学习框架。使用[进化超参数优化](https://agilerl.readthedocs.io/en/latest/api/hpo/index.html)（HPO），AgileRL 允许用户与传统 HPO 技术相比更快、更准确地训练模型。AgileRL 的多智能体算法可以同时协调多个智能体的训练，基准测试表明，与其他强化学习库中相同算法的实现相比，在更短的时间内可以获得高达 4 倍的回报增长。
 
-For more information about AgileRL and what else the library has to offer, check out the [documentation](https://agilerl.readthedocs.io/en/latest/) and [GitHub repo](https://github.com/agilerl/agilerl).
+要了解更多关于 AgileRL 及其提供的其他功能，请查看[文档](https://agilerl.readthedocs.io/en/latest/)和 [GitHub 仓库](https://github.com/agilerl/agilerl)。
 
-## Examples using PettingZoo
+## 使用 PettingZoo 的示例
 
-* [MADDPG for co-operation: simple speaker listener environment](https://agilerl.readthedocs.io/en/latest/multi_agent_training/index.html)
+* [用于合作的 MADDPG：简单说话者-听众环境](https://agilerl.readthedocs.io/en/latest/multi_agent_training/index.html)
 
 
 ```{eval-rst}
@@ -22,7 +22,7 @@ For more information about AgileRL and what else the library has to offer, check
    :align: center
    :height: 400px
 
-   Fig1: Performance of trained MADDPG algorithm on 6 random episodes
+   图1：在 6 个随机回合中训练的 MADDPG 算法的表现
 ```
 
 ```{toctree}

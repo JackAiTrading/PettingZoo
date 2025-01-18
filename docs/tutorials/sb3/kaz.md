@@ -1,41 +1,41 @@
 ---
-title: "SB3: PPO for Knights-Archers-Zombies"
+title: "SB3：骑士-弓箭手-僵尸的 PPO 算法"
 ---
 
-# SB3: PPO for Knights-Archers-Zombies
+# SB3：骑士-弓箭手-僵尸的 PPO 算法
 
-This tutorial shows how to train agents using [Proximal Policy Optimization](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html) (PPO) on the [Knights-Archers-Zombies](/environments/butterfly/knights_archers_zombies/) environment ([AEC](/api/aec/)).
+本教程展示如何在 [骑士-弓箭手-僵尸](/environments/butterfly/knights_archers_zombies/) 环境（[AEC](/api/aec/)）中使用 [近端策略优化](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)（PPO）训练智能体。
 
-We use SuperSuit to create vectorized environments, leveraging multithreading to speed up training (see SB3's [vector environments documentation](https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html)).
+我们使用 SuperSuit 创建向量化环境，利用多线程加速训练（参见 SB3 的[向量环境文档](https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html)）。
 
-After training and evaluation, this script will launch a demo game using human rendering. Trained models are saved and loaded from disk (see SB3's [model saving documentation](https://stable-baselines3.readthedocs.io/en/master/guide/save_format.html)).
+训练和评估后，此脚本将使用人类渲染启动演示游戏。训练的模型会保存到磁盘并从磁盘加载（参见 SB3 的[模型保存文档](https://stable-baselines3.readthedocs.io/en/master/guide/save_format.html)）。
 
-If the observation space is visual (`vector_state=False` in `env_kwargs`), we pre-process using color reduction, resizing, and frame stacking, and use a [CNN](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html#stable_baselines3.ppo.CnnPolicy) policy.
+如果观察空间是视觉的（`env_kwargs` 中的 `vector_state=False`），我们使用颜色缩减、调整大小和帧堆叠进行预处理，并使用 [CNN](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html#stable_baselines3.ppo.CnnPolicy) 策略。
 
 ```{eval-rst}
 .. note::
 
-    This environment has a visual (3-dimensional) observation space, so we use a CNN feature extractor.
+    这个环境具有视觉（3 维）观察空间，所以我们使用 CNN 特征提取器。
 ```
 
 ```{eval-rst}
 .. note::
 
-    This environment allows agents to spawn and die, so it requires using SuperSuit's Black Death wrapper, which provides blank observations to dead agents rather than removing them from the environment.
+    这个环境允许智能体生成和死亡，所以需要使用 SuperSuit 的 Black Death 包装器，它为死亡的智能体提供空白观察，而不是将它们从环境中移除。
 ```
 
 
-## Environment Setup
-To follow this tutorial, you will need to install the dependencies shown below. It is recommended to use a newly-created virtual environment to avoid dependency conflicts.
+## 环境设置
+要学习本教程，您需要安装下面显示的依赖项。建议使用新创建的虚拟环境以避免依赖冲突。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/SB3/kaz/requirements.txt
    :language: text
 ```
 
-## Code
-The following code should run without any issues. The comments are designed to help you understand how to use PettingZoo with SB3. If you have any questions, please feel free to ask in the [Discord server](https://discord.gg/nhvKkYa6qX).
+## 代码
+以下代码应该可以正常运行。注释旨在帮助您了解如何将 PettingZoo 与 SB3 结合使用。如果您有任何问题，请随时在 [Discord 服务器](https://discord.gg/nhvKkYa6qX) 中提问。
 
-### Training and Evaluation
+### 训练和评估
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/SB3/kaz/sb3_kaz_vector.py

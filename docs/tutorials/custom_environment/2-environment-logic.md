@@ -1,20 +1,20 @@
 ---
-title: "Tutorial: Environment Logic"
+title: "教程：环境逻辑"
 ---
 
-# Tutorial: Environment Logic
+# 教程：环境逻辑
 
-## Introduction
+## 简介
 
-Now that we have a basic understanding of the structure of environment repositories, we can start thinking about the fun part - environment logic!
+现在我们已经对环境仓库的结构有了基本的了解，我们可以开始思考有趣的部分 - 环境逻辑！
 
-For this tutorial, we will be creating a two-player game consisting of a prisoner, trying to escape, and a guard, trying to catch the prisoner. This game will be played on a 7x7 grid, where:
-- The prisoner starts in the top left corner,
-- The guard starts in the bottom right corner,
-- The escape door is randomly placed in the middle of the grid
-- Both the prisoner and the guard can move in any of the four cardinal directions (up, down, left, right).
+在本教程中，我们将创建一个双人游戏，包括一个试图逃脱的囚犯和一个试图抓住囚犯的警卫。这个游戏将在一个 7x7 的网格上进行，其中：
+- 囚犯从左上角开始，
+- 警卫从右下角开始，
+- 逃生门随机放置在网格的中间
+- 囚犯和警卫都可以在四个基本方向（上、下、左、右）移动。
 
-## Code
+## 代码
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/CustomEnvironment/tutorial2_adding_game_logic.py

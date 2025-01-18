@@ -1,57 +1,57 @@
 ---
-title: "SB3: Action Masked PPO for Connect Four"
+title: "SB3：四子棋的动作掩码 PPO 算法"
 ---
 
-# SB3: Action Masked PPO for Connect Four
+# SB3：四子棋的动作掩码 PPO 算法
 
 ```{eval-rst}
 .. warning::
 
-   Currently, this tutorial doesn't work with versions of gymnasium>0.29.1. We are looking into fixing it but it might take some time.
+   目前，本教程无法与 gymnasium>0.29.1 版本一起使用。我们正在研究修复方案，但可能需要一些时间。
 
 ```
 
-This tutorial shows how to train a agents using Maskable [Proximal Policy Optimization](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html) (PPO) on the [Connect Four](/environments/classic/chess/) environment ([AEC](/api/aec/)).
+本教程展示如何在 [四子棋](/environments/classic/chess/) 环境（[AEC](/api/aec/)）中使用可掩码的 [近端策略优化](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html)（PPO）训练智能体。
 
-It creates a custom Wrapper to convert to a [Gymnasium](https://gymnasium.farama.org/)-like environment which is compatible with [SB3 action masking](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html).
+它创建了一个自定义包装器，将环境转换为与 [SB3 动作掩码](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html) 兼容的 [Gymnasium](https://gymnasium.farama.org/) 类环境。
 
-After training and evaluation, this script will launch a demo game using human rendering. Trained models are saved and loaded from disk (see SB3's [documentation](https://stable-baselines3.readthedocs.io/en/master/guide/save_format.html) for more information).
+训练和评估后，此脚本将使用人类渲染启动演示游戏。训练的模型会保存到磁盘并从磁盘加载（更多信息请参见 SB3 的[文档](https://stable-baselines3.readthedocs.io/en/master/guide/save_format.html)）。
 
 ```{eval-rst}
 .. note::
 
-    This environment has a discrete (1-dimensional) observation space with an illegal action mask, so we use a masked MLP feature extractor.
+    这个环境具有带非法动作掩码的离散（1 维）观察空间，所以我们使用掩码 MLP 特征提取器。
 ```
 
 ```{eval-rst}
 .. warning::
 
-    The SB3ActionMaskWrapper wrapper assumes that the action space and observation space is the same for each agent, this assumption may not hold for custom environments.
+    SB3ActionMaskWrapper 包装器假设每个智能体的动作空间和观察空间都相同，这个假设可能不适用于自定义环境。
 ```
 
 
-## Environment Setup
-To follow this tutorial, you will need to install the dependencies shown below. It is recommended to use a newly-created virtual environment to avoid dependency conflicts.
+## 环境设置
+要学习本教程，您需要安装下面显示的依赖项。建议使用新创建的虚拟环境以避免依赖冲突。
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/SB3/connect_four/requirements.txt
    :language: text
 ```
 
-## Code
-The following code should run without any issues. The comments are designed to help you understand how to use PettingZoo with SB3. If you have any questions, please feel free to ask in the [Discord server](https://discord.gg/nhvKkYa6qX).
+## 代码
+以下代码应该可以正常运行。注释旨在帮助您了解如何将 PettingZoo 与 SB3 结合使用。如果您有任何问题，请随时在 [Discord 服务器](https://discord.gg/nhvKkYa6qX) 中提问。
 
-### Training and Evaluation
+### 训练和评估
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/SB3/connect_four/sb3_connect_four_action_mask.py
    :language: python
 ```
 
-### Testing other PettingZoo Classic environments
+### 测试其他 PettingZoo 经典环境
 
-The following script uses [pytest](https://docs.pytest.org/en/latest/) to test all other PettingZoo environments which support action masking.
+以下脚本使用 [pytest](https://docs.pytest.org/en/latest/) 测试所有其他支持动作掩码的 PettingZoo 环境。
 
-This code yields decent results on simpler environments like [Connect Four](/environments/classic/connect_four/), while more difficult environments such as [Chess](/environments/classic/chess/) or [Hanabi](/environments/classic/hanabi/) will likely take much more training time and hyperparameter tuning.
+这段代码在像 [四子棋](/environments/classic/connect_four/) 这样的简单环境中可以产生不错的结果，而像 [国际象棋](/environments/classic/chess/) 或 [花火](/environments/classic/hanabi/) 这样更困难的环境可能需要更多的训练时间和超参数调整。
 
 ```{eval-rst}
 .. literalinclude:: ../../../tutorials/SB3/test/test_sb3_action_mask.py
