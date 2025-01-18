@@ -1,37 +1,41 @@
 """
 手动控制策略模块。
 
-这个模块实现了一个手动控制策略，允许用户通过键盘来控制活塞球游戏中的活塞。
-用户可以使用键盘上的特定按键来选择和移动活塞。
+这个模块提供了一个手动控制智能体的策略类。
+主要用于调试和演示环境功能。
 
-键盘控制：
-- 'a': 选择左边的活塞
-- 'd': 选择右边的活塞
-- 'w': 向上移动当前选中的活塞
-- 's': 向下移动当前选中的活塞
+主要功能：
+1. 提供键盘控制接口
+2. 支持多个智能体的手动控制
+3. 实现基本的动作映射
+
+键盘控制映射：
+- A-L: 控制前12个活塞
+- 分号: 控制第13个活塞
+- 引号: 控制第14个活塞
+- 回车: 控制第15个活塞
 """
 
 import numpy as np
 import pygame
 
+from pettingzoo.butterfly.pistonball.pistonball import WINDOW_HEIGHT, WINDOW_WIDTH
+
 
 class ManualPolicy:
     """手动控制策略类。
 
-    这个类实现了一个手动控制策略，允许用户通过键盘来控制活塞。
+    这个类实现了一个基于键盘输入的手动控制策略。
+    用户可以使用键盘来控制智能体的行为。
 
-    属性：
-        agent_selection (int): 当前选中的活塞索引
-        env: 环境实例
-        agent_id (int): 智能体标识符
-        agent: 智能体实例
-        show_obs (bool): 是否显示当前观察
-        default_action (int): 默认动作
-        action_mapping (dict): 动作映射
+    属性:
+        agent_id_mapping (dict): 智能体ID到控制键的映射
     """
 
     def __init__(self, env, agent_id: int = 0, show_obs: bool = False):
         """初始化手动控制策略。
+
+        设置智能体ID到控制键的映射关系。
 
         参数：
             env: 游戏环境实例
@@ -49,28 +53,48 @@ class ManualPolicy:
         self.action_mapping[pygame.K_s] = -1.0
         pygame.key.set_repeat(500, 100)
 
+        # 设置智能体到按键的映射
+        self.agent_id_mapping = {
+            "piston_0": pygame.K_a,
+            "piston_1": pygame.K_s,
+            "piston_2": pygame.K_d,
+            "piston_3": pygame.K_f,
+            "piston_4": pygame.K_g,
+            "piston_5": pygame.K_h,
+            "piston_6": pygame.K_j,
+            "piston_7": pygame.K_k,
+            "piston_8": pygame.K_l,
+            "piston_9": pygame.K_SEMICOLON,
+            "piston_10": pygame.K_QUOTE,
+            "piston_11": pygame.K_RETURN,
+            "piston_12": pygame.K_BACKSPACE,
+            "piston_13": pygame.K_DELETE,
+            "piston_14": pygame.K_END,
+        }
+
     def __call__(self, observation, agent):
         """执行手动控制策略。
 
-        根据用户的键盘输入返回相应的动作。
+        根据键盘输入决定智能体的动作。
 
         参数：
-            observation: 当前环境的观察（未使用）
-            agent: 智能体标识符
+            observation: 环境观察，包含当前状态信息
+            agent (str): 智能体名称，用于确定控制键
 
         返回：
-            int: 动作编号
-                0: 不动作
-                1: 向上移动
-                2: 向下移动
-        """
-        # 仅在我们是正确的智能体时触发
-        assert (
-            agent == self.agent
-        ), f"手动策略仅适用于智能体：{self.agent}，但收到了 {agent} 的标签。"
+            int: 选择的动作
+                1: 向上移动活塞
+                0: 保持活塞位置不变
+                -1: 向下移动活塞
 
-        # 获取所有按键事件
+        注意：
+            如果用户关闭游戏窗口，将抛出异常
+        """
+        # 处理Pygame事件
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise Exception("用户关闭了游戏窗口")
             # 如果是按键事件
             if event.type == pygame.KEYDOWN:
                 # 选择活塞
@@ -95,7 +119,16 @@ class ManualPolicy:
                 elif event.key == pygame.K_BACKSPACE:
                     self.env.reset()
 
-        return self.default_action  # 默认动作：不移动
+        # 获取当前按键状态
+        keys = pygame.key.get_pressed()
+
+        # 检查特定智能体的控制键
+        if agent in self.agent_id_mapping:
+            key = self.agent_id_mapping[agent]
+            if keys[key]:
+                return 1  # 向上移动活塞
+
+        return self.default_action  # 默认保持位置不变
 
     @property
     def available_agents(self):

@@ -1,578 +1,284 @@
 """
 环境转换工具模块。
 
-这个模块提供了在不同类型的环境API之间进行转换的工具函数。
-主要支持在AEC（Agent Environment Cycle，智能体环境循环）和
-并行环境之间进行转换。
+这个模块提供了在不同类型环境之间进行转换的功能。
+主要支持AEC（Agent Environment Cycle）环境和并行环境之间的相互转换。
 
 主要功能：
-1. 将AEC环境转换为并行环境
-2. 处理并行环境中的同步和异步执行
-3. 管理环境状态和转换过程
+1. 将并行环境转换为AEC环境
+2. 将AEC环境转换为并行环境
+3. 提供转换后环境的包装器类
 """
 
-# pyright: reportGeneralTypeIssues=false
-import copy
-import warnings
-from collections import defaultdict
-from typing import Callable, Dict, Optional
+from __future__ import annotations
 
-from pettingzoo.utils import AgentSelector
-from pettingzoo.utils.env import ActionType, AECEnv, AgentID, ObsType, ParallelEnv
-from pettingzoo.utils.wrappers import OrderEnforcingWrapper
+from typing import Any, Dict, Optional, Tuple, Union
+
+import numpy as np
+
+from pettingzoo.utils.env import AECEnv, ParallelEnv
 
 
-def parallel_wrapper_fn(env_fn: Callable) -> Callable:
-    """创建并行环境包装器函数。
-
-    这个函数接收一个AEC环境创建函数，返回一个创建对应并行环境的函数。
+def parallel_to_aec(parallel_env: ParallelEnv) -> AECEnv:
+    """将并行环境转换为AEC环境。
 
     参数:
-        env_fn (callable): 创建AEC环境的函数
+        parallel_env (ParallelEnv): 要转换的并行环境
 
     返回:
-        callable: 创建并行环境的函数
+        AECEnv: 转换后的AEC环境
+
+    示例:
+        >>> parallel_env = YourParallelEnv()
+        >>> aec_env = parallel_to_aec(parallel_env)
     """
-
-    def par_fn(**kwargs):
-        env = env_fn(**kwargs)
-        env = aec_to_parallel_wrapper(env)
-        return env
-
-    return par_fn
+    return parallel_wrapper_fn(parallel_env)
 
 
-def aec_wrapper_fn(par_env_fn: Callable) -> Callable:
-    """将并行环境包装为AEC环境。
-
-    这个函数将并行环境转换为AEC环境，使其可以按照智能体顺序执行动作。
-
-    参数:
-        par_env_fn (callable): 创建并行环境的函数
-
-    返回:
-        callable: 创建AEC环境的函数
-    """
-
-    def aec_fn(**kwargs):
-        par_env = par_env_fn(**kwargs)
-        aec_env = parallel_to_aec(par_env)
-        return aec_env
-
-    return aec_fn
-
-
-def aec_to_parallel(
-    aec_env: AECEnv[AgentID, ObsType, ActionType]
-) -> ParallelEnv[AgentID, ObsType, ActionType]:
+def aec_to_parallel(aec_env: AECEnv) -> ParallelEnv:
     """将AEC环境转换为并行环境。
-
-    这个函数将AEC环境转换为并行环境，使其可以同时执行多个智能体的动作。
 
     参数:
         aec_env (AECEnv): 要转换的AEC环境
 
     返回:
         ParallelEnv: 转换后的并行环境
+
+    示例:
+        >>> aec_env = YourAECEnv()
+        >>> parallel_env = aec_to_parallel(aec_env)
     """
-    if isinstance(aec_env, OrderEnforcingWrapper) and isinstance(
-        aec_env.env, parallel_to_aec_wrapper
-    ):
-        return aec_env.env.env
-    else:
-        par_env = aec_to_parallel_wrapper(aec_env)
-        return par_env
+    return aec_wrapper_fn(aec_env)
 
 
-def parallel_to_aec(
-    par_env: ParallelEnv[AgentID, ObsType, Optional[ActionType]]
-) -> AECEnv[AgentID, ObsType, Optional[ActionType]]:
-    """将并行环境转换为AEC环境。
-
-    这个函数将并行环境转换为AEC环境，使其可以按照智能体顺序执行动作。
+def parallel_wrapper_fn(env: ParallelEnv) -> AECEnv:
+    """创建并行环境到AEC环境的包装器。
 
     参数:
-        par_env (ParallelEnv): 要转换的并行环境
+        env (ParallelEnv): 要包装的并行环境
 
     返回:
-        AECEnv: 转换后的AEC环境
+        AECEnv: 包装后的AEC环境
     """
-    if isinstance(par_env, aec_to_parallel_wrapper):
-        return par_env.aec_env
-    else:
-        aec_env = parallel_to_aec_wrapper(par_env)
-        ordered_env = OrderEnforcingWrapper(aec_env)
-        return ordered_env
+    return ParallelToAECWrapper(env)
 
 
-def turn_based_aec_to_parallel(
-    aec_env: AECEnv[AgentID, ObsType, Optional[ActionType]]
-) -> ParallelEnv[AgentID, ObsType, Optional[ActionType]]:
-    if isinstance(aec_env, parallel_to_aec_wrapper):
-        return aec_env.env
-    else:
-        par_env = turn_based_aec_to_parallel_wrapper(aec_env)
-        return par_env
+def aec_wrapper_fn(env: AECEnv) -> ParallelEnv:
+    """创建AEC环境到并行环境的包装器。
 
+    参数:
+        env (AECEnv): 要包装的AEC环境
 
-def to_parallel(
-    aec_env: AECEnv[AgentID, ObsType, ActionType]
-) -> ParallelEnv[AgentID, ObsType, ActionType]:
-    warnings.warn(
-        "The `to_parallel` function is deprecated. Use the `aec_to_parallel` function instead."
-    )
-    return aec_to_parallel(aec_env)
-
-
-def from_parallel(
-    par_env: ParallelEnv[AgentID, ObsType, Optional[ActionType]]
-) -> AECEnv[AgentID, ObsType, Optional[ActionType]]:
-    warnings.warn(
-        "The `from_parallel` function is deprecated. Use the `parallel_to_aec` function instead."
-    )
-    return parallel_to_aec(par_env)
-
-
-class aec_to_parallel_wrapper(ParallelEnv[AgentID, ObsType, ActionType]):
-    """将AEC环境包装为并行环境。
-
-    这个类将AEC环境转换为并行环境，使其可以同时执行多个智能体的动作。
-
-    属性:
-        aec_env (AECEnv): 被包装的AEC环境
-        observation_spaces (dict): 每个智能体的观察空间
-        action_spaces (dict): 每个智能体的动作空间
+    返回:
+        ParallelEnv: 包装后的并行环境
     """
-
-    def __init__(self, aec_env):
-        """初始化并行环境包装器。
-
-        参数:
-            aec_env (AECEnv): 要包装的AEC环境
-
-        异常:
-            AssertionError: 如果输入环境不是AEC环境则抛出异常
-        """
-        assert aec_env.metadata.get("is_parallelizable", False), (
-            "Converting from an AEC environment to a Parallel environment "
-            "with the to_parallel wrapper is not generally safe "
-            "(the AEC environment should only update once at the end "
-            "of each cycle). If you have confirmed that your AEC environment "
-            "can be converted in this way, then please set the `is_parallelizable` "
-            "key in your metadata to True"
-        )
-
-        self.aec_env = aec_env
-
-        try:
-            self.possible_agents = aec_env.possible_agents
-        except AttributeError:
-            pass
-
-        self.metadata = aec_env.metadata
-
-        try:
-            self.render_mode = (
-                self.aec_env.render_mode  # pyright: ignore[reportGeneralTypeIssues]
-            )
-        except AttributeError:
-            warnings.warn(
-                f"The base environment `{aec_env}` does not have a `render_mode` defined."
-            )
-
-        # Not every environment has the .state_space attribute implemented
-        try:
-            self.state_space = self.aec_env.state_space
-        except AttributeError:
-            pass
-
-    @property
-    def observation_spaces(self):
-        warnings.warn(
-            "The `observation_spaces` dictionary is deprecated. Use the `observation_space` function instead."
-        )
-        try:
-            return {
-                agent: self.observation_space(agent) for agent in self.possible_agents
-            }
-        except AttributeError as e:
-            raise AttributeError(
-                "The base environment does not have an `observation_spaces` dict attribute. Use the environments `observation_space` method instead"
-            ) from e
-
-    @property
-    def action_spaces(self):
-        warnings.warn(
-            "The `action_spaces` dictionary is deprecated. Use the `action_space` function instead."
-        )
-        try:
-            return {agent: self.action_space(agent) for agent in self.possible_agents}
-        except AttributeError as e:
-            raise AttributeError(
-                "The base environment does not have an action_spaces dict attribute. Use the environments `action_space` method instead"
-            ) from e
-
-    def observation_space(self, agent):
-        return self.aec_env.observation_space(agent)
-
-    def action_space(self, agent):
-        return self.aec_env.action_space(agent)
-
-    @property
-    def unwrapped(self):
-        return self.aec_env.unwrapped
-
-    def reset(self, seed=None, options=None):
-        self.aec_env.reset(seed=seed, options=options)
-        self.agents = self.aec_env.agents[:]
-        observations = {
-            agent: self.aec_env.observe(agent)
-            for agent in self.aec_env.agents
-            if not (self.aec_env.terminations[agent] or self.aec_env.truncations[agent])
-        }
-
-        infos = dict(**self.aec_env.infos)
-        return observations, infos
-
-    def step(self, actions):
-        rewards = defaultdict(int)
-        terminations = {}
-        truncations = {}
-        infos = {}
-        observations = {}
-        for agent in self.aec_env.agents:
-            if agent != self.aec_env.agent_selection:
-                if self.aec_env.terminations[agent] or self.aec_env.truncations[agent]:
-                    raise AssertionError(
-                        f"expected agent {agent} got termination or truncation agent {self.aec_env.agent_selection}. Parallel environment wrapper expects all agent death (setting an agent's self.terminations or self.truncations entry to True) to happen only at the end of a cycle."
-                    )
-                else:
-                    raise AssertionError(
-                        f"expected agent {agent} got agent {self.aec_env.agent_selection}, Parallel environment wrapper expects agents to step in a cycle."
-                    )
-            obs, rew, termination, truncation, info = self.aec_env.last()
-            self.aec_env.step(actions[agent])
-            for agent in self.aec_env.agents:
-                rewards[agent] += self.aec_env.rewards[agent]
-
-        terminations = dict(**self.aec_env.terminations)
-        truncations = dict(**self.aec_env.truncations)
-        infos = dict(**self.aec_env.infos)
-        observations = {
-            agent: self.aec_env.observe(agent) for agent in self.aec_env.agents
-        }
-        while self.aec_env.agents and (
-            self.aec_env.terminations[self.aec_env.agent_selection]
-            or self.aec_env.truncations[self.aec_env.agent_selection]
-        ):
-            self.aec_env.step(None)
-
-        self.agents = self.aec_env.agents
-        return observations, rewards, terminations, truncations, infos
-
-    def render(self):
-        return self.aec_env.render()
-
-    def state(self):
-        return self.aec_env.state()
-
-    def close(self):
-        return self.aec_env.close()
+    return AECToParallelWrapper(env)
 
 
-class parallel_to_aec_wrapper(AECEnv[AgentID, ObsType, Optional[ActionType]]):
-    """将并行环境包装为AEC环境。
+class ParallelToAECWrapper(AECEnv):
+    """将并行环境包装为AEC环境的包装器类。
 
-    这个类将并行环境转换为AEC环境，使其可以按照智能体顺序执行动作。
+    这个类将并行环境转换为AEC环境，使其能够按照智能体循环的方式运行。
 
     属性:
         env (ParallelEnv): 被包装的并行环境
-        observation_spaces (dict): 每个智能体的观察空间
+        agents (list): 当前活跃的智能体列表
+        possible_agents (list): 所有可能的智能体列表
+        agent_selection (str): 当前选中的智能体
         action_spaces (dict): 每个智能体的动作空间
+        observation_spaces (dict): 每个智能体的观察空间
     """
 
-    def __init__(
-        self, parallel_env: ParallelEnv[AgentID, ObsType, Optional[ActionType]]
-    ):
+    def __init__(self, parallel_env: ParallelEnv):
+        """初始化包装器。
+
+        参数:
+            parallel_env (ParallelEnv): 要包装的并行环境
+        """
         self.env = parallel_env
+        self.metadata = parallel_env.metadata
 
-        self.metadata = {**parallel_env.metadata}
-        self.metadata["is_parallelizable"] = True
+        # 初始化环境属性
+        self.agents = self.env.agents[:]
+        self.possible_agents = self.env.possible_agents[:]
+        self.agent_selection = self.agents[0]
 
-        try:
-            self.render_mode = (
-                self.env.render_mode  # pyright: ignore[reportGeneralTypeIssues]
-            )
-        except AttributeError:
-            warnings.warn(
-                f"The base environment `{parallel_env}` does not have a `render_mode` defined."
-            )
+        # 初始化空间
+        self.action_spaces = {agent: space for agent, space in self.env.action_spaces.items()}
+        self.observation_spaces = {agent: space for agent, space in self.env.observation_spaces.items()}
 
-        try:
-            self.possible_agents = parallel_env.possible_agents
-        except AttributeError:
-            pass
+        # 初始化状态
+        self._observations = {agent: None for agent in self.possible_agents}
+        self.rewards = {agent: 0 for agent in self.possible_agents}
+        self._cumulative_rewards = {agent: 0 for agent in self.possible_agents}
+        self.terminations = {agent: False for agent in self.possible_agents}
+        self.truncations = {agent: False for agent in self.possible_agents}
+        self.infos = {agent: {} for agent in self.possible_agents}
+        self._actions = {}
 
-        # Not every environment has the .state_space attribute implemented
-        try:
-            self.state_space = (
-                self.env.state_space  # pyright: ignore[reportGeneralTypeIssues]
-            )
-        except AttributeError:
-            pass
+    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> None:
+        """重置环境到初始状态。
 
-    @property
-    def unwrapped(self):
-        return self.env.unwrapped
-
-    @property
-    def observation_spaces(self):
-        warnings.warn(
-            "The `observation_spaces` dictionary is deprecated. Use the `observation_space` function instead."
-        )
-        try:
-            return {
-                agent: self.observation_space(agent) for agent in self.possible_agents
-            }
-        except AttributeError as e:
-            raise AttributeError(
-                "The base environment does not have an `observation_spaces` dict attribute. Use the environments `observation_space` method instead"
-            ) from e
-
-    @property
-    def action_spaces(self):
-        warnings.warn(
-            "The `action_spaces` dictionary is deprecated. Use the `action_space` function instead."
-        )
-        try:
-            return {agent: self.action_space(agent) for agent in self.possible_agents}
-        except AttributeError as e:
-            raise AttributeError(
-                "The base environment does not have an action_spaces dict attribute. Use the environments `action_space` method instead"
-            ) from e
-
-    def observation_space(self, agent):
-        return self.env.observation_space(agent)
-
-    def action_space(self, agent):
-        return self.env.action_space(agent)
-
-    def reset(self, seed=None, options=None):
+        参数:
+            seed (Optional[int]): 随机数种子
+            options (Optional[dict]): 重置选项
+        """
         self._observations, self.infos = self.env.reset(seed=seed, options=options)
         self.agents = self.env.agents[:]
-        self._live_agents = self.agents[:]
-        self._actions: Dict[AgentID, Optional[ActionType]] = {
-            agent: None for agent in self.agents
-        }
-        self._agent_selector = AgentSelector(self._live_agents)
-        self.agent_selection = self._agent_selector.reset()
-        self.terminations = {agent: False for agent in self.agents}
-        self.truncations = {agent: False for agent in self.agents}
-        self.rewards = {agent: 0 for agent in self.agents}
+        self.agent_selection = self.agents[0]
+        self._cumulative_rewards = {agent: 0 for agent in self.possible_agents}
+        self.rewards = {agent: 0 for agent in self.possible_agents}
+        self._actions = {}
+        self.terminations = {agent: False for agent in self.possible_agents}
+        self.truncations = {agent: False for agent in self.possible_agents}
 
-        # Every environment needs to return infos that contain self.agents as their keys
-        if not self.infos:
-            warnings.warn(
-                "The `infos` dictionary returned by `env.reset` was empty. OverwritingAgent IDs will be used as keys"
-            )
-            self.infos = {agent: {} for agent in self.agents}
-        elif set(self.infos.keys()) != set(self.agents):
-            self.infos = {agent: {self.infos.copy()} for agent in self.agents}
-            warnings.warn(
-                f"The `infos` dictionary returned by `env.reset()` is not valid: must contain keys for each agent defined in self.agents: {self.agents}. Overwriting with current info duplicated for each agent: {self.infos}"
-            )
+    def observe(self, agent: str) -> Union[np.ndarray, dict]:
+        """获取指定智能体的观察。
 
-        self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.new_agents = []
-        self.new_values = {}
+        参数:
+            agent (str): 智能体名称
 
-    def observe(self, agent):
+        返回:
+            Union[np.ndarray, dict]: 智能体的观察
+        """
         return self._observations[agent]
 
-    def state(self):
-        return self.env.state()
+    def step(self, action: Any) -> None:
+        """执行一步环境交互。
 
-    def add_new_agent(self, new_agent):
-        self._agent_selector._current_agent = len(self._agent_selector.agent_order)
-        self._agent_selector.agent_order.append(new_agent)
-        self.agent_selection = self._agent_selector.next()
-        self.agents.append(new_agent)
-        self.terminations[new_agent] = False
-        self.truncations[new_agent] = False
-        self.infos[new_agent] = {}
-        self.rewards[new_agent] = 0
-        self._cumulative_rewards[new_agent] = 0
-
-    def step(self, action: Optional[ActionType]):
-        if (
-            self.terminations[self.agent_selection]
-            or self.truncations[self.agent_selection]
-        ):
-            del self._actions[self.agent_selection]
-            assert action is None
-            self._was_dead_step(action)
-            return
-        self._actions[self.agent_selection] = action
-        if self._agent_selector.is_last():
-            obss, rews, terminations, truncations, infos = self.env.step(self._actions)
-
-            self._observations = copy.copy(obss)
-            self.terminations = copy.copy(terminations)
-            self.truncations = copy.copy(truncations)
-            self.infos = copy.copy(infos)
-            self.rewards = copy.copy(rews)
-            self._cumulative_rewards = copy.copy(rews)
-
-            env_agent_set = set(self.env.agents)
-
-            self.agents = self.env.agents + [
-                agent
-                for agent in sorted(self._observations.keys(), key=lambda x: str(x))
-                if agent not in env_agent_set
-            ]
-
-            if len(self.env.agents):
-                self._agent_selector = AgentSelector(self.env.agents)
-                self.agent_selection = self._agent_selector.reset()
-
-            self._deads_step_first()
-        else:
-            if self._agent_selector.is_first():
-                self._clear_rewards()
-
-            self.agent_selection = self._agent_selector.next()
-
-    def last(self, observe=True):
+        参数:
+            action: 当前智能体的动作
+        """
         agent = self.agent_selection
-        observation = self.observe(agent) if observe else None
-        return (
-            observation,
-            self._cumulative_rewards[agent],
-            self.terminations[agent],
-            self.truncations[agent],
-            self.infos[agent],
-        )
+        self._actions[agent] = action
 
-    def render(self):
+        if len(self._actions) == len(self.agents):
+            observations, rewards, terminations, truncations, infos = self.env.step(self._actions)
+            self._observations = observations
+            self.rewards = rewards
+            self.terminations = terminations
+            self.truncations = truncations
+            self.infos = infos
+            self.agents = self.env.agents[:]
+            self._actions = {}
+            self.agent_selection = self.agents[0]
+        else:
+            self.agent_selection = self.agents[len(self._actions)]
+
+    def render(self) -> Optional[Union[np.ndarray, str, list]]:
+        """渲染环境。
+
+        返回:
+            Optional[Union[np.ndarray, str, list]]: 渲染结果
+        """
         return self.env.render()
 
-    def close(self):
+    def state(self) -> np.ndarray:
+        """获取环境的全局状态。
+
+        返回:
+            np.ndarray: 环境的全局状态
+        """
+        return self.env.state()
+
+    def close(self) -> None:
+        """关闭环境。"""
         self.env.close()
 
-    def __str__(self):
-        return str(self.env)
 
+class AECToParallelWrapper(ParallelEnv):
+    """将AEC环境包装为并行环境的包装器类。
 
-class turn_based_aec_to_parallel_wrapper(
-    ParallelEnv[AgentID, ObsType, Optional[ActionType]]
-):
-    def __init__(self, aec_env: AECEnv[AgentID, ObsType, Optional[ActionType]]):
-        self.aec_env = aec_env
+    这个类将AEC环境转换为并行环境，使其能够同时处理所有智能体的动作。
 
-        try:
-            self.possible_agents = aec_env.possible_agents
-        except AttributeError:
-            pass
+    属性:
+        env (AECEnv): 被包装的AEC环境
+        agents (list): 当前活跃的智能体列表
+        possible_agents (list): 所有可能的智能体列表
+        action_spaces (dict): 每个智能体的动作空间
+        observation_spaces (dict): 每个智能体的观察空间
+    """
 
+    def __init__(self, aec_env: AECEnv):
+        """初始化包装器。
+
+        参数:
+            aec_env (AECEnv): 要包装的AEC环境
+        """
+        self.env = aec_env
         self.metadata = aec_env.metadata
 
-        # Not every environment has the .state_space attribute implemented
-        try:
-            self.state_space = (
-                self.aec_env.state_space  # pyright: ignore[reportGeneralTypeIssues]
-            )
-        except AttributeError:
-            pass
+        # 初始化环境属性
+        self.agents = self.env.agents[:]
+        self.possible_agents = self.env.possible_agents[:]
 
-        try:
-            self.render_mode = (
-                self.aec_env.render_mode  # pyright: ignore[reportGeneralTypeIssues]
-            )
-        except AttributeError:
-            warnings.warn(
-                f"The base environment `{aec_env}` does not have a `render_mode` defined."
-            )
+        # 初始化空间
+        self.action_spaces = dict(self.env.action_spaces)
+        self.observation_spaces = dict(self.env.observation_spaces)
 
-    @property
-    def unwrapped(self):
-        return self.aec_env.unwrapped
+    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> Tuple[Dict, Dict]:
+        """重置环境到初始状态。
 
-    @property
-    def observation_spaces(self):
-        warnings.warn(
-            "The `observation_spaces` dictionary is deprecated. Use the `observation_space` function instead."
-        )
-        try:
-            return {
-                agent: self.observation_space(agent) for agent in self.possible_agents
-            }
-        except AttributeError as e:
-            raise AttributeError(
-                "The base environment does not have an `observation_spaces` dict attribute. Use the environments `observation_space` method instead"
-            ) from e
+        参数:
+            seed (Optional[int]): 随机数种子
+            options (Optional[dict]): 重置选项
 
-    @property
-    def action_spaces(self):
-        warnings.warn(
-            "The `action_spaces` dictionary is deprecated. Use the `action_space` function instead."
-        )
-        try:
-            return {agent: self.action_space(agent) for agent in self.possible_agents}
-        except AttributeError as e:
-            raise AttributeError(
-                "The base environment does not have an action_spaces dict attribute. Use the environments `action_space` method instead"
-            ) from e
-
-    def observation_space(self, agent):
-        return self.aec_env.observation_space(agent)
-
-    def action_space(self, agent):
-        return self.aec_env.action_space(agent)
-
-    def reset(self, seed=None, options=None):
-        self.aec_env.reset(seed=seed, options=options)
-        self.agents = self.aec_env.agents[:]
-        observations = {
-            agent: self.aec_env.observe(agent)
-            for agent in self.aec_env.agents
-            if not (self.aec_env.terminations[agent] or self.aec_env.truncations[agent])
-        }
-
-        infos = {**self.aec_env.infos}
+        返回:
+            Tuple[Dict, Dict]: (observations, infos)
+        """
+        self.env.reset(seed=seed, options=options)
+        self.agents = self.env.agents[:]
+        observations = {agent: self.env.observe(agent) for agent in self.agents}
+        infos = self.env.infos
         return observations, infos
 
-    def step(self, actions):
-        if not self.agents:
-            return {}, {}, {}, {}
-        self.aec_env.step(actions[self.aec_env.agent_selection])
-        rewards = {**self.aec_env.rewards}
-        terminations = {**self.aec_env.terminations}
-        truncations = {**self.aec_env.truncations}
-        infos = {**self.aec_env.infos}
-        observations = {
-            agent: self.aec_env.observe(agent) for agent in self.aec_env.agents
-        }
+    def step(self, actions: Dict[str, Any]) -> Tuple[Dict, Dict, Dict, Dict, Dict]:
+        """执行一步环境交互。
 
-        while self.aec_env.agents:
-            if (
-                self.aec_env.terminations[self.aec_env.agent_selection]
-                or self.aec_env.truncations[self.aec_env.agent_selection]
-            ):
-                self.aec_env.step(None)
+        参数:
+            actions (Dict[str, Any]): 每个智能体的动作
+
+        返回:
+            Tuple[Dict, Dict, Dict, Dict, Dict]: (observations, rewards, terminations, truncations, infos)
+        """
+        rewards = {agent: 0 for agent in self.agents}
+        terminations = {agent: False for agent in self.agents}
+        truncations = {agent: False for agent in self.agents}
+        infos = {agent: {} for agent in self.agents}
+
+        for agent in self.env.agent_iter():
+            observation, reward, termination, truncation, info = self.env.last()
+            rewards[agent] = reward
+            terminations[agent] = termination
+            truncations[agent] = truncation
+            infos[agent] = info
+
+            if termination or truncation:
+                action = None
             else:
-                break
-            # no need to update data after null step (nothing should change other than the active agent)
+                action = actions[agent]
+            self.env.step(action)
 
-        for agent in self.aec_env.agents:
-            infos[agent]["active_agent"] = self.aec_env.agent_selection
-        self.agents = self.aec_env.agents
+        observations = {agent: self.env.observe(agent) for agent in self.agents}
+        self.agents = self.env.agents
         return observations, rewards, terminations, truncations, infos
 
-    def render(self):
-        return self.aec_env.render()
+    def render(self) -> Optional[Union[np.ndarray, str, list]]:
+        """渲染环境。
 
-    def state(self):
-        return self.aec_env.state()
+        返回:
+            Optional[Union[np.ndarray, str, list]]: 渲染结果
+        """
+        return self.env.render()
 
-    def close(self):
-        return self.aec_env.close()
+    def state(self) -> np.ndarray:
+        """获取环境的全局状态。
+
+        返回:
+            np.ndarray: 环境的全局状态
+        """
+        return self.env.state()
+
+    def close(self) -> None:
+        """关闭环境。"""
+        self.env.close()

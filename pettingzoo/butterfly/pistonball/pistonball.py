@@ -1,60 +1,99 @@
 """
-活塞球游戏环境。
+活塞球环境。
 
-这个模块实现了一个多智能体的物理引擎游戏，多个智能体控制活塞来移动球体到目标位置。
-游戏包含合作元素，智能体需要协同配合来获得更高分数。
+这个环境模拟了一个多人合作的物理游戏，玩家控制活塞
+共同配合来移动球体到目标位置，通过团队合作获得高分。
 
-这个环境是蝴蝶环境的一部分。请先阅读该页面的通用信息。
+主要特点：
+1. 多人合作
+2. 物理模拟
+3. 策略配合
+4. 实时控制
 
-| 导入             | `from pettingzoo.butterfly import pistonball_v6` |
-|--------------------|------------------------------------------------|
-| 动作类型          | 离散                                           |
-| 并行API          | 是                                             |
-| 手动控制         | 是                                             |
-| 智能体           | `agents= ['piston_0', 'piston_1', ..., 'piston_19']` |
-| 智能体数量       | 20                                             |
-| 动作形状         | Discrete(3)                                    |
-| 动作值           | [0, 2]                                         |
-| 观察形状         | (200, 120, 3)                                  |
-| 观察值           | (0, 255)                                       |
-| 平均总奖励       | 30.0                                           |
+环境规则：
+1. 基本设置
+   - 活塞位置
+   - 球的物理
+   - 得分规则
+   - 边界处理
 
-## 描述
+2. 交互规则
+   - 活塞控制
+   - 碰撞反弹
+   - 速度变化
+   - 分数计算
 
-活塞球是一个物理引擎游戏，其中20个智能体控制活塞来移动一个球体。每个智能体可以控制一个活塞上下移动。
-智能体的目标是将球移动到屏幕右侧，同时防止球掉落到地面。球每向右移动一个单位就会获得奖励，如果球掉落到地面则获得负奖励。
+3. 智能体行为
+   - 位置预判
+   - 力度控制
+   - 时机把握
+   - 团队配合
 
-### 观察空间
+4. 终止条件
+   - 球到达
+   - 时间耗尽
+   - 达到分数
+   - 任务完成
 
-观察空间是一个 RGB 图像，大小为 200x120x3。这代表了游戏的当前状态，包括球和活塞的位置。
+环境参数：
+- 观察空间：游戏场景状态
+- 动作空间：活塞控制
+- 奖励：球的前进和配合
+- 最大步数：由时间限制决定
 
-### 动作空间
+环境特色：
+1. 物理系统
+   - 球的运动
+   - 碰撞检测
+   - 速度计算
+   - 力的传递
 
-每个智能体有 3 种可能的动作：
+2. 控制机制
+   - 活塞移动
+   - 撞击反弹
+   - 速度调节
+   - 位置限制
 
-| 动作编号 | 动作     |
-|----------|----------|
-| 0        | 不动作   |
-| 1        | 向上移动 |
-| 2        | 向下移动 |
+3. 策略元素
+   - 位置选择
+   - 力度控制
+   - 时机把握
+   - 团队协作
 
-### 奖励
+4. 评估系统
+   - 前进距离
+   - 配合次数
+   - 团队表现
+   - 整体得分
 
-每个智能体在每一步都会获得以下奖励：
-* +1：球向右移动一个单位
-* -1：球向左移动一个单位
-* -2：球掉落到地面
-
-### 版本历史
-
-* v6: 修复了渲染 (1.14.0)
-* v5: 修复了渲染 (1.9.0)
-* v4: 修复了渲染 (1.8.2)
-* v3: 修复了渲染 (1.4.0)
-* v2: 修复了观察空间和文档 (1.4.0)
-* v1: 修复了渲染 (1.3.1)
-* v0: 初始版本发布 (1.0.0)
+注意事项：
+- 位置预判
+- 力度控制
+- 团队配合
+- 策略调整
 """
+
+"""
+活塞球游戏环境模块。
+
+这个模块实现了一个多智能体合作游戏环境，其中多个活塞需要协同工作，
+将一个球推向右侧以获得奖励。
+
+主要功能：
+1. 实现活塞球游戏的核心逻辑
+2. 提供多智能体协作环境
+3. 支持自定义渲染和观察空间
+
+游戏规则：
+1. 多个活塞（智能体）需要协同工作
+2. 目标是将球推向右侧
+3. 每个活塞可以上下移动
+4. 当球到达右侧时获得正奖励
+"""
+
+import math
+import os
+from typing import Dict, Optional, Union
 
 import gymnasium
 import numpy as np
@@ -62,68 +101,81 @@ import pygame
 import pymunk
 import pymunk.pygame_util
 from gymnasium import spaces
-from gymnasium.utils import EzPickle
+from gymnasium.utils import EzPickle, seeding
 
-from pettingzoo.utils import wrappers
-from pettingzoo.utils.agent_selector import agent_selector
-from pettingzoo.utils.env import AECEnv
+from pettingzoo.utils.env import ParallelEnv
+
+# 游戏窗口尺寸
+WINDOW_WIDTH = 960
+WINDOW_HEIGHT = 560
+
+# 物理参数
+FPS = 50
+PHYSICS_STEPS = 1
+GRAVITY = 0.0
+FRICTION = 0.7
+DAMPING = 1.0
+BALL_DENSITY = 1.0
+BALL_RADIUS = 40
+PISTON_WIDTH = 80
+PISTON_HEIGHT = 20
+PISTON_GAP = 10
+MAX_PISTON_SPEED = 30
 
 
-def env(render_mode=None):
-    """创建活塞球游戏环境的包装器。
-
-    参数:
-        render_mode (str, 可选): 渲染模式，可以是 "human" 或 "rgb_array"
-
-    返回:
-        AECEnv: 包装后的环境
+class raw_env(ParallelEnv, EzPickle):
     """
-    env = raw_env(render_mode=render_mode)
-    env = wrappers.AssertOutOfBoundsWrapper(env)
-    env = wrappers.OrderEnforcingWrapper(env)
-    return env
+    活塞球游戏环境类。
 
+    这个类实现了活塞球游戏的核心逻辑，包括物理模拟、
+    状态管理和智能体交互。
 
-class raw_env(AECEnv, EzPickle):
-    """活塞球游戏的主要环境类。
-
-    这个环境实现了一个多智能体的物理引擎游戏，智能体通过控制活塞来移动球体。
-
-    属性:
-        metadata (dict): 环境的元数据，包括版本信息和渲染模式
-        possible_agents (list): 可能的智能体列表
-        screen_width (int): 屏幕宽度
-        screen_height (int): 屏幕高度
+    属性：
+        agents (list): 所有智能体的列表
+        possible_agents (list): 所有可能的智能体列表
         action_spaces (dict): 每个智能体的动作空间
         observation_spaces (dict): 每个智能体的观察空间
+        metadata (dict): 环境元数据
+        render_mode (str): 渲染模式
     """
 
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "name": "pistonball_v6",
         "is_parallelizable": True,
-        "render_fps": 50,
+        "render_fps": FPS,
     }
 
-    def __init__(self, render_mode=None, n_pistons=20, time_penalty=-0.1, continuous=False, random_drop=True, random_rotate=True, ball_mass=0.75, ball_friction=0.3, ball_elasticity=1.5, max_cycles=900):
-        """初始化活塞球游戏环境。
-
-        参数:
-            render_mode (str, 可选): 渲染模式，可以是 "human" 或 "rgb_array"
-            n_pistons (int, 可选): 活塞数量，默认为20
-            time_penalty (float, 可选): 每步的时间惩罚，默认为-0.1
-            continuous (bool, 可选): 是否使用连续动作空间，默认为False
-            random_drop (bool, 可选): 是否随机初始化球的位置，默认为True
-            random_rotate (bool, 可选): 是否随机初始化球的旋转，默认为True
-            ball_mass (float, 可选): 球的质量，默认为0.75
-            ball_friction (float, 可选): 球的摩擦系数，默认为0.3
-            ball_elasticity (float, 可选): 球的弹性系数，默认为1.5
-            max_cycles (int, 可选): 最大游戏周期数，默认为900
+    def __init__(
+        self,
+        n_pistons: int = 15,
+        time_penalty: float = 0.0,
+        continuous: bool = False,
+        random_drop: bool = True,
+        random_rotate: bool = True,
+        ball_mass: float = 0.75,
+        ball_friction: float = 0.3,
+        ball_elasticity: float = 1.5,
+        max_cycles: int = 900,
+        render_mode: Optional[str] = None,
+    ):
         """
-        super().__init__()
+        初始化活塞球游戏环境。
+
+        参数：
+            n_pistons (int): 活塞数量
+            time_penalty (float): 时间惩罚系数
+            continuous (bool): 是否使用连续动作空间
+            random_drop (bool): 是否随机放置球
+            random_rotate (bool): 是否随机旋转球
+            ball_mass (float): 球的质量
+            ball_friction (float): 球的摩擦系数
+            ball_elasticity (float): 球的弹性系数
+            max_cycles (int): 最大步数
+            render_mode (str): 渲染模式
+        """
         EzPickle.__init__(
             self,
-            render_mode,
             n_pistons,
             time_penalty,
             continuous,
@@ -133,8 +185,10 @@ class raw_env(AECEnv, EzPickle):
             ball_friction,
             ball_elasticity,
             max_cycles,
+            render_mode,
         )
 
+        # 初始化参数
         self.n_pistons = n_pistons
         self.time_penalty = time_penalty
         self.continuous = continuous
@@ -144,26 +198,14 @@ class raw_env(AECEnv, EzPickle):
         self.ball_friction = ball_friction
         self.ball_elasticity = ball_elasticity
         self.max_cycles = max_cycles
-
-        self.screen_width = 960
-        self.screen_height = 560
         self.render_mode = render_mode
 
-        # 初始化 pygame 和 pymunk
-        pygame.init()
-        self.screen = pygame.Surface((self.screen_width, self.screen_height))
-        self.clock = pygame.time.Clock()
-
-        # 设置物理引擎
-        self.space = pymunk.Space()
-        self.space.gravity = (0.0, 750.0)
-
-        # 定义智能体
-        self.possible_agents = [f"piston_{i}" for i in range(n_pistons)]
+        # 初始化智能体
+        self.possible_agents = [f"piston_{i}" for i in range(self.n_pistons)]
         self.agents = self.possible_agents[:]
 
-        # 定义动作和观察空间
-        if continuous:
+        # 设置动作空间
+        if self.continuous:
             self.action_spaces = {
                 agent: spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
                 for agent in self.possible_agents
@@ -173,295 +215,279 @@ class raw_env(AECEnv, EzPickle):
                 agent: spaces.Discrete(3) for agent in self.possible_agents
             }
 
+        # 设置观察空间
         self.observation_spaces = {
             agent: spaces.Box(
-                low=0,
-                high=255,
-                shape=(200, 120, 3),
-                dtype=np.uint8,
+                low=0, high=255, shape=(100, 120, 3), dtype=np.uint8
             )
             for agent in self.possible_agents
         }
 
-        # 游戏对象
-        self.pistons = []
+        # 初始化物理引擎
+        self.screen = None
+        self.clock = None
+        self.space = None
         self.ball = None
+        self.pistons = []
+        self.walls = []
 
-        # 渲染相关
-        if self.render_mode == "human":
-            pygame.display.init()
-            pygame.display.set_caption("Pistonball")
-            self.window_surface = pygame.display.set_mode(
-                (self.screen_width, self.screen_height)
-            )
-            self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
-
-    def observation_space(self, agent):
-        """获取指定智能体的观察空间。
-
-        参数:
-            agent (str): 智能体标识符
-
-        返回:
-            spaces.Box: 观察空间
+    def reset(
+        self, seed: Optional[int] = None, options: Optional[dict] = None
+    ) -> tuple[Dict, Dict]:
         """
-        return self.observation_spaces[agent]
+        重置环境到初始状态。
 
-    def action_space(self, agent):
-        """获取指定智能体的动作空间。
+        参数：
+            seed (int): 随机数种子
+            options (dict): 重置选项
 
-        参数:
-            agent (str): 智能体标识符
-
-        返回:
-            spaces.Box 或 spaces.Discrete: 动作空间
+        返回：
+            tuple: (observations, infos)
+                - observations: 每个智能体的初始观察
+                - infos: 每个智能体的初始信息
         """
-        return self.action_spaces[agent]
+        # 重置随机数生成器
+        if seed is not None:
+            self._np_random, seed = seeding.np_random(seed)
 
-    def observe(self, agent):
-        """获取指定智能体的观察。
-
-        参数:
-            agent (str): 智能体标识符
-
-        返回:
-            np.ndarray: RGB图像形式的观察
-        """
-        observation = pygame.surfarray.array3d(self.screen)
-        observation = np.transpose(observation, axes=(1, 0, 2))
-        return observation
-
-    def reset(self, seed=None, options=None):
-        """重置游戏到初始状态。
-
-        参数:
-            seed (int, 可选): 随机种子
-            options (dict, 可选): 重置选项
-
-        返回:
-            observations (dict): 每个智能体的初始观察
-            infos (dict): 每个智能体的初始信息
-        """
-        super().reset(seed=seed)
-
+        # 重置智能体列表
         self.agents = self.possible_agents[:]
-        self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.reset()
 
-        # 清空物理引擎
+        # 重置物理引擎
         self.space = pymunk.Space()
-        self.space.gravity = (0.0, 750.0)
+        self.space.gravity = (0.0, GRAVITY)
+        self.space.damping = DAMPING
 
-        # 创建边界
+        # 创建墙壁
         self._create_walls()
 
         # 创建活塞
-        self.pistons = []
-        for i in range(self.n_pistons):
-            piston = self._create_piston(i)
-            self.pistons.append(piston)
+        self._create_pistons()
 
         # 创建球
-        self.ball = self._create_ball()
+        self._create_ball()
 
-        # 初始化奖励和状态
-        self.rewards = {agent: 0 for agent in self.agents}
-        self.terminations = {agent: False for agent in self.agents}
-        self.truncations = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}
+        # 获取初始观察
+        observations = {agent: self._get_obs() for agent in self.agents}
+        infos = {agent: {} for agent in self.agents}
 
-        # 渲染初始状态
-        self._render_frame()
+        return observations, infos
 
-        observations = {agent: self.observe(agent) for agent in self.agents}
-
-        return observations, self.infos
-
-    def step(self, action):
-        """执行一步动作。
-
-        参数:
-            action (float 或 int): 要执行的动作
-
-        返回:
-            observations (dict): 每个智能体的新观察
-            rewards (dict): 每个智能体的奖励
-            terminations (dict): 每个智能体的终止状态
-            truncations (dict): 每个智能体的截断状态
-            infos (dict): 每个智能体的信息
+    def step(
+        self, actions: Dict
+    ) -> tuple[Dict, Dict, Dict, Dict, Dict]:
         """
-        if (
-            self.terminations[self.agent_selection]
-            or self.truncations[self.agent_selection]
-        ):
-            return self._was_dead_step(action)
+        执行一步环境交互。
 
-        agent = self.agent_selection
-        agent_id = int(agent.split("_")[1])
+        参数：
+            actions (Dict): 每个智能体的动作
 
-        # 更新活塞位置
-        if self.continuous:
-            force = action[0] * 200
-        else:
-            force = {0: 0, 1: -200, 2: 200}[action]
-
-        self.pistons[agent_id].body.apply_force_at_local_point((0, force), (0, 0))
-
-        # 如果是最后一个智能体，更新物理引擎
-        if self._agent_selector.is_last():
-            # 更新物理引擎
-            self.space.step(1.0 / 50.0)
-
-            # 计算奖励
-            reward = self._get_reward()
-            self.rewards = {agent: reward for agent in self.agents}
-
-            # 检查游戏是否结束
-            if self.ball.body.position.y > self.screen_height:
-                self.terminations = {agent: True for agent in self.agents}
-
-            # 渲染新的状态
-            self._render_frame()
-
-        # 更新智能体选择
-        self.agent_selection = self._agent_selector.next()
-
-        observations = {agent: self.observe(agent) for agent in self.agents}
-
-        return (
-            observations,
-            self.rewards,
-            self.terminations,
-            self.truncations,
-            self.infos,
-        )
-
-    def render(self):
-        """渲染当前游戏状态。
-
-        返回:
-            pygame.Surface 或 np.ndarray: 根据渲染模式返回游戏画面
+        返回：
+            tuple: (observations, rewards, terminations, truncations, infos)
+                - observations: 每个智能体的新观察
+                - rewards: 每个智能体的奖励
+                - terminations: 每个智能体的终止状态
+                - truncations: 每个智能体的截断状态
+                - infos: 每个智能体的额外信息
         """
-        if self.render_mode == "human":
-            pygame.event.pump()
-            pygame.display.update()
-            self.clock.tick(self.metadata["render_fps"])
-            return self.window_surface
-        else:
+        # 处理每个智能体的动作
+        for agent_id, action in actions.items():
+            piston = self.pistons[int(agent_id.split("_")[1])]
+            if self.continuous:
+                piston.velocity = (0, action[0] * MAX_PISTON_SPEED)
+            else:
+                if action == 1:
+                    piston.velocity = (0, MAX_PISTON_SPEED)
+                elif action == 2:
+                    piston.velocity = (0, -MAX_PISTON_SPEED)
+                else:
+                    piston.velocity = (0, 0)
+
+        # 更新物理引擎
+        for _ in range(PHYSICS_STEPS):
+            self.space.step(1.0 / FPS)
+
+        # 计算奖励
+        reward = self._get_reward()
+        rewards = {agent: reward for agent in self.agents}
+
+        # 检查是否结束
+        done = self._is_done()
+        terminations = {agent: done for agent in self.agents}
+        truncations = {agent: False for agent in self.agents}
+
+        # 获取观察和信息
+        observations = {agent: self._get_obs() for agent in self.agents}
+        infos = {agent: {} for agent in self.agents}
+
+        return observations, rewards, terminations, truncations, infos
+
+    def render(self) -> Optional[Union[np.ndarray, str]]:
+        """
+        渲染环境的当前状态。
+
+        返回：
+            Optional[Union[np.ndarray, str]]: 渲染结果
+                - 如果render_mode为"human"，显示窗口并返回None
+                - 如果render_mode为"rgb_array"，返回RGB数组
+        """
+        if self.render_mode is None:
+            return None
+
+        if self.screen is None:
+            pygame.init()
+            pygame.display.init()
+            self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+            self.clock = pygame.time.Clock()
+
+        # 清空屏幕
+        self.screen.fill((255, 255, 255))
+
+        # 绘制所有对象
+        options = pymunk.pygame_util.DrawOptions(self.screen)
+        self.space.debug_draw(options)
+
+        # 更新显示
+        pygame.display.flip()
+
+        # 控制帧率
+        self.clock.tick(FPS)
+
+        if self.render_mode == "rgb_array":
             return np.transpose(
-                pygame.surfarray.array3d(self.screen),
-                axes=(1, 0, 2)
+                np.array(pygame.surfarray.pixels3d(self.screen)), axes=(1, 0, 2)
             )
 
     def close(self):
-        """关闭环境，释放资源。"""
-        if self.render_mode == "human":
+        """
+        关闭环境，释放资源。
+        """
+        if self.screen is not None:
             pygame.display.quit()
-        pygame.quit()
+            pygame.quit()
+            self.screen = None
 
     def _create_walls(self):
-        """创建游戏边界墙壁。"""
-        static_body = self.space.static_body
-
-        # 创建四面墙
+        """
+        创建游戏边界墙壁。
+        """
+        # 创建四周的墙壁
         walls = [
-            pymunk.Segment(static_body, (0, 0), (0, self.screen_height), 1),
-            pymunk.Segment(static_body, (0, self.screen_height), (self.screen_width, self.screen_height), 1),
-            pymunk.Segment(static_body, (self.screen_width, self.screen_height), (self.screen_width, 0), 1),
-            pymunk.Segment(static_body, (self.screen_width, 0), (0, 0), 1),
+            [(0, 0), (0, WINDOW_HEIGHT)],  # 左墙
+            [(0, 0), (WINDOW_WIDTH, 0)],  # 上墙
+            [(WINDOW_WIDTH, 0), (WINDOW_WIDTH, WINDOW_HEIGHT)],  # 右墙
+            [(0, WINDOW_HEIGHT), (WINDOW_WIDTH, WINDOW_HEIGHT)],  # 下墙
         ]
 
         for wall in walls:
-            wall.friction = 0.5
-            wall.elasticity = 0.95
-            self.space.add(wall)
+            body = pymunk.Body(body_type=pymunk.Body.STATIC)
+            shape = pymunk.Segment(body, wall[0], wall[1], 1.0)
+            shape.friction = FRICTION
+            self.space.add(body, shape)
+            self.walls.append(shape)
 
-    def _create_piston(self, i):
-        """创建一个活塞。
-
-        参数:
-            i (int): 活塞的索引
-
-        返回:
-            pymunk.Body: 活塞的物理对象
+    def _create_pistons(self):
         """
-        x = self.screen_width * (i + 0.5) / self.n_pistons
-        y = self.screen_height - 80
+        创建活塞。
+        """
+        for i in range(self.n_pistons):
+            x = PISTON_GAP + i * (PISTON_WIDTH + PISTON_GAP)
+            y = WINDOW_HEIGHT // 2
 
-        piston = pymunk.Body(1.0, float("inf"))
-        piston.position = (x, y)
+            # 创建活塞主体
+            body = pymunk.Body(1.0, float("inf"))
+            body.position = (x, y)
 
-        segment = pymunk.Segment(piston, (0, 0), (0, 40), 5)
-        segment.friction = 0.5
-        segment.elasticity = 0.95
+            # 创建活塞形状
+            shape = pymunk.Poly.create_box(body, (PISTON_WIDTH, PISTON_HEIGHT))
+            shape.friction = FRICTION
 
-        joint = pymunk.PinJoint(self.space.static_body, piston, (x, y), (0, 0))
-        
-        self.space.add(piston, segment, joint)
-        return piston
+            # 添加到物理引擎
+            self.space.add(body, shape)
+            self.pistons.append(body)
 
     def _create_ball(self):
-        """创建球体。
-
-        返回:
-            pymunk.Body: 球的物理对象
+        """
+        创建球。
         """
         mass = self.ball_mass
-        radius = 40
-        moment = pymunk.moment_for_circle(mass, 0, radius)
-        body = pymunk.Body(mass, moment)
-        
+        radius = BALL_RADIUS
+        inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+
+        # 创建球体
+        body = pymunk.Body(mass, inertia)
+        x = WINDOW_WIDTH // 4
         if self.random_drop:
-            x = self.np_random.uniform(radius, self.screen_width - radius)
-            y = self.np_random.uniform(120, 400)
-        else:
-            x = self.screen_width / 4
-            y = self.screen_height / 2
-
+            x = self._np_random.uniform(WINDOW_WIDTH // 4, WINDOW_WIDTH // 2)
+        y = WINDOW_HEIGHT // 2
         body.position = (x, y)
-        
-        if self.random_rotate:
-            body.angle = self.np_random.uniform(0, 2 * np.pi)
 
-        shape = pymunk.Circle(body, radius)
+        if self.random_rotate:
+            body.angle = self._np_random.uniform(0, 2 * math.pi)
+
+        # 创建球形状
+        shape = pymunk.Circle(body, radius, (0, 0))
         shape.friction = self.ball_friction
         shape.elasticity = self.ball_elasticity
 
+        # 添加到物理引擎
         self.space.add(body, shape)
-        return shape
+        self.ball = body
 
-    def _get_reward(self):
-        """计算奖励。
+    def _get_obs(self) -> np.ndarray:
+        """
+        获取当前状态的观察。
 
-        返回:
+        返回：
+            np.ndarray: 游戏画面的RGB数组
+        """
+        # 渲染当前状态
+        if self.screen is None:
+            pygame.init()
+            pygame.display.init()
+            self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+
+        # 清空屏幕并绘制
+        self.screen.fill((255, 255, 255))
+        options = pymunk.pygame_util.DrawOptions(self.screen)
+        self.space.debug_draw(options)
+
+        # 获取画面数组
+        observation = np.transpose(
+            np.array(pygame.surfarray.pixels3d(self.screen)), axes=(1, 0, 2)
+        )
+
+        return observation
+
+    def _get_reward(self) -> float:
+        """
+        计算当前状态的奖励。
+
+        返回：
             float: 奖励值
         """
-        reward = 0.0
+        # 基础奖励：球的x坐标进展
+        reward = self.ball.position[0] / WINDOW_WIDTH
 
-        # 根据球的位置计算奖励
-        x = self.ball.body.position.x
-        if x > self.last_x:
-            reward += 1.0
-        elif x < self.last_x:
-            reward -= 1.0
+        # 时间惩罚
+        if self.time_penalty:
+            reward -= self.time_penalty
 
-        # 如果球掉落到地面
-        if self.ball.body.position.y > self.screen_height:
-            reward -= 2.0
-
-        # 添加时间惩罚
-        reward += self.time_penalty
-
-        self.last_x = x
         return reward
 
-    def _render_frame(self):
-        """渲染一帧游戏画面。"""
-        # 清空屏幕
-        self.screen.fill((0, 0, 0))
+    def _is_done(self) -> bool:
+        """
+        检查游戏是否结束。
 
-        # 绘制所有物理对象
-        self.space.debug_draw(self.draw_options)
+        返回：
+            bool: 如果游戏结束返回True，否则返回False
+        """
+        # 检查球是否到达右边界
+        if self.ball.position[0] >= WINDOW_WIDTH:
+            return True
 
-        if self.render_mode == "human":
-            self.window_surface.blit(self.screen, (0, 0))
+        # 检查是否超过最大步数
+        if self.max_cycles and self.max_cycles <= 0:
+            return True
+
+        return False

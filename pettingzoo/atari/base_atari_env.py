@@ -1,3 +1,66 @@
+"""
+雅达利基础环境模块。
+
+这个模块实现了所有雅达利游戏环境的基础类和功能，为具体游戏提供统一的接口和实现。
+包括环境初始化、状态管理、动作处理等核心功能。
+
+主要功能：
+1. 环境管理
+   - 初始化游戏
+   - 重置状态
+   - 渲染画面
+   - 关闭环境
+
+2. 状态处理
+   - 观察空间
+   - 动作空间
+   - 奖励计算
+   - 终止判定
+
+3. 游戏控制
+   - 帧率控制
+   - 按键映射
+   - 多人支持
+   - 难度设置
+
+4. 辅助功能
+   - 录制回放
+   - 状态保存
+   - 错误处理
+   - 调试信息
+
+环境参数：
+1. 基本设置
+   - game - 游戏ROM名称
+   - num_players - 玩家数量
+   - mode_num - 游戏模式
+   - seed - 随机种子
+
+2. 显示设置
+   - render_mode - 渲染模式
+   - full_action_space - 完整动作空间
+   - max_cycles - 最大步数
+   - auto_rom_install_path - ROM安装路径
+
+3. 观察设置
+   - obs_type - 观察类型
+   - repeat_action_probability - 动作重复概率
+   - difficulty - 游戏难度
+   - restrict_actions - 动作限制
+
+4. 其他设置
+   - frameskip - 跳帧数
+   - repeat_action_probability - 动作重复概率
+   - full_action_space - 完整动作空间
+   - max_cycles - 最大步数
+
+注意事项：
+- ROM文件依赖
+- 性能优化
+- 多人同步
+- 状态一致性
+"""
+
 """Atari 环境的基类。
 
 这个模块提供了所有 Atari 游戏环境的基础实现。
